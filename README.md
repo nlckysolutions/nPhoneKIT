@@ -7,7 +7,7 @@ It utilizes **AT**, **ADB**, and other USB commands in order to perform most fea
 
 ## Features
 ### Samsung
-- FRP Unlock (2022 models)
+- FRP Bypass (Select 2022 and earlier models)
 - Get Version Info
 - Crash to Reboot
 - WIFITEST hidden menu
