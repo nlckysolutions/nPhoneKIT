@@ -8,15 +8,15 @@ import sys
 import io
 import re
 import subprocess
-import serial # type: ignore
+import serial
 import platform
 import glob
 import asyncio
 import threading
+import urllib.request
+import json
 
-version = "1.2.1 (2025 BETA)"
-
-# sys.path.insert(1, './deps')
+version = "1.2.2"
 
 # This program is free software: you can redistribute it and/or modify it 
 # under the terms of the GNU General Public License as published by the Free Software Foundation, 
@@ -54,6 +54,7 @@ os_config = "LINUX" # Change based on your OS to "WINDOWS" or "LINUX"
 dark_theme = True # If True, changes the GUI to a "dark mode, which is fully black to reduce power on OLED screens
 hacker_font = True # If True, changes the output box font to green. Works best with dark_theme
 slower_animations = False # If True, slows down all animations to make the GUI more... dramatic?
+update_check = True # If True, nPhoneKIT will automatically check for updates and prompt the user if there are any.
 
 # Speed Related Controls
 
@@ -221,6 +222,27 @@ async def preload_samsung_modem(serman2):
             print("[❌] Preload error:", e)
 
     preload_done.set()
+
+
+# Check for updates
+
+def check_for_update():
+    try:
+        # Replace with your actual repo
+        repo = "nlckysolutions/nPhoneKIT"
+        url = f"https://api.github.com/repos/{repo}/releases/latest"
+
+        with urllib.request.urlopen(url) as response:
+            data = json.loads(response.read().decode())
+            latest_version = data["tag_name"].lstrip("v")
+
+            if latest_version != version:
+                messagebox.showinfo(
+                    "Update Available",
+                    f"A new version of nPhoneKIT is available!\n\nCurrent: v{version}\nLatest: v{latest_version}\n\nVisit GitHub to update."
+                )
+    except Exception as e:
+        print(f"[Warning] Could not check for updates, check your internet connection?")
 
 
 # =============================================
@@ -878,6 +900,9 @@ if not is_root():
 
     messagebox.showwarning("nPhoneKIT", "Please close this window and rerun using SUDO (or Run as Administrator on Windows). Most features/tools will not work otherwise.")
     sys.exit(1)
+
+if update_check:
+    check_for_update()
 
 serman1 = SerialManager()
 
