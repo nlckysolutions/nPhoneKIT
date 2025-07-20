@@ -17,17 +17,18 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands, real tran
 ## 📱 Current Features
 
 ### Samsung
-- FRP Unlock (select devices pre-2022)
-- Get Version Info
-- Open WIFITEST Menu
-- Crash to Reboot
-
+- FRP Unlock on most U.S. 2024 Samsung Devices 
+- FRP Unlock on Aug 2022 - Dec 2022 Security Patch Date Samsung Devices
+- FRP Unlock on Pre - Aug 2022 Security Patch Date Samsung Devices
+- Get Version/Firmware Info on All Samsung Devices
+- Reboot Samsung Devices (Normal or into Download Mode)
+- Open Hidden WLANTEST Menu on All Samsung Devices
+    
 ### LG
 - Legacy Screen Unlock (Pre-G5)
 
 ### Generic Android
-- Universal FRP Unlock (ADB-based)
-- Crash to Reboot
+- Reboot
 
 ---
 
