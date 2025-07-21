@@ -14,6 +14,39 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands, real tran
 
 ---
 
+## Installation
+
+### Windows
+
+- Go to the latest release, download Source Code as ZIP.
+- Make sure you have Python and Pip installed.
+- Extract the zip, open Command Prompt as Administrator, and cd into the source code directory.
+- Run the following command:
+  ```
+  pip install pyserial requests tkinter
+  ```
+- Then, (every time you want to run nPhoneKIT you will need to run this in the source folder) (before running the below command, make sure Command Prompt is started as Administrator):
+  python main.py
+
+### Linux
+
+- Go to the latest release, download Source Code as ZIP.
+- Make sure you have Python and Pip installed.
+- Extract the zip, open Terminal, and cd into the source code directory.
+- Run the following commands:
+  ```
+  python3 -m venv ./.venv
+  source ./.venv/bin/activate
+  pip3 install pyserial requests tkinter
+  ```
+- Then, (every time you want to run nPhoneKIT you will need to run these 2 commands in the source folder) (make sure to use SUDO):
+  ```
+  source ./.venv/bin/activate
+  sudo python3 main.py
+  ```
+
+---
+
 ## 📱 Current Features
 
 ### Samsung
