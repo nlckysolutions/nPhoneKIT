@@ -23,7 +23,7 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands, real tran
 - Extract the zip, open Command Prompt as Administrator, and cd into the source code directory.
 - Run the following command:
   ```
-  pip install pyserial requests tkinter
+  pip install pyserial requests
   ```
 - Then, (every time you want to run nPhoneKIT you will need to run this in the source folder) (before running the below command, make sure Command Prompt is started as Administrator):
   python main.py
@@ -37,7 +37,7 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands, real tran
   ```
   python3 -m venv ./.venv
   source ./.venv/bin/activate
-  pip3 install pyserial requests tkinter
+  pip3 install pyserial requests
   ```
 - Then, (every time you want to run nPhoneKIT you will need to run these 2 commands in the source folder) (make sure to use SUDO):
   ```
