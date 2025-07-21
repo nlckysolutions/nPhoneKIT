@@ -68,7 +68,7 @@ enable_preload = True # If True, silently preloads (modem unlocks) all Samsung d
 
 debug_info = False # Prints debug info directly from the SerialManager class. Not needed, and breaks the minimalistic flow
 i_know_what_im_doing = False # If True, dialog boxes prompting user to enable MTP and ADB are not shown. If you don't know what that means, you shouldn't enable this feature.
-basic_telemetry = True # If True, basic telemetry will be sent, only an anonymized ping to our servers, in order to see which features are used the most often. PLEASE leave this enabled. If you'd like, you can check the source for exactly what's being sent.
+basic_success_checks = True # If True, basic success checks will be sent, only an anonymized ping to our servers, in order to see which features are used the most often. PLEASE leave this enabled. If you'd like, you can check the source for exactly what's being sent.
 
 # ============================================================================= #
 # You shouldn't edit anything below this line unless you know what you're doing #
