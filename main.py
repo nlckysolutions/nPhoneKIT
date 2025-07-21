@@ -19,7 +19,7 @@ import requests
 import uuid
 import hashlib
 
-version = "1.2.3"
+version = "1.2.4"
 
 # This program is free software: you can redistribute it and/or modify it 
 # under the terms of the GNU General Public License as published by the Free Software Foundation, 
@@ -53,7 +53,6 @@ version = "1.2.3"
 
 # Basic User-Friendly Config
 
-os_config = "LINUX" # Change based on your OS to "WINDOWS" or "LINUX"
 dark_theme = True # If True, changes the GUI to a "dark mode, which is fully black to reduce power on OLED screens
 hacker_font = True # If True, changes the output box font to green. Works best with dark_theme
 slower_animations = False # If True, slows down all animations to make the GUI more... dramatic?
@@ -68,11 +67,13 @@ enable_preload = True # If True, silently preloads (modem unlocks) all Samsung d
 
 debug_info = False # Prints debug info directly from the SerialManager class. Not needed, and breaks the minimalistic flow
 i_know_what_im_doing = False # If True, dialog boxes prompting user to enable MTP and ADB are not shown. If you don't know what that means, you shouldn't enable this feature.
-basic_success_checks = True # If True, basic success checks will be sent, only an anonymized ping to our servers, in order to see which features are used the most often. PLEASE leave this enabled. If you'd like, you can check the source for exactly what's being sent.
+basic_success_checks = True # If True, basic success_checks will be sent, only an anonymized ping to our servers, in order to see which features are used the most often. PLEASE leave this enabled. If you'd like, you can check the source for exactly what's being sent.
 
 # ============================================================================= #
 # You shouldn't edit anything below this line unless you know what you're doing #
 # ============================================================================= #
+
+os_config = "WINDOWS" if platform.system() == "Windows" else "LINUX"
 
 preload_done = threading.Event()
 
@@ -267,22 +268,38 @@ def get_public_hardware_uuid():
     # Optionally convert to UUID format (UUID5 with a fixed namespace)
     return uuid.UUID(hashlib.md5(hashed_mac.encode()).hexdigest())
 
-def telemetry(uuid, model, action, status):
-    FIREBASE_URL = "https://nphonekit-default-rtdb.firebaseio.com/"
+FIREBASE_URL = "https://nphonekit-default-rtdb.firebaseio.com/"
 
-    data = {
-        "timestamp": time.time(),
-        "uuid": str(uuid),
-        "model": model.group(1) if model else "Unknown",
-        "action": action,
-        "status": status,
-        "phoneKITversion": version
-    }
+def success_checks(uuid, model, action, status, first=True):
+    if first:
+        if basic_success_checks:
+            data = {
+                "timestamp": time.time(),
+                "uuid": str(uuid),
+                "model": model.group(1) if model else "Unknown",
+                "action": action,
+                "status": status,
+                "phoneKITversion": version
+            }
 
-    try:
-        response = requests.post(f"{FIREBASE_URL}/telemetry.json", json=data)
-    except Exception as e:
-        silentError = 1
+            try:
+                response = requests.post(f"{FIREBASE_URL}/success_checks.json", json=data)
+            except Exception as e:
+                silentError = 1
+    else:
+        data = {
+            "timestamp": time.time(),
+            "uuid": str(uuid),
+            "model": "NOT_First",
+            "action": "NOT_First",
+            "status": "Success",
+            "phoneKITversion": version
+        }
+
+        try:
+            response = requests.post(f"{FIREBASE_URL}/success_checks.json", json=data)
+        except Exception as e:
+            silentError = 1
         
 
 # =============================================
@@ -450,8 +467,8 @@ def frp_unlock_pre_aug2022():
     if "error" in output.lower():
         print("  FAIL")
         print("\nThis FRP unlock method will not work on your device.")
-        tthread = threading.Thread(target = telemetry, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Pre_2022", "Fail"))
-        tthread.start() # Sends basic, anonymized telemetry info with only the model number. This is so we know what devices are compatible with which unlocks.
+        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Pre_2022", "Fail"))
+        tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
     else:
         print("  OK")
         print(f"Running Unlock...", end="")
@@ -460,8 +477,8 @@ def frp_unlock_pre_aug2022():
             ADB.send(command)
         print("  OK")
         print("\nUNLOCK should be successful! To complete the unlock, please go into settings and perform a factory reset normally!")
-        tthread = threading.Thread(target = telemetry, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Pre_2022", "Success"))
-        tthread.start() # Sends basic, anonymized telemetry info with only the model number. This is so we know what devices are compatible with which unlocks.
+        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Pre_2022", "Success"))
+        tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
 
 def frp_unlock_aug2022_to_dec2022():
     info = verinfo(False)
@@ -493,8 +510,8 @@ def frp_unlock_aug2022_to_dec2022():
     if "error" in output.lower():
         print("  FAIL")
         print("\nThis FRP unlock method will not work on your device.")
-        tthread = threading.Thread(target = telemetry, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Aug_To_Dec_2022", "Fail"))
-        tthread.start() # Sends basic, anonymized telemetry info with only the model number. This is so we know what devices are compatible with which unlocks.
+        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Aug_To_Dec_2022", "Fail"))
+        tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
     else:
         print("  OK")
         print(f"Running Unlock...", end="")
@@ -503,8 +520,8 @@ def frp_unlock_aug2022_to_dec2022():
             ADB.send(command)
         print("  OK")
         print("\nUNLOCK should be successful! To complete the unlock, please go into settings and perform a factory reset normally!")
-        tthread = threading.Thread(target = telemetry, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Aug_To_Dec_2022", "Success"))
-        tthread.start() # Sends basic, anonymized telemetry info with only the model number. This is so we know what devices are compatible with which unlocks.
+        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Aug_To_Dec_2022", "Success"))
+        tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
 
 def frp_unlock_2024():
     info = verinfo(False)
@@ -547,8 +564,8 @@ def frp_unlock_2024():
     if "error" in output.lower():
         print("  FAIL")
         print("\nThis FRP unlock method will not work on your device.")
-        tthread = threading.Thread(target = telemetry, args = (get_public_hardware_uuid(), model, "FRP_Unlock_2024", "Fail"))
-        tthread.start() # Sends basic, anonymized telemetry info with only the model number. This is so we know what devices are compatible with which unlocks.
+        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_2024", "Fail"))
+        tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
     else:
         print("  OK")
         print(f"Running Unlock...", end="")
@@ -557,8 +574,8 @@ def frp_unlock_2024():
             ADB.send(command)
         print("  OK")
         print("\nUNLOCK should be successful! To complete the unlock, please go into settings and perform a factory reset normally!")
-        tthread = threading.Thread(target = telemetry, args = (get_public_hardware_uuid(), model, "FRP_Unlock_2024", "Success"))
-        tthread.start() # Sends basic, anonymized telemetry info with only the model number. This is so we know what devices are compatible with which unlocks.
+        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_2024", "Success"))
+        tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
 
 def general_frp_unlock():
     info = verinfo(False)
@@ -587,14 +604,14 @@ def LG_screen_unlock():
         if "error" in output or "Error" in output:
             print("  FAIL\n")
             print("There was an error in unlocking the screen. Please open a GitHub issue with your phone model, and the contents of tmp_output.txt which should be in the same directory as main.py.")
-            tthread = threading.Thread(target = telemetry, args = (get_public_hardware_uuid(), model, "LG_Screen_Unlock", "Fail"))
-            tthread.start() # Sends basic, anonymized telemetry info with only the model number. This is so we know what devices are compatible with which unlocks.
+            tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "LG_Screen_Unlock", "Fail"))
+            tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
         else:
             rt()
             print("  OK\n")
             print("Screen should be unlocked. If it's not, please open a GitHub issue with your phone model, and exactly what you did.")
-            tthread = threading.Thread(target = telemetry, args = (get_public_hardware_uuid(), model, "LG_Screen_Unlock", "Success"))
-            tthread.start() # Sends basic, anonymized telemetry info with only the model number. This is so we know what devices are compatible with which unlocks.
+            tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "LG_Screen_Unlock", "Success"))
+            tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
 
 # ==============================================
 #  Simple functions that do stuff to the device
@@ -609,8 +626,8 @@ def verinfo(gui=True):
             output = parse_devconinfo(output) # Make the output actually readable
             print(output) # Print the version info to the output box
             model = re.search(r'Model:\s*(\S+)', output) # Extract only the model no. from the output
-            tthread = threading.Thread(target = telemetry, args = (get_public_hardware_uuid(), model, "VersionInfo", "Success"))
-            tthread.start() # Sends basic, anonymized telemetry info with only the model number.
+            tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "VersionInfo", "Success"))
+            tthread.start() # Sends basic, anonymized success_checks info with only the model number.
         else: 
             if testAT(True, text=f"Getting version info..."): # We should verify AT is working before running the below code
                 if not enable_preload:
@@ -629,8 +646,8 @@ def verinfo(gui=True):
             output = readOutput("AT") # Output is retrieved from the command
             output = parse_devconinfo(output) # Make the output actually readable (parse the output)
             model = re.search(r'Model:\s*(\S+)', output) # Extract only the model no. from the output
-            tthread = threading.Thread(target = telemetry, args = (get_public_hardware_uuid(), model, "VersionInfo", "Success"))
-            tthread.start() # Sends basic, anonymized telemetry info with only the model number.
+            tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "VersionInfo", "Success"))
+            tthread.start() # Sends basic, anonymized success_checks info with only the model number.
             return output # Return the version info
 
 def wifitest():
@@ -655,12 +672,12 @@ def wifitest():
             counter += 1
     if counter == 3:
         print("  OK")
-        tthread = threading.Thread(target = telemetry, args = (get_public_hardware_uuid(), model, "WIFITEST", "Success"))
-        tthread.start() # Sends basic, anonymized telemetry info with only the model number.
+        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "WIFITEST", "Success"))
+        tthread.start() # Sends basic, anonymized success_checks info with only the model number.
     else:
         print("  FAIL")
-        tthread = threading.Thread(target = telemetry, args = (get_public_hardware_uuid(), model, "WIFITEST", "Fail"))
-        tthread.start() # Sends basic, anonymized telemetry info with only the model number.
+        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "WIFITEST", "Fail"))
+        tthread.start() # Sends basic, anonymized success_checks info with only the model number.
 
 def reboot():
     print(f"Crashing phone to reboot...", end="")
@@ -673,14 +690,14 @@ def reboot():
     except Exception as e:
         if "disconnected" in str(e):
             print("  OK") # Error opening serial means that the command worked, because it reset the phone before it could give a response.
-            tthread = threading.Thread(target = telemetry, args = (get_public_hardware_uuid(), model, "REBOOT", "Success"))
-            tthread.start() # Sends basic, anonymized telemetry info with only the model number.
+            tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "REBOOT", "Success"))
+            tthread.start() # Sends basic, anonymized success_checks info with only the model number.
     output = readOutput("AT")
     if "OK" in output:
         print("  FAIL")
         print("\nThe phone did not seem to crash. (If this is a Samsung phone, you must click the reboot option in the SAMSUNG tab on the left.)")
-        tthread = threading.Thread(target = telemetry, args = (get_public_hardware_uuid(), model, "REBOOT", "Fail"))
-        tthread.start() # Sends basic, anonymized telemetry info with only the model number.
+        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "REBOOT", "Fail"))
+        tthread.start() # Sends basic, anonymized success_checks info with only the model number.
 
 def reboot_sam():
     print(f"Crashing phone to reboot...", end="")
@@ -694,14 +711,14 @@ def reboot_sam():
     except Exception as e:
         if "disconnected" in str(e):
             print("  OK") # Error opening serial means that the command worked, because it reset the phone before it could give a response.
-            tthread = threading.Thread(target = telemetry, args = (get_public_hardware_uuid(), model, "REBOOT_SAM", "Success"))
-            tthread.start() # Sends basic, anonymized telemetry info with only the model number.
+            tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "REBOOT_SAM", "Success"))
+            tthread.start() # Sends basic, anonymized success_checks info with only the model number.
     output = readOutput("AT")
     if "OK" in output:
         print("  FAIL")
         print("\nThe phone did not seem to crash. (If this is a Samsung phone, you must click the reboot option in the SAMSUNG tab on the left.)")
-        tthread = threading.Thread(target = telemetry, args = (get_public_hardware_uuid(), model, "REBOOT_SAM", "Fail"))
-        tthread.start() # Sends basic, anonymized telemetry info with only the model number.
+        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "REBOOT_SAM", "Fail"))
+        tthread.start() # Sends basic, anonymized success_checks info with only the model number.
 
 def bloatRemove():
     adbMenu()
@@ -712,12 +729,12 @@ def reboot_download_sam():
     print("Rebooting to Download Mode...", end="")
     MTPmenu() 
     AT.send("AT+FUS?") # Thankfully, no modem unlocking required for this command.
-    if basic_telemetry:
+    if basic_success_checks:
         modemUnlock("SAMSUNG")
         info = verinfo(False)
         model = re.search(r'Model:\s*(\S+)', info)
-        tthread = threading.Thread(target = telemetry, args = (get_public_hardware_uuid(), model, "REBOOT_DOWNLOAD_SAM", "Fail"))
-        tthread.start() # Sends basic, anonymized telemetry info with only the model number.
+        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "REBOOT_DOWNLOAD_SAM", "Fail"))
+        tthread.start() # Sends basic, anonymized success_checks info with only the model number.
     print(" OK")
 
 # ===================================
@@ -1010,5 +1027,7 @@ def preload_thread():
 threading.Thread(target=preload_thread, daemon=True).start()
 
 if __name__ == "__main__":
+    ttthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), "NOT_First", "NOT_First", "Success", False))
+    ttthread.start() # Sends basic, anonymized success_checks info with only the model number.
     rt()
     main()
