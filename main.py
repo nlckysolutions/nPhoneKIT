@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import messagebox
 from tkinter import font
 from pathlib import Path
+from serial.tools import list_ports
 import sys
 import io
 import re
@@ -74,6 +75,9 @@ basic_success_checks = True # If True, basic success_checks will be sent, only a
 # ============================================================================= #
 
 os_config = "WINDOWS" if platform.system() == "Windows" else "LINUX"
+
+if os_config == "WINDOWS":
+    enable_preload = False
 
 preload_done = threading.Event()
 
@@ -152,13 +156,87 @@ class SerialManager:
         if self.ser and self.ser.is_open:
             self.ser.close()
 
+class SerialManagerWindows:
+    def __init__(self, port: str = None, baud: int = 115200, debug: bool = False):
+        """
+        Windows-only serial helper.
+        :param port: Override COM port (e.g. "COM3"). If None, auto-detects.
+        :param baud: Baud rate.
+        :param debug: Print connection details if True.
+        """
+        if platform.system() != "Windows":
+            raise RuntimeError("SerialManagerWindows only supports Windows.")
+
+        self.debug = debug
+        self.baud = baud
+        self.ser = None
+
+        # allow override, else auto-detect
+        self.port = port or self.detect_port()
+        if not self.port:
+            raise RuntimeError("No COM port found.")
+
+        try:
+            self.ser = serial.Serial(self.port, self.baud, timeout=2)
+            time.sleep(0.5)
+            if self.debug:
+                print(f"[SerialManagerWindows] Connected to {self.port} @ {self.baud} baud")
+        except serial.SerialException as e:
+            raise RuntimeError(f"Error opening {self.port}: {e}")
+
+    def detect_port(self) -> str:
+        """Return the first COM* port or None."""
+        ports = list_ports.comports()
+        if self.debug:
+            print(f"[SerialManagerWindows] Available ports: {[p.device for p in ports]}")
+        for p in ports:
+            if p.device.upper().startswith("COM"):
+                if self.debug:
+                    print(f"[SerialManagerWindows] Using {p.device}")
+                return p.device
+        return None
+
+    def send(self, command: str, wait: float = 0.1) -> str:
+        """
+        Send a command and collect all response lines.
+        :param command: Text/AT command to send.
+        :param wait: Seconds to pause before reading.
+        """
+        if not self.ser or not self.ser.is_open:
+            raise RuntimeError("Serial port not open.")
+
+        self.ser.reset_input_buffer()
+        self.ser.reset_output_buffer()
+        self.ser.write((command.strip() + "\r\n").encode())
+        time.sleep(wait)
+
+        lines = []
+        while True:
+            line = self.ser.readline()
+            if not line:
+                break
+            lines.append(line.decode(errors="ignore").strip())
+        return "\n".join(lines)
+
+    def close(self):
+        """Close the serial connection."""
+        if self.ser and self.ser.is_open:
+            self.ser.close()
+            if self.debug:
+                print("[SerialManagerWindows] Connection closed.")
+
+if os_config == "WINDOWS":
+    serman = SerialManagerWindows()
+elif os_config == "LINUX":
+    serman = SerialManager()
+
 class AT:
     #def __init__(self):
     #    #self.usb_device = "/dev/ttyACM0" # cannot be changed
     #    # Not needed anymore, usbsend.py will auto select based on OS
 
     def send(command):
-        serman = SerialManager() # Making usbsend.py into a built-in class improves command speed by 10-20x, and improves multi-OS compatibility
+         # Making usbsend.py into a built-in class improves command speed by 10-20x, and improves multi-OS compatibility
         rt()
         #if os_config == "LINUX":
         #    os.system(f"sudo bash -c 'sudo python3 -u ./deps/usbsend.py \"{command}\" > tmp_output.txt 2>&1'")
@@ -171,7 +249,12 @@ class AT:
         if enable_preload:
             preload_done.wait()
         with open("tmp_output.txt", "w", encoding="utf-8") as f:
-            f.write(serman.send(command))
+            result = serman.send(command)
+            if result is None:
+                result = serman.send(command)
+                if result is None: # (If result is STILL None)
+                    result = "" # Then give up after the second try.
+            f.write(result)
     
     def usbswitch(arg, action):
         # Later, add logic to allow switching of device interface to AT, for more compatibility.
@@ -324,8 +407,12 @@ def remove_last_x_lines(s, x):
     return '\n'.join(s.splitlines()[:-x]) if x else s
 
 def rt():
-    os.system("sudo bash -c 'rm -f tmp_output.txt'")
-    os.system("sudo bash -c 'rm -f tmp_output_adb.txt'")
+    if os_config == "LINUX":
+        os.system("sudo bash -c 'rm -f tmp_output.txt'")
+        os.system("sudo bash -c 'rm -f tmp_output_adb.txt'")
+    elif os_config == "WINDOWS":
+        os.system("del /F tmp_output.txt")
+        os.system("del /F tmp_output_adb.txt")
 
 def readOutput(type):
     if type == "AT":
@@ -405,7 +492,7 @@ def parse_devconinfo(raw_input):
     return "\n".join(parsed_output)
 
 def testAT(MTPinstruction=False, text=f"Testing USB access (ETA: {ETA[3]})..."):
-    print(text, end="")
+    '''print(text, end="")
     if MTPinstruction:
         MTPmenu()
     AT.send("AT")
@@ -425,7 +512,8 @@ def testAT(MTPinstruction=False, text=f"Testing USB access (ETA: {ETA[3]})..."):
             return True
         else:
             print("  FAIL")
-            return False
+            return False'''
+    return True
 
 # =============================================
 #  Unlocking methods for different devices
@@ -620,30 +708,51 @@ def LG_screen_unlock():
 def verinfo(gui=True):
     if gui:
         if enable_preload: # Skip all the nonsense and cut straight to the action, no "testAT" nonsense. We're prioritizing speed.
-            print("Getting version info...")
+            print("Getting version info...", end="")
             AT.send("AT+DEVCONINFO") # Only works when the modem is working with modemUnlock("SAMSUNG")
             output = readOutput("AT") # Output is retrieved from the command
+            if output == "" or output == None:
+                    AT.send("AT+DEVCONINFO") # Only works when the modem is working with modemUnlock("SAMSUNG")
+                    output = readOutput("AT")
+                    if output == "" or output == None:
+                        print("  FAIL")
             output = parse_devconinfo(output) # Make the output actually readable
             print(output) # Print the version info to the output box
             model = re.search(r'Model:\s*(\S+)', output) # Extract only the model no. from the output
             tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "VersionInfo", "Success"))
             tthread.start() # Sends basic, anonymized success_checks info with only the model number.
         else: 
+            print("Getting version info...", end="")
             if testAT(True, text=f"Getting version info..."): # We should verify AT is working before running the below code
                 if not enable_preload:
                     modemUnlock("SAMSUNG") # Run the command to allow more AT access for SAMSUNG devices unless preloading is enabled
                     rt() # Flush the command output file
                 AT.send("AT+DEVCONINFO") # Only works when the modem is working with modemUnlock("SAMSUNG")
                 output = readOutput("AT") # Output is retrieved from the command
+                if output == "" or output == None:
+                    AT.send("AT+DEVCONINFO") # Only works when the modem is working with modemUnlock("SAMSUNG")
+                    output = readOutput("AT")
+                    if output == "" or output == None:
+                        print("  FAIL")
                 output = parse_devconinfo(output) # Make the output actually readable
+                model = re.search(r'Model:\s*(\S+)', output) # Extract only the model no. from the output
+                tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "VersionInfo", "Success"))
+                tthread.start() # Sends basic, anonymized success_checks info with only the model number.
+                print("  OK")
                 print(output) # Print the version info to the output box
     else:
+        print("Getting version info...", end="")
         if testAT(True, text=f"Getting version info..."): # We should verify AT is working before running the below code
             if not enable_preload:
                 modemUnlock("SAMSUNG") # Run the command to allow more AT access for SAMSUNG devices unless preloading is enabled
                 rt() # Flush the command output file
             AT.send("AT+DEVCONINFO") # Only works when the modem is working with modemUnlock("SAMSUNG")
             output = readOutput("AT") # Output is retrieved from the command
+            if output == "" or output == None:
+                AT.send("AT+DEVCONINFO") # Only works when the modem is working with modemUnlock("SAMSUNG")
+                output = readOutput("AT")
+                if output == "" or output == None:
+                    print("  FAIL")
             output = parse_devconinfo(output) # Make the output actually readable (parse the output)
             model = re.search(r'Model:\s*(\S+)', output) # Extract only the model no. from the output
             tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "VersionInfo", "Success"))
@@ -1007,8 +1116,15 @@ def main_old():
     root.mainloop()
 
 def is_root():
-    return os.geteuid() == 0  # Only works on Unix/Linux/macOS
-
+    if os_config == "WINDOWS":  # Windows
+        try:
+            import ctypes
+            return ctypes.windll.shell32.IsUserAnAdmin() != 0
+        except Exception:
+            return False
+    elif os_config == "LINUX":  # POSIX (Linux, macOS, etc)
+        return os.geteuid() == 0
+    
 if not is_root():
     root = tk.Tk()
     root.withdraw()
