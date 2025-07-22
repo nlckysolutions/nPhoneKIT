@@ -20,7 +20,7 @@ import requests
 import uuid
 import hashlib
 
-version = "1.2.4"
+version = "1.2.5"
 
 # This program is free software: you can redistribute it and/or modify it 
 # under the terms of the GNU General Public License as published by the Free Software Foundation, 
