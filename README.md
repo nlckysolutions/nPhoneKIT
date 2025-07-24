@@ -31,17 +31,13 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands, real tran
 ### Linux
 
 - Go to the latest release, download Source Code as ZIP.
-- Make sure you have Python and Pip installed.
 - Extract the zip, open Terminal, and cd into the source code directory.
-- Run the following commands:
+- Run the following command:
   ```
-  python3 -m venv ./.venv
-  source ./.venv/bin/activate
-  pip3 install pyserial requests
+  sudo apt install python3 python3-tk python3-serial python3-requests adb
   ```
-- Then, (every time you want to run nPhoneKIT you will need to run these 2 commands in the source folder) (make sure to use SUDO):
+- Then, (every time you want to run nPhoneKIT you will need to run this command in the source folder) (make sure to use SUDO):
   ```
-  source ./.venv/bin/activate
   sudo python3 main.py
   ```
 
