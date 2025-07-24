@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="nPhoneKIT: Open-source FRP unlock, screen unlock & more for Samsung, LG & Android devices. Powered by Python, works on Linux & Windows.">
+  <meta name="keywords" content="nPhoneKIT, FRP unlock, Android toolkit, open source, Python, Samsung unlock, LG unlock">
+  <meta property="og:title" content="nPhoneKIT - Open Source Android Unlock Toolkit">
+  <meta property="og:description" content="Unlock your Android device with transparency. FRP, screen unlock & more, all in Python, all open source.">
+  <title>nPhoneKIT – Unlock Your Android, Transparently</title>
+
+  <!-- AOS Animate on Scroll -->
+  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+
+  <style>
+    :root { --brand: #6969f1; --white: #fff; --dark-blue: #000814; --light-blue: #001f3f; }
+    * { margin:0; padding:0; box-sizing:border-box; scroll-behavior: smooth; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      color: var(--white);
+      background: linear-gradient(to bottom, var(--light-blue), var(--dark-blue));
+      background-attachment: fixed;
+      transition: background-position 0.2s;
+    }
+    header { text-align:center; padding:6rem 1rem; position:relative; z-index:1; }
+    header h1, header p { opacity:0; animation: flyIn 1.2s ease-out forwards; }
+    header p { animation-delay: 0.6s; }
+    @keyframes flyIn { from { transform: translateY(-40px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+    nav { position:fixed; top:0; width:100%; padding:1rem; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display:flex; justify-content:center; z-index:2; }
+    nav ul { display:flex; list-style:none; }
+    nav a { margin:0 1rem; color: var(--white); text-decoration:none; font-weight:600; }
+    section { padding:6rem 1rem; max-width:1000px; margin:0 auto; }
+    .features { display:grid; grid-template-columns:1fr; gap:4rem; }
+    .feature-detail { background: rgba(255,255,255,0.1); border-radius:8px; padding:3rem; transition:background 0.3s; }
+    .feature-detail:nth-child(odd) { background: rgba(255,255,255,0.15); }
+    .feature-detail h3 { margin-bottom:1rem; }
+    .feature-detail p { line-height:1.5; }
+    .screenshot { text-align:center; margin:2rem 0; }
+    .screenshot img { width:80%; max-width:800px; border-radius:8px; box-shadow: 0 8px 30px rgba(0,0,0,0.5); transform: scale(0.9); opacity:0; animation: screenshotIn 1s ease-out 0.8s forwards; }
+    @keyframes screenshotIn { to { transform: scale(1); opacity:1; } }
+    .cta { text-align:center; padding:4rem 1rem; }
+    .cta a { background:var(--brand); color:#fff; padding:1rem 2rem; border-radius:4px; text-decoration:none; font-size:1.2rem; transition: transform 0.3s; }
+    .cta a:hover { transform:scale(1.05); }
+    footer { text-align:center; padding:2rem 1rem; font-size:0.9rem; color:rgba(255,255,255,0.7); }
+  </style>
+</head>
+<body onscroll="document.body.style.backgroundPositionY = (window.pageYOffset * 0.5) + 'px'">
+  <nav data-aos="fade-down">
+    <ul>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#howto">How To</a></li>
+      <li><a href="#download">Download</a></li>
+    </ul>
+  </nav>
+
+  <header>
+    <h1 data-aos="none">nPhoneKIT – Open Source FRP unlock, screen unlock & more, in Python.</h1>
+    <p data-aos="none">Unlock Your Phone, Transparently</p>
+    <div class="screenshot">
+      <img src="images/nphonekit-screenshot.png" alt="nPhoneKIT Desktop Window">
+    </div>
+  </header>
+
+  <section id="features" data-aos="fade-up">
+    <h2>Features</h2>
+    <div class="features">
+      <div class="feature-detail" data-aos="fade-right">
+        <h3>FRP Unlock</h3>
+        <p>Bypass Factory Reset Protection on Samsung (2023–2025 patches) and many other Android devices. nPhoneKIT uses low-level AT commands to disable Samsung’s proprietary locks instantly, then re-locks for safe completion.</p>
+      </div>
+      <div class="feature-detail" data-aos="fade-left">
+        <h3>Screen Unlock</h3>
+        <p>Unlock the screen on select LG models without losing any data. Compatible with G4, V10, G3, Stylo 2, Tribute HD, Phoenix 2, Aristo, Leon and more. One command does it all.</p>
+      </div>
+      <div class="feature-detail" data-aos="fade-right">
+        <h3>Version Info</h3>
+        <p>Fetch detailed device metadata—model, baseband, software version, serial, IMEI, region codes—straight from the modem via AT+DEVCONINFO and parsed into human-readable form.</p>
+      </div>
+      <div class="feature-detail" data-aos="fade-left">
+        <h3>WIFITEST Access</h3>
+        <p>Open Samsung’s hidden WIFITEST app even before setup completion. Run diagnostics on wireless hardware and verify signal parameters right in the setup wizard.</p>
+      </div>
+      <div class="feature-detail" data-aos="fade-right">
+        <h3>Download Mode</h3>
+        <p>Boot any Samsung phone into Download Mode with a single click—no key combinations required. Perfect for flashing custom firmware or recovery images via Odin.</p>
+      </div>
+      <div class="feature-detail" data-aos="fade-left">
+        <h3>Open Source</h3>
+        <p>Fully transparent. Inspect every line under GPLv3. No hidden binaries or obfuscation—just Python and pySerial, so you know exactly what’s happening on your device.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="howto" data-aos="fade-up">
+    <h2>How To Use</h2>
+    <ol>
+      <li>Download the latest release ZIP from GitHub.</li>
+      <li>Install dependencies: <code>pip install pyserial requests tkinter</code>.</li>
+      <li>Launch as admin/root: <code>python main.py</code> (or <code>sudo python3 main.py</code> on Linux).</li>
+      <li>Choose your device tab (Samsung, LG, Android) and click the feature you need.</li>
+      <li>Follow on-screen prompts and watch the output console for real‑time feedback.</li>
+    </ol>
+  </section>
+
+  <section id="download" class="cta" data-aos="fade-up">
+    <h2>Ready to Go?</h2>
+    <a href="https://github.com/nlckysolutions/nPhoneKIT/releases/latest" target="_blank">Download Now</a>
+  </section>
+
+  <footer data-aos="fade-in">
+    <p>&copy; 2025 nPhoneKIT. Crafted with 🔧 and ❤.</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+  <script> AOS.init({ duration: 800, once: true }); </script>
+</body>
+</html>
