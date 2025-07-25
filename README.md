@@ -14,8 +14,11 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands, real tran
 
 ---
 
-### NOTICE:
-**We are currently aware of a bug that stops all actions from working when plugging in a phone. This will be fixed with the release of v3.0.0.**
+### Bugs:
+- We are currently aware of a bug that stops all actions from working when plugging in a phone. This will be fixed with the release of v3.0.0.
+
+> [!IMPORTANT]
+> If you find a bug, **make sure to open a GitHub issue.** This will help me fix the error and make nPhoneKIT better for everyone!
 
 ---
 
