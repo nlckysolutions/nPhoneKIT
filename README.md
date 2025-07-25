@@ -14,6 +14,11 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands, real tran
 
 ---
 
+### NOTICE:
+**We are currently aware of a bug that stops all actions from working when plugging in a phone. This will be fixed with the release of v3.0.0.**
+
+---
+
 ## Installation
 
 ### Windows
