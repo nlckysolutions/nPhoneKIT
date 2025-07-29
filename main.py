@@ -1,26 +1,36 @@
-import time
-import os
-import tkinter as tk
-from tkinter import messagebox
-from tkinter import font
-from pathlib import Path
-from serial.tools import list_ports
-import sys
-import io
-import re
-import subprocess
-import serial
-import platform
-import glob
-import asyncio
-import threading
-import urllib.request
-import json
-import requests
-import uuid
-import hashlib
+# IMPORTS AND WHY EACH ONE IS NEEDED
 
-version = "1.2.5"
+import time # Waiting before executing something
+import os # Executing most commands
+import tkinter as tk # Main GUI
+from tkinter import ttk # Styling for GUI (deprecated)
+from tkinter import messagebox # Opening message/warning boxes
+from tkinter import font # Customizing GUI font
+from pathlib import Path # Importing deps (deprecated)
+from serial.tools import list_ports # Listing connected devices
+import sys # Getting basic system info
+import re # Finding strings within text
+import subprocess # Opening new processes
+import serial # Communicating with device
+import platform # Checking the current OS
+import glob # Finding/listing ports
+import asyncio # Running different actions asynchronously
+import threading # Using multiple threads
+import urllib.request # Requesting different servers
+import json # Parsing and creating JSON
+import requests # Requesting different servers
+import uuid # Parsing and creating UUIDs
+import hashlib # Hashing strings
+import webbrowser # Opening browser to any page
+
+## nPhoneKIT permissions (these are the things that nPhoneKIT is capable of doing):
+
+# Communicate with USB devices using ADB, MTP, and AT commands.
+# Communicate with external servers to verify whether an action worked or not.
+# Open a new tab in the default browser
+# Checking and getting basic information about the current system
+
+version = "1.3.0"
 
 # This program is free software: you can redistribute it and/or modify it 
 # under the terms of the GNU General Public License as published by the Free Software Foundation, 
@@ -50,36 +60,116 @@ version = "1.2.5"
 # ===================================
 
 
-# CONFIG
+# CONFIG HAS BEEN MOVED TO SETTINGS.JSON, OR THE SETTINGS MENU IN THE nPhoneKIT GUI
 
-# Basic User-Friendly Config
-
-dark_theme = True # If True, changes the GUI to a "dark mode, which is fully black to reduce power on OLED screens
-hacker_font = True # If True, changes the output box font to green. Works best with dark_theme
-slower_animations = False # If True, slows down all animations to make the GUI more... dramatic?
-update_check = True # If True, nPhoneKIT will automatically check for updates and prompt the user if there are any.
-
-# Speed Related Controls
-
-impatient = False # If True, shows the ETA for every single command/action
-enable_preload = True # If True, silently preloads (modem unlocks) all Samsung devices that are connected. They must be connected and have ALLOW ACCESS TO PHONE DATA allowed BEFORE starting the script even. This can sometimes speed up commands by 10 seconds+
-
-# Debug / Dev Stuff (not recommended to change)
-
-debug_info = False # Prints debug info directly from the SerialManager class. Not needed, and breaks the minimalistic flow
-i_know_what_im_doing = False # If True, dialog boxes prompting user to enable MTP and ADB are not shown. If you don't know what that means, you shouldn't enable this feature.
-basic_success_checks = True # If True, basic success_checks will be sent, only an anonymized ping to our servers, in order to see which features are used the most often. PLEASE leave this enabled. If you'd like, you can check the source for exactly what's being sent.
 
 # ============================================================================= #
 # You shouldn't edit anything below this line unless you know what you're doing #
 # ============================================================================= #
 
-os_config = "WINDOWS" if platform.system() == "Windows" else "LINUX"
+import json
+from pathlib import Path
+
+SETTINGS_PATH = Path("settings.json")
+
+firstunlock = False
+
+default_settings = {
+    "dark_theme": False,
+    "hacker_font": False,
+    "slower_animations": False,
+    "update_check": True,
+    "impatient": False,
+    "enable_preload": True,
+    "debug_info": False,
+    "i_know_what_im_doing": False,
+    "basic_success_checks": True
+}
+
+# Load or initialize
+if SETTINGS_PATH.exists():
+    with open(SETTINGS_PATH, "r") as f:
+        settings = json.load(f)
+else:
+    settings = default_settings.copy()
+    with open(SETTINGS_PATH, "w") as f:
+        json.dump(settings, f, indent=2)
+
+# Inject into variables (your original style)
+dark_theme = settings["dark_theme"]
+hacker_font = settings["hacker_font"]
+slower_animations = settings["slower_animations"]
+update_check = settings["update_check"]
+impatient = settings["impatient"]
+enable_preload = settings["enable_preload"]
+debug_info = settings["debug_info"]
+i_know_what_im_doing = settings["i_know_what_im_doing"]
+basic_success_checks = settings["basic_success_checks"]
+
+# Load settings
+def load_settings():
+    with open(SETTINGS_PATH, "r") as f:
+        return json.load(f)
+
+# Save settings
+def save_settings(new_settings):
+    with open(SETTINGS_PATH, "w") as f:
+        json.dump(new_settings, f, indent=2)
+
+# Settings GUI
+def open_settings_window():
+    settings = load_settings()
+    win = tk.Toplevel()
+    win.geometry('800x300')
+    win.title("nPhoneKIT Settings (you must restart nPhoneKIT to fully apply)")
+
+    vars = {}
+    row = 0
+
+    for key in ["dark_theme", "hacker_font", "slower_animations", "update_check",
+                "impatient", "enable_preload"]:
+        tk.Label(win, text=key).grid(row=row, column=0, sticky="w")
+        var = tk.BooleanVar(value=settings[key])
+        chk = tk.Checkbutton(win, variable=var)
+        chk.grid(row=row, column=1)
+        vars[key] = var
+        row += 1
+
+    def open_dev_settings():
+        dev_win = tk.Toplevel()
+        dev_win.title("Developer Settings")
+        dev_vars = {}
+
+        for i, key in enumerate(["debug_info", "i_know_what_im_doing", "basic_success_checks"]):
+            tk.Label(dev_win, text=key).grid(row=i, column=0, sticky="w")
+            var = tk.BooleanVar(value=settings[key])
+            chk = tk.Checkbutton(dev_win, variable=var)
+            chk.grid(row=i, column=1)
+            dev_vars[key] = var
+
+        def apply_dev():
+            for k, v in dev_vars.items():
+                settings[k] = v.get()
+            save_settings(settings)
+            dev_win.destroy()
+
+        tk.Button(dev_win, text="Apply", command=apply_dev).grid(row=i+1, columnspan=2)
+
+    def apply_main():
+        for k, v in vars.items():
+            settings[k] = v.get()
+        save_settings(settings)
+        win.destroy()
+
+    tk.Button(win, text="Apply", command=apply_main).grid(row=row, column=0)
+    tk.Button(win, text="Developer Settings", command=open_dev_settings, font=("Segoe UI", 5), width=20, height=1).grid(row=row+1, column=0)
+
+os_config = "WINDOWS" if platform.system() == "Windows" else "LINUX" # Auto-get OS and save to var
 
 if os_config == "WINDOWS":
-    enable_preload = False
+    enable_preload = False # Preload doesn't work on Windows; disable it
 
-preload_done = threading.Event()
+preload_done = threading.Event() # Event variable to check whether the Samsung modem preload has completed
 
 ETA = [
     "not available", # Enabling ADB access
@@ -92,28 +182,33 @@ ETA = [
     "00:00:01" # Crashing a non-SAMSUNG phone to reboot (Seems to possibly work without modem unlock, on newer Samsungs, such as S24 series. Should look into this*)
 ]
 
-class SerialManager:
-    def __init__(self, baud=115200):
-        self.port = self.detect_port()
-        self.baud = baud
+class SerialManager: # AT command sender via class
+    def __init__(self, baud=115200): # Start the serial port early
+        self.port = self.detect_port() # Detect which port it is
+        self.baud = baud # Choose a baud rate
         self.ser = None
 
-        if not self.port:
+        if not self.port: # No device connected
             if debug_info:
-                print("NO DEVICE CONNECTED, CANNOT USE.")
+                print("NO DEVICE CONNECTED, CANNOT USE.") 
         elif self.port:
             try:
-                self.ser = serial.Serial(self.port, self.baud, timeout=2)
+                self.ser = serial.Serial(self.port, self.baud, timeout=2) # Save the port for use with the rest of the class
                 time.sleep(0.5)
                 if debug_info:
                     print(f"[SerialManager] Connected to {self.port}")
             except serial.SerialException as e:
                 raise RuntimeError(f"❌ Error opening serial port {self.port}: {e}")
 
+    def reset(self):
+        self.__init__()
+
     def detect_port(self):
         system = platform.system()
 
-        if system == "Windows":
+        # Detect port for different systems/OSes
+
+        if system == "Windows": 
             for i in range(1, 256):
                 try:
                     s = serial.Serial(f"COM{i}")
@@ -156,7 +251,7 @@ class SerialManager:
         if self.ser and self.ser.is_open:
             self.ser.close()
 
-class SerialManagerWindows:
+class SerialManagerWindows: # Version of SerialManager class specifically for Windows
     def __init__(self, port: str = None, baud: int = 115200, debug: bool = False):
         """
         Windows-only serial helper.
@@ -183,6 +278,9 @@ class SerialManagerWindows:
                 print(f"[SerialManagerWindows] Connected to {self.port} @ {self.baud} baud")
         except serial.SerialException as e:
             raise RuntimeError(f"Error opening {self.port}: {e}")
+        
+    def reset(self):
+        self.__init__()
 
     def detect_port(self) -> str:
         """Return the first COM* port or None."""
@@ -225,42 +323,42 @@ class SerialManagerWindows:
             if self.debug:
                 print("[SerialManagerWindows] Connection closed.")
 
-if os_config == "WINDOWS":
+if os_config == "WINDOWS": # Choose which serial manager to use based on OS
     serman = SerialManagerWindows()
 elif os_config == "LINUX":
     serman = SerialManager()
 
 class AT:
-    #def __init__(self):
-    #    #self.usb_device = "/dev/ttyACM0" # cannot be changed
-    #    # Not needed anymore, usbsend.py will auto select based on OS
-
-    def send(command):
-         # Making usbsend.py into a built-in class improves command speed by 10-20x, and improves multi-OS compatibility
+    def send(command, not_first=False):
+        # Making usbsend.py into a built-in class (SerialManager for Linux, or SerialManagerWindows for Windows) improves command speed by 10-20x, and improves multi-OS compatibility
         rt()
-        #if os_config == "LINUX":
-        #    os.system(f"sudo bash -c 'sudo python3 -u ./deps/usbsend.py \"{command}\" > tmp_output.txt 2>&1'")
-        #elif os_config == "WINDOWS":
-        #    with open('tmp_output.txt', 'w') as f:
-        #        subprocess.run(['python', '-u', 'deps/usbsend.py', command], stdout=f, stderr=subprocess.STDOUT)
-        #elif os_config == "MAC":
-        #    print("MACOS devices are not supported!")
-        #time.sleep(0.5)
         if enable_preload:
             preload_done.wait()
+        if not_first:
+            serman.reset()
         with open("tmp_output.txt", "w", encoding="utf-8") as f:
-            result = serman.send(command)
-            if result is None:
+            try:
                 result = serman.send(command)
-                if result is None: # (If result is STILL None)
-                    result = "" # Then give up after the second try.
-            f.write(result)
+                if result is None:
+                    result = serman.send(command)
+                    if result is None: # (If result is STILL None)
+                        result = "" # Then give up after the second try.
+                f.write(result)
+            except Exception: # If the connection isn't there, reset to attempt to gain the connection back
+                serman.reset()
+                time.sleep(1) 
+                try:
+                    result = serman.send(command)
+                    if result is None:
+                        result = serman.send(command)
+                        if result is None: # (If result is STILL None)
+                            result = "" # Then give up after the second try.
+                    f.write(result)
+                except Exception:
+                    # Device must not be plugged in?
+                    print("Error: Please check your connnection to your device: \n1. Make sure the device is plugged in.\n2. Make sure the device is in MTP mode (allow access to phone data)\n3. Try enabling DEVELOPER SETTINGS on your device and try again.")
     
-    def usbswitch(arg, action):
-        # Later, add logic to allow switching of device interface to AT, for more compatibility.
-        return True
-    
-class ADB:
+class ADB: # ADB class for sending ADB commands if needed
     def send(command):
         rt()
         if os_config == "LINUX":
@@ -275,36 +373,45 @@ class ADB:
         return True
     
 async def preload_samsung_modem(serman2):
+    global enable_preload
+    global preload_error
+
     if not enable_preload:
-        preload_done.set()
+        preload_done.set() # If preload isn't enabled, pretend as if preload has already succeeded
         return
 
     try:
         system = platform.system()
         output = ""
 
-        if system == "Linux":
+        if system == "Linux": # Find connected devices on different OSes
             output = subprocess.check_output(['lsusb']).decode().lower()
         elif system == "Darwin":
             output = subprocess.check_output(['system_profiler', 'SPUSBDataType']).decode().lower()
         elif system == "Windows":
             output = subprocess.check_output(['powershell', 'Get-PnpDevice']).decode().lower()
 
-        if "samsung" in output:
+        if "samsung" in output.lower():
             if debug_info:
                 print("[🌀] Samsung USB detected. Preloading...")
+            # If a Samsung device is plugged in, preload its modem using the below commands
             set_brand("Samsung") # For convenience, auto-select the SAMSUNG menu in the nPhoneKIT GUI
             serman2.send("AT+SWATD=0")  # Send without await since it's serial and blocking
             serman2.send("AT+ACTIVATE=0,0,0") # This and the above command do the same thing as modemUnlock("SAMSUNG"), except without infinitely waiting for preload_done, since modemUnlock uses the AT class which will follow preload_done
             if debug_info:
                 print("[✅] Preload complete.")
+            preload_error = False
         else:
             if debug_info:
                 print("[⚠️] No Samsung USB found. Skipping preload.")
+            enable_preload = False
+            preload_error = True
 
     except Exception as e:
         if debug_info:
-            print("[❌] Preload error:", e)
+            print("[❌] Preload error:", e) # Usually error, but works most of the time reguardless.
+        enable_preload = False
+        preload_error = True
 
     preload_done.set()
 
@@ -313,18 +420,18 @@ async def preload_samsung_modem(serman2):
 
 def check_for_update():
     try:
-        # Replace with your actual repo
         repo = "nlckysolutions/nPhoneKIT"
         url = f"https://api.github.com/repos/{repo}/releases/latest"
 
         with urllib.request.urlopen(url) as response:
             data = json.loads(response.read().decode())
 
-            #latest_version_raw = "ⅴ1.2.4"
-            #latest_version = "1.2.4"
-
             latest_version_raw = data["tag_name"]
             latest_version = data["tag_name"].lstrip("v")
+
+            # If the tag is different then the current version, assume it's newer, and prompt update.
+
+            # Based on the unicode "v", depending on whether it's normal or U+2174, prompt for normal update and FORCE for critical update
 
             if latest_version != version:
                 if "ⅴ" in latest_version_raw:
@@ -332,7 +439,7 @@ def check_for_update():
                         "Update REQUIRED",
                         f"A new version of nPhoneKIT is available, and is REQUIRED!\n\nCurrent: v{version}\nLatest: v{latest_version}\n\nVisit GitHub to update."
                     )
-                    sys.exit(0)
+                    sys.exit(0) # Exit and do not let user use nPhoneKIT if the update is REQUIRED or critical
                 else:   
                     messagebox.showinfo(
                         "Update Available",
@@ -351,38 +458,38 @@ def get_public_hardware_uuid():
     # Optionally convert to UUID format (UUID5 with a fixed namespace)
     return uuid.UUID(hashlib.md5(hashed_mac.encode()).hexdigest())
 
-FIREBASE_URL = "https://nphonekit-default-rtdb.firebaseio.com/"
+FIREBASE_URL = "https://nphonekit-default-rtdb.firebaseio.com/" # URL for success checks
 
 def success_checks(uuid, model, action, status, first=True):
-    if first:
         if basic_success_checks:
-            data = {
-                "timestamp": time.time(),
-                "uuid": str(uuid),
-                "model": model.group(1) if model else "Unknown",
-                "action": action,
-                "status": status,
-                "phoneKITversion": version
-            }
+            if first:
+                data = {
+                    "timestamp": time.time(), # Basic success check info
+                    "uuid": str(uuid), # Private hashed identifier in order to get anonymous active user estimation
+                    "model": model.group(1) if model else "Unknown", # Check what model that the below action works on, anonymously
+                    "action": action, # The action, for example "FRP_Unlock_2024"
+                    "status": status, # Whether the action succeeded or failed
+                    "phoneKITversion": version # Version of nPhoneKIT to get anonymous version usage estimation
+                }
 
-            try:
-                response = requests.post(f"{FIREBASE_URL}/success_checks.json", json=data)
-            except Exception as e:
-                silentError = 1
-    else:
-        data = {
-            "timestamp": time.time(),
-            "uuid": str(uuid),
-            "model": "NOT_First",
-            "action": "NOT_First",
-            "status": "Success",
-            "phoneKITversion": version
-        }
+                try:
+                    response = requests.post(f"{FIREBASE_URL}/success_checks.json", json=data)
+                except Exception as e:
+                    silentError = 1
+            else:
+                data = {
+                    "timestamp": time.time(), # Same stuff as above, in order to get an anonymous active user estimation
+                    "uuid": str(uuid),
+                    "model": "NOT_First",
+                    "action": "NOT_First",
+                    "status": "Success",
+                    "phoneKITversion": version
+                }
 
-        try:
-            response = requests.post(f"{FIREBASE_URL}/success_checks.json", json=data)
-        except Exception as e:
-            silentError = 1
+                try:
+                    response = requests.post(f"{FIREBASE_URL}/success_checks.json", json=data)
+                except Exception as e:
+                    silentError = 1
         
 
 # =============================================
@@ -390,31 +497,26 @@ def success_checks(uuid, model, action, status, first=True):
 # =============================================
 
 def MTPmenu():
-    #show_messagebox_at(500, 200, "nPhoneKIT", "Steps to continue (PLEASE READ CAREFULLY, THEN CLOSE THE MESSAGE BOX.):\n\n1. Open the dialer on your phone. After opening the dialer, \nplease continue by typing in the following (without quotes): '*#0*#', and press CALL.\n A service/test menu should be opened. If not, you can also try '*#*#88#*#*'. \nIf neither of these work, this method will NOT work on your device.\n\n2. Once the service/test menu is open, do not touch anything on the screen. \nPlug one end of a USB cable into your computer, and the other end into the device.\n\n3. When the cable is plugged in, you may now close the message box to continue.")
     show_messagebox_at(500, 200, "nPhoneKIT", "Steps to continue (PLEASE READ CAREFULLY, THEN CLOSE THE MESSAGE BOX.):\n\n1. Plug one end of a USB cable into your computer, and the other end into the device.\n\n2. When the cable is plugged in, press ALLOW ACCESS TO PHONE DATA, and you may now close the message box to continue.")
+    # Show user instructions to enable MTP mode
 
 def adbMenu():
     show_messagebox_at(500, 200, "nPhoneKIT", "Steps to continue (PLEASE READ CAREFULLY, THEN CLOSE THE MESSAGE BOX.):\n\n1. Enable developer options by going into settings,\nabout phone, software information, and tap build number \n 7 times. \n\n2. Go back into settings, scroll to\n the bottom, open developer options, scroll down a bit, \n find USB Debugging, and turn it on. \n\n 3. Plug one end of a USB cable into your computer, and the other end into the device.\n\n4. When the cable is plugged in, you may now close the message box to continue. If you ever see a dialog after this, please always click ALLOW.")
+    # Show user instructions to enable ADB mode
 
 # ================================================
 #  Simple functions to eliminate repetitive tasks
 # ================================================
 
-def remove_first_x_lines(s, x):
-    return '\n'.join(s.splitlines()[x:])
-
-def remove_last_x_lines(s, x):
-    return '\n'.join(s.splitlines()[:-x]) if x else s
-
-def rt():
-    if os_config == "LINUX":
-        os.system("sudo bash -c 'rm -f tmp_output.txt'")
+def rt(): # Flush the output buffer. May be deprecated and replaced soon with a new output collection method
+    if os_config == "LINUX": # Flush output buffer on different OSes
+        os.system("sudo bash -c 'rm -f tmp_output.txt'") 
         os.system("sudo bash -c 'rm -f tmp_output_adb.txt'")
     elif os_config == "WINDOWS":
         os.system("del /F tmp_output.txt")
         os.system("del /F tmp_output_adb.txt")
 
-def readOutput(type):
+def readOutput(type): # Read the output buffer based on command type AT or ADB
     if type == "AT":
         with open("tmp_output.txt", "r") as f:
             output = f.read()
@@ -423,9 +525,9 @@ def readOutput(type):
             output = f.read()
     return output
 
-def show_messagebox_at(x, y, title, content):
+def show_messagebox_at(x, y, title, content): # Show a customizable message box
     # Create a new top-level window
-    box = tk.Tk()
+    box = tk.Tk() 
     box.title(title)
     box.geometry(f"+{x}+{y}")
     box.resizable(False, False)
@@ -441,17 +543,25 @@ def show_messagebox_at(x, y, title, content):
     box.grab_set()
     box.wait_window()  # <--- THIS is what blocks until closed
 
-def modemUnlock(manufacturer, softUnlock=False):
+def modemUnlock(manufacturer, softUnlock=False): # Unlock the modem per-action if preload wasn't enabled
+    global firstunlock
+
     if not enable_preload:
-        if manufacturer == "SAMSUNG":
-            if softUnlock:
-                AT.send("AT+SWATD=0") # Disables some sort of a proprietary "AT commands lock" from SAMSUNG
-            else:
-                AT.send("AT+SWATD=0") # Disables some sort of a proprietary "AT commands lock" from SAMSUNG
-                AT.send("AT+ACTIVATE=0,0,0") # An activation sequence that unlocks the modem when paired with the above command.
+        if preload_error and firstunlock == False:
+            if manufacturer == "SAMSUNG": # Select the manufacturer to preload
+                AT.send("AT+SWATD=0", True) # Disables some sort of a proprietary "AT commands lock" from SAMSUNG
+                AT.send("AT+ACTIVATE=0,0,0", True) # An activation sequence that unlocks the modem when paired with the above command.
+                firstunlock = True
+        else:
+            if manufacturer == "SAMSUNG": # Select the manufacturer to preload
+                if softUnlock:
+                    AT.send("AT+SWATD=0") # Disables some sort of a proprietary "AT commands lock" from SAMSUNG
+                else:
+                    AT.send("AT+SWATD=0") # Disables some sort of a proprietary "AT commands lock" from SAMSUNG
+                    AT.send("AT+ACTIVATE=0,0,0") # An activation sequence that unlocks the modem when paired with the above command.
 
 # Function that can parse DEVCONINFO in order to make it more readable
-def parse_devconinfo(raw_input):
+def parse_devconinfo(raw_input): 
     lines = raw_input.strip().splitlines()
     parsed_output = []
 
@@ -491,35 +601,14 @@ def parse_devconinfo(raw_input):
                     parsed_output.append(f"{friendly_key}: {value if value else 'N/A'}")
     return "\n".join(parsed_output)
 
-def testAT(MTPinstruction=False, text=f"Testing USB access (ETA: {ETA[3]})..."):
-    '''print(text, end="")
-    if MTPinstruction:
-        MTPmenu()
-    AT.send("AT")
-    output = readOutput("AT")
-    if "ok" in output.lower():
-        print("  OK")
-        rt()
-        return True
-    else:
-        time.sleep(0.5)
-        AT.send("AT")
-        with open("tmp_output.txt", "r") as f:
-            output = f.read()
-        if "ok" in output.lower():
-            print("  OK")
-            rt()
-            return True
-        else:
-            print("  FAIL")
-            return False'''
+def testAT(MTPinstruction=False, text=f"Testing USB access (ETA: {ETA[3]})..."): # Deprecated
     return True
 
 # =============================================
 #  Unlocking methods for different devices
 # =============================================
 
-def frp_unlock_pre_aug2022():
+def frp_unlock_pre_aug2022(): # FRP unlock for pre-aug2022 security patch update
     info = verinfo(False)
     model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output
 
@@ -532,7 +621,7 @@ def frp_unlock_pre_aug2022():
         "AT+DEBUGLVC=0,5"
     ]
 
-    ADBcommands = [
+    ADBcommands = [ # Run list of commands in order to complete the unlock with newly-enabled ADB
         "shell settings put global setup_wizard_has_run 1",
         "shell settings put secure user_setup_complete 1",
         "shell content insert --uri content://settings/secure --bind name:s:DEVICE_PROVISIONED --bind value:i:1",
@@ -568,14 +657,14 @@ def frp_unlock_pre_aug2022():
         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Pre_2022", "Success"))
         tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
 
-def frp_unlock_aug2022_to_dec2022():
+def frp_unlock_aug2022_to_dec2022(): # FRP unlock for aug2022-dec2022 security patch update
     info = verinfo(False)
     model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output
 
     commands = ['AT+SWATD=0', 'AT+ACTIVATE=0,0,0', 'AT+DEVCONINFO','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0', 'AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5']
     # These commands are supposed to overwhelm the phone and trick it into enabling ADB. The rest after this is the same as the other unlock method.
 
-    ADBcommands = [
+    ADBcommands = [ # Run list of commands in order to complete the unlock with newly-enabled ADB
         "shell settings put global setup_wizard_has_run 1",
         "shell settings put secure user_setup_complete 1",
         "shell content insert --uri content://settings/secure --bind name:s:DEVICE_PROVISIONED --bind value:i:1",
@@ -611,7 +700,7 @@ def frp_unlock_aug2022_to_dec2022():
         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Aug_To_Dec_2022", "Success"))
         tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
 
-def frp_unlock_2024():
+def frp_unlock_2024(): # FRP unlock for early 2024-ish security patch update
     info = verinfo(False)
     model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output
 
@@ -629,8 +718,8 @@ def frp_unlock_2024():
         "AT+PRECONFIG=1,0", # Quickly change it back
     ]
 
-    ADBcommands = [
-        "shell settings put global setup_wizard_has_run 1",
+    ADBcommands = [ # Run list of commands in order to complete the unlock with newly-enabled ADB
+        "shell settings put global setup_wizard_has_run 1", 
         "shell settings put secure user_setup_complete 1",
         "shell content insert --uri content://settings/secure --bind name:s:DEVICE_PROVISIONED --bind value:i:1",
         "shell content insert --uri content://settings/secure --bind name:s:user_setup_complete --bind value:i:1",
@@ -662,10 +751,14 @@ def frp_unlock_2024():
             ADB.send(command)
         print("  OK")
         print("\nUNLOCK should be successful! To complete the unlock, please go into settings and perform a factory reset normally!")
+        if model == "" or model == None:
+            # Retry get model
+            info = verinfo(False)
+            model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output
         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_2024", "Success"))
         tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
 
-def general_frp_unlock():
+def general_frp_unlock(): # Not completed yet
     info = verinfo(False)
     if "Model: SM" in info:
         frp_unlock_pre_aug2022()
@@ -673,9 +766,9 @@ def general_frp_unlock():
         # to do, add FULLY universal FRP unlock
         print("Your device is not supported.")
 
-def LG_screen_unlock():
+def LG_screen_unlock(): # Screen unlock on supported LG devices *untested*
     info = verinfo(False)
-    model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output
+    model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output (may not work)
 
     show_messagebox_at(500, 200, "nPhoneKIT", "🔓 LG Screen Unlock\n\nThe LG Screen Unlock will simply unlock the phone's \nscreen, without erasing data whatsoever.\n\nIt is only supported on these LG phones. \nPlease UNPLUG all devices and CLOSE this window if you do not have one of the below devices:\n\nLG G4 H815\nLG G4 H811\nLG G4 VS986\nLG V10 H901\nLG V10 H960\nLG G3 D855\nLG G3 D851\nLG Stylo 2 LS775\nLG Tribute HD LS676\nLG Phoenix 2 K371\nLG Aristo M210\nLG Leon H345\n\nIf one of these devices is yours, you may click OK and follow the instructions.")
     print(f"Running Screen Unlock Command...", end="")
@@ -684,8 +777,8 @@ def LG_screen_unlock():
     
     time.sleep(1)
     if AT.usbswitch("-l", "LG Screen Unlock"):
-        rt()
-        AT.send('AT%KEYLOCK=0') # This AT command SHOULD unlock the screen instantly.
+        rt() # Flush the output buffer
+        AT.send('AT%KEYLOCK=0') # This AT command SHOULD unlock the screen instantly. (yes, one command.)
         with open("tmp_output.txt", "r") as f:
             output = f.read()
         # debug only: print("\n\nOutput: \n\n" + output + "\n\n")
@@ -705,25 +798,31 @@ def LG_screen_unlock():
 #  Simple functions that do stuff to the device
 # ==============================================
 
-def verinfo(gui=True):
+def verinfo(gui=True): # Get version info on the device. Pretty simple. (not simple, this has taken me hours.)
     if gui:
         if enable_preload: # Skip all the nonsense and cut straight to the action, no "testAT" nonsense. We're prioritizing speed.
             print("Getting version info...", end="")
             AT.send("AT+DEVCONINFO") # Only works when the modem is working with modemUnlock("SAMSUNG")
             output = readOutput("AT") # Output is retrieved from the command
             if output == "" or output == None:
-                    AT.send("AT+DEVCONINFO") # Only works when the modem is working with modemUnlock("SAMSUNG")
-                    output = readOutput("AT")
-                    if output == "" or output == None:
-                        print("  FAIL")
+                AT.send("AT+DEVCONINFO") # Only works when the modem is working with modemUnlock("SAMSUNG")
+                output = readOutput("AT")
+                if output == "" or output == None:
+                    print("  FAIL")
+                    print("Error: Please check your connnection to your device: \n1. Make sure the device is plugged in.\n2. Make sure the device is in MTP mode (allow access to phone data)\n3. Try enabling DEVELOPER SETTINGS on your device and try again.")
+                    model = re.search(r'Model:\s*(\S+)', output) # Extract only the model no. from the output
+                    tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "VersionInfo", "Fail"))
+                    tthread.start() # Sends basic, anonymized success_checks info with only the model number.
+            else:
+                print("  OK")
+                model = re.search(r'Model:\s*(\S+)', output) # Extract only the model no. from the output
+                tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "VersionInfo", "Success"))
+                tthread.start() # Sends basic, anonymized success_checks info with only the model number.
             output = parse_devconinfo(output) # Make the output actually readable
             print(output) # Print the version info to the output box
-            model = re.search(r'Model:\s*(\S+)', output) # Extract only the model no. from the output
-            tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "VersionInfo", "Success"))
-            tthread.start() # Sends basic, anonymized success_checks info with only the model number.
         else: 
             print("Getting version info...", end="")
-            if testAT(True, text=f"Getting version info..."): # We should verify AT is working before running the below code
+            if testAT(True, text=f"Getting version info..."): # We should verify AT is working before running the below code (testAT is deprecated)
                 if not enable_preload:
                     modemUnlock("SAMSUNG") # Run the command to allow more AT access for SAMSUNG devices unless preloading is enabled
                     rt() # Flush the command output file
@@ -733,16 +832,37 @@ def verinfo(gui=True):
                     AT.send("AT+DEVCONINFO") # Only works when the modem is working with modemUnlock("SAMSUNG")
                     output = readOutput("AT")
                     if output == "" or output == None:
-                        print("  FAIL")
-                output = parse_devconinfo(output) # Make the output actually readable
-                model = re.search(r'Model:\s*(\S+)', output) # Extract only the model no. from the output
-                tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "VersionInfo", "Success"))
-                tthread.start() # Sends basic, anonymized success_checks info with only the model number.
-                print("  OK")
-                print(output) # Print the version info to the output box
+                        AT.send("AT+DEVCONINFO", True) # Only works when the modem is working with modemUnlock("SAMSUNG")
+                        output = readOutput("AT")
+                        try:
+                            if output == "" or output == None:
+                                print("  FAIL")
+                                print("Error: Please check your connnection to your device: \n1. Make sure the device is plugged in.\n2. Make sure the device is in MTP mode (allow access to phone data)\n3. Try enabling DEVELOPER SETTINGS on your device and try again.")
+                            else:
+                                output = parse_devconinfo(output) # Make the output actually readable
+                                model = re.search(r'Model:\s*(\S+)', output) # Extract only the model no. from the output
+                                tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "VersionInfo", "Success"))
+                                tthread.start() # Sends basic, anonymized success_checks info with only the model number.
+                                print("  OK")
+                        except Exception:
+                            print("Error: Please check your connnection to your device: \n1. Make sure the device is plugged in.\n2. Make sure the device is in MTP mode (allow access to phone data)\n3. Try enabling DEVELOPER SETTINGS on your device and try again.")
+                    else:
+                        output = parse_devconinfo(output) # Make the output actually readable
+                        model = re.search(r'Model:\s*(\S+)', output) # Extract only the model no. from the output
+                        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "VersionInfo", "Success"))
+                        tthread.start() # Sends basic, anonymized success_checks info with only the model number.
+                        print("  OK")
+                        print(output) # Print the version info to the output box
+                else:
+                    output = parse_devconinfo(output) # Make the output actually readable
+                    model = re.search(r'Model:\s*(\S+)', output) # Extract only the model no. from the output
+                    tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "VersionInfo", "Success"))
+                    tthread.start() # Sends basic, anonymized success_checks info with only the model number.
+                    print("  OK")
+                    print(output) # Print the version info to the output box
     else:
-        print("Getting version info...", end="")
-        if testAT(True, text=f"Getting version info..."): # We should verify AT is working before running the below code
+        #print("Getting version info...", end="")
+        if testAT(True, text=f"Getting version info..."): # We should verify AT is working before running the below code (deprecated)
             if not enable_preload:
                 modemUnlock("SAMSUNG") # Run the command to allow more AT access for SAMSUNG devices unless preloading is enabled
                 rt() # Flush the command output file
@@ -759,7 +879,7 @@ def verinfo(gui=True):
             tthread.start() # Sends basic, anonymized success_checks info with only the model number.
             return output # Return the version info
 
-def wifitest():
+def wifitest(): # Opens a hidden WLANTEST menu on Samsung devices
     info = verinfo(False)
     model = re.search(r'Model:\s*(\S+)', info)
     success = [
@@ -770,10 +890,10 @@ def wifitest():
 
     print(f"Opening WIFITEST...", end="")
     MTPmenu()
-    modemUnlock("SAMSUNG")
-    AT.send("AT+SWATD=1")
+    modemUnlock("SAMSUNG") # Unlock modem
+    AT.send("AT+SWATD=1") # Modem must be relocked for this to work
     rt()
-    AT.send("AT+WIFITEST=9,9,9,1")
+    AT.send("AT+WIFITEST=9,9,9,1") # WifiTEST command to open
     output = readOutput("AT")
     counter = 0
     for i in success:
@@ -788,7 +908,7 @@ def wifitest():
         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "WIFITEST", "Fail"))
         tthread.start() # Sends basic, anonymized success_checks info with only the model number.
 
-def reboot():
+def reboot(): # Crash an android phone to reboot
     print(f"Crashing phone to reboot...", end="")
     MTPmenu()
     info = verinfo(False)
@@ -808,7 +928,7 @@ def reboot():
         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "REBOOT", "Fail"))
         tthread.start() # Sends basic, anonymized success_checks info with only the model number.
 
-def reboot_sam():
+def reboot_sam(): # Crash a Samsung phone to reboot
     print(f"Crashing phone to reboot...", end="")
     MTPmenu()
     modemUnlock("SAMSUNG", True)
@@ -834,7 +954,7 @@ def bloatRemove():
     print("Not implemented!")
     # UNFINISHED
 
-def reboot_download_sam():
+def reboot_download_sam(): # Reboot Samsung device to download mode
     print("Rebooting to Download Mode...", end="")
     MTPmenu() 
     AT.send("AT+FUS?") # Thankfully, no modem unlocking required for this command.
@@ -846,11 +966,38 @@ def reboot_download_sam():
         tthread.start() # Sends basic, anonymized success_checks info with only the model number.
     print(" OK")
 
+def imeicheck():
+    info = verinfo(False)
+    match = re.search(r'IMEI:\s*([0-9]+)', info)
+    if match:
+        imei = match.group(1)
+        messagebox.showinfo("nPhoneKIT", "Please click OK, then in the browser, press 'Check Blacklist Status.' \nYou will then see whether your phone is blacklisted or not.\n\nMAKE SURE NOT TO CLICK ON ADS. SCROLL PAST THEM.")
+        if os_config == "WINDOWS":
+            webbrowser.open_new_tab(f"https://www.imei.info/services/blacklist-simple/samsung/check-free/?imei={str(imei)}")
+        elif os_config == "LINUX":
+            url = f"https://www.imei.info/services/blacklist-simple/samsung/check-free/?imei={str(imei)}"
+            original_user = os.environ.get("SUDO_USER", "yourusername")  # linux is complicated :/
+            cmd = f'su - {original_user} -c "DISPLAY=$DISPLAY DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS xdg-open \\"{url}\\""'
+            os.system(cmd)
+        print("IMEI checked in your Default Web Browser.  OK")
+    else:
+        print("❌ IMEI not found.")
+
+def mtkclient():
+    if os_config == "WINDOWS":
+        os.system('pip install -r deps/mtkclient/requirements.txt')
+        os.system('python ./deps/mtkclient/mtk_gui.py')
+    elif os_config == "LINUX":
+        #os.system('sudo pip install --no-deps statsd scrypt repoze.lru keystone-engine fusepy aniso8601 Yappi wrapt werkzeug WebOb vine unicorn tzdata testtools shiboken6 Routes rfc3986 pyusb pyflakes pycryptodomex pycryptodome pycodestyle psutil prometheus-client PrettyTable pbr PasteDeploy Paste netaddr msgpack mccabe itsdangerous iso8601 greenlet elementpath dnspython capstone cachetools blinker xmlschema testscenarios testresources stevedore SQLAlchemy PySide6-Essentials oslo.i18n oslo.context os-service-types Flask flake8 eventlet debtcollector amqp PySide6-Addons pysaml2 oslo.utils oslo.config kombu keystoneauth1 futurist Flask-RESTful dogpile.cache alembic pyside6 oslo.serialization oslo.middleware oslo.db oslo.concurrency python-keystoneclient pycadf osprofiler oslo.policy oslo.log oslo.upgradecheck oslo.service oslo.metrics oslo.cache oslo.messaging keystonemiddleware keystone --break-system-packages')
+        #os.system('sudo python3 deps/mtkclient/mtk_gui.py')
+        os.system('sudo apt install libxcb-cursor0')
+        os.system("sudo bash -c 'source ./deps/venv/bin/activate && python3 ./deps/mtkclient/mtk_gui.py'")
+
 # ===================================
 #  Tkinter GUI Stuff
 # ===================================
 
-class RedirectText:
+class RedirectText: # Redirect all print() statements to the output terminal
     def __init__(self, text_ctrl):
         self.output = text_ctrl
         # compile once for speed
@@ -877,7 +1024,7 @@ current_brand = "Android"
 brand_buttons = {}  
 brand_frames = {} 
 
-def select_brand(name):
+def select_brand(name): # Choose the brand based on the detected connected device
     global current_brand
     current_brand = name
     for bname, btn in brand_buttons.items():
@@ -891,7 +1038,7 @@ def select_brand(name):
 def set_brand(name):
     select_brand(name) # Change selected brand from anywhere in the script
 
-def main():
+def main(): # Tkinter GUI
     root = tk.Tk()
     root.title("nPhoneKIT")
     root.geometry("1550x800")
@@ -911,7 +1058,7 @@ def main():
     button_bar = tk.Frame(left_frame, bg=background_color_1)
     button_bar.pack(fill="x")
 
-    for name in ["Samsung", "LG", "Android"]:
+    for name in ["Samsung", "LG", "MediaTek", "Android"]:
         btn = tk.Button(button_bar, text=name, font=("Helvetica", 20), width=15,
                         command=lambda n=name: select_brand(n), bg=background_color_2)
         btn.pack(side="left", padx=10, pady=10)
@@ -922,6 +1069,7 @@ def main():
 
     samsung_frame_A = tk.Frame(content_area, bg=background_color_1, bd=0, relief="flat")
     lg_frame = tk.Frame(content_area, bg=background_color_1, bd=0, relief="flat")
+    mediatek_frame = tk.Frame(content_area, bg=background_color_1, bd=0, relief="flat")
     general_frame = tk.Frame(content_area, bg=background_color_1, bd=0, relief="flat")
 
     # Output frame
@@ -951,12 +1099,14 @@ def main():
 
     # Header
     if dark_theme:
-        tk.Label(top_outputbar, text="nPhoneKIT", bg="#9191eb", fg="black", font=("Helvetica", 24, "bold")).pack(pady=10)
+        tk.Label(top_outputbar, text="nPhoneKIT", bg="#9191eb", fg="black", font=("Helvetica", 24, "bold"), width=10).pack(pady=10, side="left")
     else:
-        tk.Label(top_outputbar, text="nPhoneKIT", bg="#6969f1", fg="white", font=("Helvetica", 24, "bold")).pack(pady=10)
+        tk.Label(top_outputbar, text="nPhoneKIT", bg="#6969f1", fg="white", font=("Helvetica", 24, "bold"), width=10).pack(pady=10, side="left")
 
+    tk.Button(top_outputbar, text="Settings", command=open_settings_window).pack(side="left", padx=(30, 100))
 
     brand_frames["Samsung"] = samsung_frame_A
+    brand_frames["MediaTek"] = mediatek_frame
     brand_frames["LG"] = lg_frame
     brand_frames["Android"] = general_frame
 
@@ -973,7 +1123,7 @@ def main():
     else:
         anim_speed = 16
 
-    def animate_window_open(target_width=1550, speed=anim_speed, delay=1):
+    def animate_window_open(target_width=1700, speed=anim_speed, delay=1):
         def expand():
             nonlocal current_width
             if current_width < target_width:
@@ -1014,16 +1164,20 @@ def main():
 
     # For the FRP buttons, the year numbers are Mathematical Sans Unicode, because otherwise Noto Color Emoji would replace the numbers with emojis.
     add_button(samsung_frame_A, "FRP Unlock \n(Security Patch 𝟤𝟢𝟤𝟦)\n Works on most devices! 🔓", frp_unlock_2024, "Attempts to unlock a phone \nwhich has been FRP locked. \n\n Usually works on most devices,\nincluding some devices with \nSecurity Patch Level 𝟤𝟢𝟤𝟦.", emoji_font_bold)
-    add_button(samsung_frame_A, "FRP Unlock \n(Security Patch August-𝟤𝟢𝟤𝟤 \nthrough December-𝟤𝟢𝟤𝟤) 🔓", frp_unlock_pre_aug2022, "Attempts to unlock a phone \nwhich has been FRP locked. \n\n Usually only works on older devices,\nspecifically from Security\n Patch Level August 𝟤𝟢𝟤𝟤 through\n the December 𝟤𝟢𝟤𝟤 patch.", emoji_font_smaller)
+    add_button(samsung_frame_A, "FRP Unlock \n(Security Patch August-𝟤𝟢𝟤𝟤 \nthrough December-𝟤𝟢𝟤𝟤) 🔓", frp_unlock_aug2022_to_dec2022, "Attempts to unlock a phone \nwhich has been FRP locked. \n\n Usually only works on older devices,\nspecifically from Security\n Patch Level August 𝟤𝟢𝟤𝟤 through\n the December 𝟤𝟢𝟤𝟤 patch.", emoji_font_smaller)
     add_button(samsung_frame_A, "FRP Unlock \n(Security Patch Pre-August-𝟤𝟢𝟤𝟤) 🔓", frp_unlock_pre_aug2022, "Attempts to unlock a phone \nwhich has been FRP locked. \n\n Usually only works on older devices,\nspecifically before Security\n Patch Level August 𝟤𝟢𝟤𝟤", emoji_font_smaller)
     add_button(samsung_frame_A, "Get Version Info 📝", verinfo, "Gets firmware version info from most SAMSUNG phones. \n\n(Works on S24 Series)")
     add_button(samsung_frame_A, "   Reboot 🔄   ", reboot_sam, "Crashes the phone using AT commands as an\nalternate reboot method.")
     add_button(samsung_frame_A, "Reboot to Download Mode", reboot_download_sam, "Reboots into Download Mode easily.")
     add_button(samsung_frame_A, "  WIFITEST 🛜  ", wifitest, "Opens a hidden WIFITEST app, even \nif the setup wizard hasn't completed. \n\n(Works on S24 Series)")
+    add_button(samsung_frame_A, "IMEI Check (via IMEI.INFO)", imeicheck, "Checks whether the connected device is\n blacklisted, reported as lost, or reported\n as stolen.")
 
-
+    
     add_button(lg_frame, "Screen Unlock 🔓", LG_screen_unlock,"Unlock the screen of an LG phone, without losing data.\n\nOnly click if you are using one of the following phones:\n\nLG G4 H815\nLG G4 H811\nLG G4 VS986\nLG V10 H901\nLG V10 H960\nLG G3 D855\nLG G3 D851\nLG Stylo 2 LS775\nLG Tribute HD LS676\nLG Phoenix 2 K371\nLG Aristo M210\nLG Leon H345")
     
+    
+    add_button(mediatek_frame, "MTK Client", mtkclient ,"Starts the MTKCLIENT GUI. This may take a few minutes\n if you're doing it for the first time.")
+
 
     #add_button(general_frame, "Universal FRP Unlock 🔓", general_frp_unlock, "This is a universal FRP unlock method. It \nshould work on most manufacturers. \n\n=======================================\n\nAttempts to unlock a phone \nwhich has been FRP locked. \n\n Usually only works on older devices,\nspecifically =< Android 8")
     add_button(general_frame, "   Reboot 🔄   ", reboot, "Crashes the phone using AT commands as an\nalternate reboot method.")
@@ -1033,86 +1187,14 @@ def main():
     select_brand(current_brand)
 
     print(f"Welcome to nPhoneKIT v{version}")
-    print(f"\n\nNew in v1.2.1: Made all AT commands 10-20x faster by including pySerial in main.py")
-    print(f"\n\nNew in v1.2.0: Confirmed WIFITEST and VER_INFO support for S24 Series\n\n")
+    print(f"\n\nNew in v1.3.0: Cleaned up codebase, added built-in settings, made more user-friendly, easier to install, better GUI. \n\nFull Changelog on https://github.com/nlckysolutions/nPhoneKIT/releases/tag/v1.3.0")
+    #print(f"\n\nNew in v1.2.5: Fixed bugs on Windows")
+    #print(f"\n\nNew in v1.2.4: Added basic Windows support")
+    #print(f"\n\nNew in v1.2.1: Made all AT commands 10-20x faster by including pySerial in main.py")
+    #print(f"\n\nNew in v1.2.0: Confirmed WIFITEST and VER_INFO support for S24 Series\n\n")
 
     animate_window_open()
 
-    root.mainloop()
-
-def main_old():
-    root = tk.Tk()
-    root.title("nPhoneKIT")
-    root.geometry("1550x800")
-    root.tk.call('tk', 'scaling', 3)
-
-    # Panels setup
-    left_frame = tk.Frame(root, width=1050, bg="#dddddd")
-    left_frame.pack(side="left", fill="y")
-    samsung_frame_A = tk.Frame(left_frame, width=525, bg="#dddddd")
-    samsung_frame_A.pack(side="left", fill="y", padx=20, pady=(20, 0))
-    lg_frame = tk.Frame(left_frame, width=525, bg="#dddddd")
-    lg_frame.pack(side="left", fill="y", padx=20, pady=(20, 0))
-    general_frame = tk.Frame(left_frame, width=525, bg="#dddddd")
-    general_frame.pack(side="left", fill="y", padx=20, pady=(20, 0))
-
-    # Output panel
-    right_frame = tk.Frame(root, width=200)
-    right_frame.pack(side="right", fill="both")
-    top_outputbar = tk.Frame(right_frame, bg="#6969f1", height=100)
-    top_outputbar.pack(fill="x")
-    output_box = tk.Text(right_frame, width=525, wrap="word", bg="#f5f5f5", font=("Courier", 15))
-    output_box.pack(expand=True, fill="both")
-    output_box.tag_configure("fail", foreground="red")
-    output_box.tag_configure("ok",  foreground="green")
-    sys.stdout = RedirectText(output_box)
-    sys.stderr = RedirectText(output_box)
-
-    # Header
-    tk.Label(top_outputbar, text="nPhoneKIT", bg="#6969f1", fg="white", font=("Helvetica", 24, "bold")).pack(pady=10)
-
-    tk.Label(samsung_frame_A, text="SAMSUNG", fg="black", font=("Helvetica", 30, "bold")).pack(pady=10)
-    tk.Label(lg_frame, text="LG", fg="red", font=("Helvetica", 30, "bold")).pack(pady=10)
-    tk.Label(general_frame, text="Android", fg="green", font=("Helvetica", 30, "bold")).pack(pady=10)
-
-    emoji_font_bold = font.Font(family="Noto Color Emoji", size=10, weight="bold")
-    emoji_font = font.Font(family="Noto Color Emoji", size=10)
-    emoji_font_smaller = font.Font(family="Noto Color Emoji", size=8)
-
-    # Tooltip label (hidden by default)
-    tooltip = tk.Label(root, text="", bg="yellow", font=("Helvetica", 12), bd=1, relief="solid")
-    tooltip.place_forget()
-
-    def show_tooltip(event, text):
-        tooltip.config(text=text)
-        x = event.x_root - root.winfo_rootx() + 10
-        y = event.y_root - root.winfo_rooty() + 10
-        tooltip.place(x=x, y=y)
-        tooltip.lift()
-
-    def hide_tooltip(event):
-        tooltip.place_forget()
-
-    def add_button(frame, text, cmd, prefix, fontType=emoji_font):
-        btn = tk.Button(frame, text=text, command=cmd, font=fontType)
-        btn.pack(pady=10)
-        btn.bind("<Enter>", lambda e, t=text: show_tooltip(e, f"{prefix}"))
-        btn.bind("<Leave>", hide_tooltip)
-    
-    add_button(samsung_frame_A, "FRP Unlock \n(Security Patch 2024)\n Works on most devices! 🔓", frp_unlock_2024, "Attempts to unlock a phone \nwhich has been FRP locked. \n\n Usually works on most devices,\nincluding some devices with \nSecurity Patch Level 2024.", emoji_font_bold)
-    add_button(samsung_frame_A, "FRP Unlock \n(Security Patch August-2022 \nthrough December-2022) 🔓", frp_unlock_pre_aug2022, "Attempts to unlock a phone \nwhich has been FRP locked. \n\n Usually only works on older devices,\nspecifically from Security\n Patch Level August 2022 through\n the December 2022 patch.", emoji_font_smaller)
-    add_button(samsung_frame_A, "FRP Unlock \n(Security Patch Pre-August-2022) 🔓", frp_unlock_pre_aug2022, "Attempts to unlock a phone \nwhich has been FRP locked. \n\n Usually only works on older devices,\nspecifically before Security\n Patch Level August 2022", emoji_font_smaller)
-    add_button(samsung_frame_A, "Get Version Info 📝", verinfo, "Gets firmware version info from most SAMSUNG phones. \n\n(Works on S24 Series)")
-    add_button(samsung_frame_A, "   Reboot 🔄   ", reboot_sam, "Crashes the phone using AT commands as an\nalternate reboot method.")
-    add_button(samsung_frame_A, "Reboot to Download Mode", reboot_download_sam, "Reboots into Download Mode easily.")
-    add_button(samsung_frame_A, "  WIFITEST 🛜  ", wifitest, "Opens a hidden WIFITEST app, even \nif the setup wizard hasn't completed. \n\n(Works on S24 Series)")
-
-
-    add_button(lg_frame, "Screen Unlock 🔓", LG_screen_unlock,"Unlock the screen of an LG phone, without losing data.\n\nOnly click if you are using one of the following phones:\n\nLG G4 H815\nLG G4 H811\nLG G4 VS986\nLG V10 H901\nLG V10 H960\nLG G3 D855\nLG G3 D851\nLG Stylo 2 LS775\nLG Tribute HD LS676\nLG Phoenix 2 K371\nLG Aristo M210\nLG Leon H345")
-    
-
-    #add_button(general_frame, "Universal FRP Unlock 🔓", general_frp_unlock, "This is a universal FRP unlock method. It \nshould work on most manufacturers. \n\n=======================================\n\nAttempts to unlock a phone \nwhich has been FRP locked. \n\n Usually only works on older devices,\nspecifically =< Android 8")
-    add_button(general_frame, "   Reboot 🔄   ", reboot, "Crashes the phone using AT commands as an\nalternate reboot method.")
     root.mainloop()
 
 def is_root():
@@ -1142,8 +1224,8 @@ def preload_thread():
 
 threading.Thread(target=preload_thread, daemon=True).start()
 
-if __name__ == "__main__":
+if __name__ == "__main__": # If directly opened, start nPhoneKIT
     ttthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), "NOT_First", "NOT_First", "Success", False))
     ttthread.start() # Sends basic, anonymized success_checks info with only the model number.
-    rt()
-    main()
+    rt() # Flush the buffer from previous runs of nPhoneKIT just in case
+    main() # Start the main GUI (with a cool animation)
