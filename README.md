@@ -22,6 +22,10 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands, real tran
 
 ---
 
+### Credits:
+- **MediaTek features work only using MTKCLIENT, which is in the DEPS folder. Sourced from: https://github.com/bkerler/mtkclient. MTKCLIENT is provided by bkerler and IS NOT owned or created by nPhoneKIT in ANY WAY.**
+- **IMEI Checking features work by opening a new tab of www.imei.info in order to check your IMEI yourself.**
+
 ## Installation
 
 ### Windows
