@@ -53,6 +53,16 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands, real tran
   sudo python3 main.py
   ```
 
+  ## IMPORTANT! If you want MediaTek features on LINUX:
+  - In order to enable MTKCLIENT features, please run these additional commands in the source folder which contains main.py.
+    ```
+    sudo python3 -m venv ./deps/venv
+    sudo source ./deps/venv/bin/activate
+    sudo pip install -r ./deps/mtkclient/requirements.txt
+    ```
+
+    **These commands are REQUIRED on Linux in order to enable ANY MTKCLIENT features. Otherwise, MTKCLIENT simply will not open from nPhoneKIT.**
+
 ---
 
 ## 📱 Current Features
