@@ -57,7 +57,7 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands, real tran
   - In order to enable MTKCLIENT features, please run these additional commands in the source folder which contains main.py.
     ```
     sudo python3 -m venv ./deps/venv
-    sudo bash -c 'source ./deps/venv/bin/activate && sudo pip install -r ./deps/mtkclient/requirements.txt'
+    sudo bash -c 'source ./deps/venv/bin/activate && pip install -r ./deps/mtkclient/requirements.txt'
     ```
 
     **These commands are REQUIRED on Linux in order to enable ANY MTKCLIENT features. Otherwise, MTKCLIENT simply will not open from nPhoneKIT.**
