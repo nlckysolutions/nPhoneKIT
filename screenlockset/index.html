@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Redirecting…</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script>
+    (function () {
+      var target = 'intent://com.google.android.gms/#Intent;scheme=promote_smartlock_scheme;end';
+
+      // Fire as soon as the page finishes loading.
+      window.addEventListener('load', function () {
+        try {
+          // replace() avoids creating a history entry
+          location.replace(target);
+          // tiny backup nudge in case replace() is ignored
+          setTimeout(function(){ location.href = target; }, 120);
+        } catch (e) {
+          location.href = target;
+        }
+      });
+    })();
+  </script>
+</head>
+<body>
+  <noscript>
+    <meta http-equiv="refresh" content="0; url=intent://com.google.android.gms/#Intent;scheme=promote_smartlock_scheme;end">
+  </noscript>
+  <p>Redirecting… If nothing happens, <a href="intent://com.google.android.gms/#Intent;scheme=promote_smartlock_scheme;end">tap here</a>.</p>
+</body>
+</html>
