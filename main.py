@@ -22,6 +22,7 @@ import requests # Requesting different servers
 import uuid # Parsing and creating UUIDs
 import hashlib # Hashing strings
 import webbrowser # Opening browser to any page
+import xml.etree.ElementTree as ET
 
 ## nPhoneKIT permissions (these are the things that nPhoneKIT is capable of doing):
 
@@ -30,7 +31,7 @@ import webbrowser # Opening browser to any page
 # Open a new tab in the default browser
 # Checking and getting basic information about the current system
 
-version = "1.3.0"
+version = "1.3.2"
 
 # This program is free software: you can redistribute it and/or modify it 
 # under the terms of the GNU General Public License as published by the Free Software Foundation, 
@@ -106,6 +107,17 @@ debug_info = settings["debug_info"]
 i_know_what_im_doing = settings["i_know_what_im_doing"]
 basic_success_checks = settings["basic_success_checks"]
 
+def load_strings(xml_path):
+    tree = ET.parse(xml_path)
+    root = tree.getroot()
+    return {
+        elem.attrib['name']: elem.text.replace('\\n', '\n') if elem.text else ''
+        for elem in root.findall('string')
+    }
+
+# Load strings
+strings = load_strings("strings.xml")
+
 # Load settings
 def load_settings():
     with open(SETTINGS_PATH, "r") as f:
@@ -121,7 +133,7 @@ def open_settings_window():
     settings = load_settings()
     win = tk.Toplevel()
     win.geometry('800x300')
-    win.title("nPhoneKIT Settings (you must restart nPhoneKIT to fully apply)")
+    win.title(strings["settingsMenuTitleText"])
 
     vars = {}
     row = 0
@@ -137,7 +149,7 @@ def open_settings_window():
 
     def open_dev_settings():
         dev_win = tk.Toplevel()
-        dev_win.title("Developer Settings")
+        dev_win.title(strings["devSettingsTitle"])
         dev_vars = {}
 
         for i, key in enumerate(["debug_info", "i_know_what_im_doing", "basic_success_checks"]):
@@ -153,7 +165,7 @@ def open_settings_window():
             save_settings(settings)
             dev_win.destroy()
 
-        tk.Button(dev_win, text="Apply", command=apply_dev).grid(row=i+1, columnspan=2)
+        tk.Button(dev_win, text=strings["applyText"], command=apply_dev).grid(row=i+1, columnspan=2)
 
     def apply_main():
         for k, v in vars.items():
@@ -161,8 +173,8 @@ def open_settings_window():
         save_settings(settings)
         win.destroy()
 
-    tk.Button(win, text="Apply", command=apply_main).grid(row=row, column=0)
-    tk.Button(win, text="Developer Settings", command=open_dev_settings, font=("Segoe UI", 5), width=20, height=1).grid(row=row+1, column=0)
+    tk.Button(win, text=strings["applyText"], command=apply_main).grid(row=row, column=0)
+    tk.Button(win, text=strings["devSettingsTitle"], command=open_dev_settings, font=("Segoe UI", 5), width=20, height=1).grid(row=row+1, column=0)
 
 os_config = "WINDOWS" if platform.system() == "Windows" else "LINUX" # Auto-get OS and save to var
 
@@ -190,15 +202,15 @@ class SerialManager: # AT command sender via class
 
         if not self.port: # No device connected
             if debug_info:
-                print("NO DEVICE CONNECTED, CANNOT USE.") 
+                print(strings["noDeviceSermanError"]) 
         elif self.port:
             try:
                 self.ser = serial.Serial(self.port, self.baud, timeout=2) # Save the port for use with the rest of the class
                 time.sleep(0.5)
                 if debug_info:
-                    print(f"[SerialManager] Connected to {self.port}")
+                    print(f"{strings["sermanConnectedPort"]}{self.port}")
             except serial.SerialException as e:
-                raise RuntimeError(f"❌ Error opening serial port {self.port}: {e}")
+                raise RuntimeError(f"{strings["sermanOpeningPortError"]}{self.port}: {e}")
 
     def reset(self):
         self.__init__()
@@ -229,9 +241,9 @@ class SerialManager: # AT command sender via class
         if not self.ser or not self.ser.is_open:
             if preload_samsung_modem:
                 if debug_info:
-                    print("Error: Your device is not connected!")
+                    print(strings["noDeviceGenericError"])
             else:
-                print("Error: Your device is not connected!")
+                print(strings["noDeviceGenericError"])
         else:
             self.ser.flushInput()
             self.ser.flushOutput()
@@ -260,7 +272,7 @@ class SerialManagerWindows: # Version of SerialManager class specifically for Wi
         :param debug: Print connection details if True.
         """
         if platform.system() != "Windows":
-            raise RuntimeError("SerialManagerWindows only supports Windows.")
+            raise RuntimeError(strings["sermanWindowsOsError"])
 
         self.debug = debug
         self.baud = baud
@@ -269,15 +281,15 @@ class SerialManagerWindows: # Version of SerialManager class specifically for Wi
         # allow override, else auto-detect
         self.port = port or self.detect_port()
         if not self.port:
-            raise RuntimeError("No COM port found.")
+            raise RuntimeError(strings["sermanNoComPort"])
 
         try:
             self.ser = serial.Serial(self.port, self.baud, timeout=2)
             time.sleep(0.5)
             if self.debug:
-                print(f"[SerialManagerWindows] Connected to {self.port} @ {self.baud} baud")
+                print(f"{strings["sermanConnectedPort"]}{self.port} @ {self.baud} baud")
         except serial.SerialException as e:
-            raise RuntimeError(f"Error opening {self.port}: {e}")
+            raise RuntimeError(f"{strings["sermanOpeningPortError"]}{self.port}: {e}")
         
     def reset(self):
         self.__init__()
@@ -286,11 +298,11 @@ class SerialManagerWindows: # Version of SerialManager class specifically for Wi
         """Return the first COM* port or None."""
         ports = list_ports.comports()
         if self.debug:
-            print(f"[SerialManagerWindows] Available ports: {[p.device for p in ports]}")
+            print(f"{strings["sermanWinAvailablePorts"]}{[p.device for p in ports]}")
         for p in ports:
             if p.device.upper().startswith("COM"):
                 if self.debug:
-                    print(f"[SerialManagerWindows] Using {p.device}")
+                    print(f"{strings["sermanWinDev"]}{p.device}")
                 return p.device
         return None
 
@@ -301,7 +313,7 @@ class SerialManagerWindows: # Version of SerialManager class specifically for Wi
         :param wait: Seconds to pause before reading.
         """
         if not self.ser or not self.ser.is_open:
-            raise RuntimeError("Serial port not open.")
+            raise RuntimeError(strings["serPortNotOpen"])
 
         self.ser.reset_input_buffer()
         self.ser.reset_output_buffer()
@@ -321,7 +333,7 @@ class SerialManagerWindows: # Version of SerialManager class specifically for Wi
         if self.ser and self.ser.is_open:
             self.ser.close()
             if self.debug:
-                print("[SerialManagerWindows] Connection closed.")
+                print(strings["sermanWinConClosed"])
 
 if os_config == "WINDOWS": # Choose which serial manager to use based on OS
     serman = SerialManagerWindows()
@@ -356,7 +368,7 @@ class AT:
                     f.write(result)
                 except Exception:
                     # Device must not be plugged in?
-                    print("Error: Please check your connnection to your device: \n1. Make sure the device is plugged in.\n2. Make sure the device is in MTP mode (allow access to phone data)\n3. Try enabling DEVELOPER SETTINGS on your device and try again.")
+                    print(strings["deviceConCheckNotPlugged"])
     
 class ADB: # ADB class for sending ADB commands if needed
     def send(command):
@@ -393,23 +405,23 @@ async def preload_samsung_modem(serman2):
 
         if "samsung" in output.lower():
             if debug_info:
-                print("[🌀] Samsung USB detected. Preloading...")
+                print(strings["samPreloadUsbDetected"])
             # If a Samsung device is plugged in, preload its modem using the below commands
             set_brand("Samsung") # For convenience, auto-select the SAMSUNG menu in the nPhoneKIT GUI
             serman2.send("AT+SWATD=0")  # Send without await since it's serial and blocking
             serman2.send("AT+ACTIVATE=0,0,0") # This and the above command do the same thing as modemUnlock("SAMSUNG"), except without infinitely waiting for preload_done, since modemUnlock uses the AT class which will follow preload_done
             if debug_info:
-                print("[✅] Preload complete.")
+                print(strings["samPreloadComplete"])
             preload_error = False
         else:
             if debug_info:
-                print("[⚠️] No Samsung USB found. Skipping preload.")
+                print(strings["samNoUsbFound"])
             enable_preload = False
             preload_error = True
 
     except Exception as e:
         if debug_info:
-            print("[❌] Preload error:", e) # Usually error, but works most of the time reguardless.
+            print(strings["samPreloadError"], e) # Usually error, but works most of the time reguardless.
         enable_preload = False
         preload_error = True
 
@@ -436,17 +448,17 @@ def check_for_update():
             if latest_version != version:
                 if "ⅴ" in latest_version_raw:
                     messagebox.showinfo(
-                        "Update REQUIRED",
-                        f"A new version of nPhoneKIT is available, and is REQUIRED!\n\nCurrent: v{version}\nLatest: v{latest_version}\n\nVisit GitHub to update."
+                        strings["updateReqd"],
+                        strings["updateReqdString"].format(version=version, latest_version=latest_version)
                     )
                     sys.exit(0) # Exit and do not let user use nPhoneKIT if the update is REQUIRED or critical
                 else:   
                     messagebox.showinfo(
-                        "Update Available",
-                        f"A new version of nPhoneKIT is available!\n\nCurrent: v{version}\nLatest: v{latest_version}\n\nVisit GitHub to update."
+                        strings["updateAvail"],
+                        strings["updateAvailString"].format(version=version, latest_version=latest_version)
                     )
     except Exception as e:
-        print(f"[Warning] Could not check for updates, check your internet connection?")
+        print(strings["updateCheckFailed"])
 
 def get_public_hardware_uuid():
     mac = uuid.getnode()
@@ -497,11 +509,11 @@ def success_checks(uuid, model, action, status, first=True):
 # =============================================
 
 def MTPmenu():
-    show_messagebox_at(500, 200, "nPhoneKIT", "Steps to continue (PLEASE READ CAREFULLY, THEN CLOSE THE MESSAGE BOX.):\n\n1. Plug one end of a USB cable into your computer, and the other end into the device.\n\n2. When the cable is plugged in, press ALLOW ACCESS TO PHONE DATA, and you may now close the message box to continue.")
+    show_messagebox_at(500, 200, "nPhoneKIT", strings["mtpMenu"])
     # Show user instructions to enable MTP mode
 
 def adbMenu():
-    show_messagebox_at(500, 200, "nPhoneKIT", "Steps to continue (PLEASE READ CAREFULLY, THEN CLOSE THE MESSAGE BOX.):\n\n1. Enable developer options by going into settings,\nabout phone, software information, and tap build number \n 7 times. \n\n2. Go back into settings, scroll to\n the bottom, open developer options, scroll down a bit, \n find USB Debugging, and turn it on. \n\n 3. Plug one end of a USB cable into your computer, and the other end into the device.\n\n4. When the cable is plugged in, you may now close the message box to continue. If you ever see a dialog after this, please always click ALLOW.")
+    show_messagebox_at(500, 200, "nPhoneKIT", strings["adbMenu"])
     # Show user instructions to enable ADB mode
 
 # ================================================
@@ -546,19 +558,27 @@ def show_messagebox_at(x, y, title, content): # Show a customizable message box
 def modemUnlock(manufacturer, softUnlock=False): # Unlock the modem per-action if preload wasn't enabled
     global firstunlock
 
-    if not enable_preload:
-        if preload_error and firstunlock == False:
-            if manufacturer == "SAMSUNG": # Select the manufacturer to preload
-                AT.send("AT+SWATD=0", True) # Disables some sort of a proprietary "AT commands lock" from SAMSUNG
-                AT.send("AT+ACTIVATE=0,0,0", True) # An activation sequence that unlocks the modem when paired with the above command.
-                firstunlock = True
-        else:
-            if manufacturer == "SAMSUNG": # Select the manufacturer to preload
-                if softUnlock:
-                    AT.send("AT+SWATD=0") # Disables some sort of a proprietary "AT commands lock" from SAMSUNG
-                else:
-                    AT.send("AT+SWATD=0") # Disables some sort of a proprietary "AT commands lock" from SAMSUNG
-                    AT.send("AT+ACTIVATE=0,0,0") # An activation sequence that unlocks the modem when paired with the above command.
+    if os_config == "LINUX":
+        if not enable_preload:
+            if preload_error and firstunlock == False:
+                if manufacturer == "SAMSUNG": # Select the manufacturer to preload
+                    AT.send("AT+SWATD=0", True) # Disables some sort of a proprietary "AT commands lock" from SAMSUNG
+                    AT.send("AT+ACTIVATE=0,0,0", True) # An activation sequence that unlocks the modem when paired with the above command.
+                    firstunlock = True
+            else:
+                if manufacturer == "SAMSUNG": # Select the manufacturer to preload
+                    if softUnlock:
+                        AT.send("AT+SWATD=0") # Disables some sort of a proprietary "AT commands lock" from SAMSUNG
+                    else:
+                        AT.send("AT+SWATD=0") # Disables some sort of a proprietary "AT commands lock" from SAMSUNG
+                        AT.send("AT+ACTIVATE=0,0,0") # An activation sequence that unlocks the modem when paired with the above command.
+    elif os_config == "WINDOWS":
+        if manufacturer == "SAMSUNG": # Select the manufacturer to preload
+            if softUnlock:
+                AT.send("AT+SWATD=0") # Disables some sort of a proprietary "AT commands lock" from SAMSUNG
+            else:
+                AT.send("AT+SWATD=0") # Disables some sort of a proprietary "AT commands lock" from SAMSUNG
+                AT.send("AT+ACTIVATE=0,0,0") # An activation sequence that unlocks the modem when paired with the above command.
 
 # Function that can parse DEVCONINFO in order to make it more readable
 def parse_devconinfo(raw_input): 
@@ -609,154 +629,172 @@ def testAT(MTPinstruction=False, text=f"Testing USB access (ETA: {ETA[3]})..."):
 # =============================================
 
 def frp_unlock_pre_aug2022(): # FRP unlock for pre-aug2022 security patch update
+    print(strings["getVerInfo"], end="")
     info = verinfo(False)
     model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output
 
-    ATcommands = [
-        "AT+DUMPCTRL=1,0",
-        "AT+DEBUGLVC=0,5",
-        "AT+SWATD=0", # Removes some kind of proprietary SAMSUNG modem lock
-        "AT+ACTIVATE=0,0,0", # So that you can ACTIVATE
-        "AT+SWATD=1", # Then relocks it.
-        "AT+DEBUGLVC=0,5"
-    ]
-
-    ADBcommands = [ # Run list of commands in order to complete the unlock with newly-enabled ADB
-        "shell settings put global setup_wizard_has_run 1",
-        "shell settings put secure user_setup_complete 1",
-        "shell content insert --uri content://settings/secure --bind name:s:DEVICE_PROVISIONED --bind value:i:1",
-        "shell content insert --uri content://settings/secure --bind name:s:user_setup_complete --bind value:i:1",
-        "shell content insert --uri content://settings/secure --bind name:s:INSTALL_NON_MARKET_APPS --bind value:i:1",
-        "shell am start -c android.intent.category.HOME -a android.intent.action.MAIN"
-    ]
-
-    show_messagebox_at(500, 200, "nPhoneKIT", "Warning: This FRP unlock method may not always work. It will perform best on devices pre-2022. \n\n\n⚠️ This feature is intended only for owners of devices they personally own or are legally authorized to access. \nUnauthorized use may violate local laws. The developer assumes no responsibility for misuse.")
-
-    print(f"Attempting to enable ADB access...", end="")
-
-    show_messagebox_at(500, 200, "nPhoneKIT", "Steps to FRP Unlock (method A) (PLEASE READ CAREFULLY, THEN CLOSE THE MESSAGE BOX.):\n\n1. Factory reset the device using the recovery menu. \nIf this has already been done, proceed to step 2.\n\n2. Boot up the phone normally. You should see the setup screen. \nLocate a button called something like 'Emergency Call', and click it.\n This usually opens the dialer. If it calls immediately, \nthis method will NOT work on your device.\n\n3. After pressing the Emergency Call button, the dialer should be visible. \nPlease continue by typing in the following (without quotes): '*#0*#', and press CALL.\n A service/test menu should be opened. If not, you can also try '*#*#88#*#*'. \nIf neither of these work, this method will NOT work on your device.\n\n4. Once the service/test menu is open, do not touch anything on the screen. \nPlug one end of a USB cable into your computer, and the other end into the device.\n\n5. When the cable is plugged in, you may now close the message box to continue.")
-
-    for command in ATcommands:
-        AT.send(command)
-
-    output = readOutput("AT")
-
-    if "error" in output.lower():
-        print("  FAIL")
-        print("\nThis FRP unlock method will not work on your device.")
+    if info == "Fail":
+        print(strings["deviceCheckPluggedIn2"])
         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Pre_2022", "Fail"))
         tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
     else:
-        print("  OK")
-        print(f"Running Unlock...", end="")
-        show_messagebox_at(500, 200, "nPhoneKIT", "Please make sure the USB Debugging prompt has appeared on your phone,\n and click ALLOW. If it does not appear, \n try unplugging and replugging the cable. \n If it still does not appear, this unlock is NOT compatible.")
-        for command in ADBcommands:
-            ADB.send(command)
-        print("  OK")
-        print("\nUNLOCK should be successful! To complete the unlock, please go into settings and perform a factory reset normally!")
-        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Pre_2022", "Success"))
-        tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+        ATcommands = [
+            "AT+DUMPCTRL=1,0",
+            "AT+DEBUGLVC=0,5",
+            "AT+SWATD=0", # Removes some kind of proprietary SAMSUNG modem lock
+            "AT+ACTIVATE=0,0,0", # So that you can ACTIVATE
+            "AT+SWATD=1", # Then relocks it.
+            "AT+DEBUGLVC=0,5"
+        ]
+
+        ADBcommands = [ # Run list of commands in order to complete the unlock with newly-enabled ADB
+            "shell settings put global setup_wizard_has_run 1",
+            "shell settings put secure user_setup_complete 1",
+            "shell content insert --uri content://settings/secure --bind name:s:DEVICE_PROVISIONED --bind value:i:1",
+            "shell content insert --uri content://settings/secure --bind name:s:user_setup_complete --bind value:i:1",
+            "shell content insert --uri content://settings/secure --bind name:s:INSTALL_NON_MARKET_APPS --bind value:i:1",
+            "shell am start -c android.intent.category.HOME -a android.intent.action.MAIN"
+        ]
+
+        show_messagebox_at(500, 200, "nPhoneKIT", strings["misuseFrpGuidance"])
+
+        print(strings["attemptingEnableAdb"], end="")
+
+        show_messagebox_at(500, 200, "nPhoneKIT", strings["frpUnlockStepsPre2022"])
+
+        for command in ATcommands:
+            AT.send(command)
+
+        output = readOutput("AT")
+
+        if "error" in output.lower():
+            print(strings["failText"])
+            print(strings["frpNotCompatible"])
+            tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Pre_2022", "Fail"))
+            tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+        else:
+            print(strings["okText"])
+            print(strings["runUnlock"], end="")
+            show_messagebox_at(500, 200, "nPhoneKIT", strings["usbDebuggingPromptCheck"])
+            for command in ADBcommands:
+                ADB.send(command)
+            print(strings["okText"])
+            print(strings["unlockSuccess"])
+            tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Pre_2022", "Success"))
+            tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
 
 def frp_unlock_aug2022_to_dec2022(): # FRP unlock for aug2022-dec2022 security patch update
+    print(strings["getVerInfo"], end="")
     info = verinfo(False)
     model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output
 
-    commands = ['AT+SWATD=0', 'AT+ACTIVATE=0,0,0', 'AT+DEVCONINFO','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0', 'AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5']
-    # These commands are supposed to overwhelm the phone and trick it into enabling ADB. The rest after this is the same as the other unlock method.
-
-    ADBcommands = [ # Run list of commands in order to complete the unlock with newly-enabled ADB
-        "shell settings put global setup_wizard_has_run 1",
-        "shell settings put secure user_setup_complete 1",
-        "shell content insert --uri content://settings/secure --bind name:s:DEVICE_PROVISIONED --bind value:i:1",
-        "shell content insert --uri content://settings/secure --bind name:s:user_setup_complete --bind value:i:1",
-        "shell content insert --uri content://settings/secure --bind name:s:INSTALL_NON_MARKET_APPS --bind value:i:1",
-        "shell am start -c android.intent.category.HOME -a android.intent.action.MAIN"
-    ]
-
-    show_messagebox_at(500, 200, "nPhoneKIT", "Warning: This FRP unlock method may not always work. It will perform best on most devices mid-2022. \n\n\n⚠️ This feature is intended only for owners of devices they personally own or are legally authorized to access. \nUnauthorized use may violate local laws. The developer assumes no responsibility for misuse.")
-
-    print(f"Attempting to enable ADB access...", end="")
-
-    show_messagebox_at(500, 200, "nPhoneKIT", "Steps to FRP Unlock (PLEASE READ CAREFULLY, THEN CLOSE THE MESSAGE BOX.):\n\n1. Factory reset the device using the recovery menu. \nIf this has already been done, proceed to step 2.\n\n2. Boot up the phone normally. You should see the setup screen. \nLocate a button called something like 'Emergency Call', and click it.\n This usually opens the dialer. If it calls immediately, \nthis method will NOT work on your device.\n\n3. After pressing the Emergency Call button, the dialer should be visible. \nPlease continue by typing in the following (without quotes): '*#0*#', and press CALL.\n A service/test menu should be opened. If not, you can also try '*#*#88#*#*'. \nIf neither of these work, this method will NOT work on your device.\n\n4. Once the service/test menu is open, do not touch anything on the screen. \nPlug one end of a USB cable into your computer, and the other end into the device.\n\n5. When the cable is plugged in, you may now close the message box to continue.")
-
-    for command in commands:
-        AT.send(command)
-
-    output = readOutput("AT")
-
-    if "error" in output.lower():
-        print("  FAIL")
-        print("\nThis FRP unlock method will not work on your device.")
+    if info == "Fail":
+        print(strings["deviceCheckPluggedIn2"])
         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Aug_To_Dec_2022", "Fail"))
         tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
     else:
-        print("  OK")
-        print(f"Running Unlock...", end="")
-        show_messagebox_at(500, 200, "nPhoneKIT", "Please make sure the USB Debugging prompt has appeared on your phone,\n and click ALLOW. If it does not appear, \n try unplugging and replugging the cable. \n If it still does not appear, this unlock is NOT compatible.")
-        for command in ADBcommands:
-            ADB.send(command)
-        print("  OK")
-        print("\nUNLOCK should be successful! To complete the unlock, please go into settings and perform a factory reset normally!")
-        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Aug_To_Dec_2022", "Success"))
-        tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+        commands = ['AT+SWATD=0', 'AT+ACTIVATE=0,0,0', 'AT+DEVCONINFO','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0', 'AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5']
+        # These commands are supposed to overwhelm the phone and trick it into enabling ADB. The rest after this is the same as the other unlock method.
+
+        ADBcommands = [ # Run list of commands in order to complete the unlock with newly-enabled ADB
+            "shell settings put global setup_wizard_has_run 1",
+            "shell settings put secure user_setup_complete 1",
+            "shell content insert --uri content://settings/secure --bind name:s:DEVICE_PROVISIONED --bind value:i:1",
+            "shell content insert --uri content://settings/secure --bind name:s:user_setup_complete --bind value:i:1",
+            "shell content insert --uri content://settings/secure --bind name:s:INSTALL_NON_MARKET_APPS --bind value:i:1",
+            "shell am start -c android.intent.category.HOME -a android.intent.action.MAIN"
+        ]
+
+        show_messagebox_at(500, 200, "nPhoneKIT", strings["misuseFrpGuidance2022"])
+
+        print(strings["attemptingEnableAdb"], end="")
+
+        show_messagebox_at(500, 200, "nPhoneKIT", strings["frpUnlockSteps2022"])
+
+        for command in commands:
+            AT.send(command)
+
+        output = readOutput("AT")
+
+        if "error" in output.lower():
+            print(strings["failText"])
+            print(strings["frpNotCompatible"])
+            tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Aug_To_Dec_2022", "Fail"))
+            tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+        else:
+            print(strings["okText"])
+            print(strings["runUnlock"], end="")
+            show_messagebox_at(500, 200, "nPhoneKIT", strings["usbDebuggingPromptCheck"])
+            for command in ADBcommands:
+                ADB.send(command)
+            print(strings["okText"])
+            print(strings["unlockSuccess"])
+            tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Aug_To_Dec_2022", "Success"))
+            tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
 
 def frp_unlock_2024(): # FRP unlock for early 2024-ish security patch update
+    print(strings["getVerInfo"], end="")
     info = verinfo(False)
     model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output
 
-    commands = [
-        "AT+SWATD=0", # Modem unlocking
-        "AT+ACTIVATE=0,0,0", # Modem unlocking
-        "AT+DEVCONINFO", # Get device info
-        "AT+VERSNAME=3.2.3", # FRP unlocking commands
-        "AT+REACTIVE=1,0,0", # FRP unlocking commands
-        "AT+SWATD=0", # Re-Modem unlocking
-        "AT+ACTIVATE=0,0,0", # Re-Modem unlocking
-        "AT+SWATD=1", # Lock quickly
-        "AT+SWATD=1", # Lock again
-        "AT+PRECONFIG=2,VZW", # Quickly change CSC
-        "AT+PRECONFIG=1,0", # Quickly change it back
-    ]
-
-    ADBcommands = [ # Run list of commands in order to complete the unlock with newly-enabled ADB
-        "shell settings put global setup_wizard_has_run 1", 
-        "shell settings put secure user_setup_complete 1",
-        "shell content insert --uri content://settings/secure --bind name:s:DEVICE_PROVISIONED --bind value:i:1",
-        "shell content insert --uri content://settings/secure --bind name:s:user_setup_complete --bind value:i:1",
-        "shell content insert --uri content://settings/secure --bind name:s:INSTALL_NON_MARKET_APPS --bind value:i:1",
-        "shell am start -c android.intent.category.HOME -a android.intent.action.MAIN"
-    ]
-
-    show_messagebox_at(500, 200, "nPhoneKIT", "Warning: This FRP unlock method may not always work. It will perform best on most devices. \n\n\n⚠️ This feature is intended only for owners of devices they personally own or are legally authorized to access. \nUnauthorized use may violate local laws. The developer assumes no responsibility for misuse.")
-
-    print(f"Attempting to enable ADB access...", end="")
-
-    show_messagebox_at(500, 200, "nPhoneKIT", "Steps to FRP Unlock (method A) (PLEASE READ CAREFULLY, THEN CLOSE THE MESSAGE BOX.):\n\n1. Factory reset the device using the recovery menu. \nIf this has already been done, proceed to step 2.\n\n2. Boot up the phone normally. You should see the setup screen. \nLocate a button called something like 'Emergency Call', and click it.\n This usually opens the dialer. If it calls immediately, \nthis method will NOT work on your device.\n\n3. After pressing the Emergency Call button, the dialer should be visible. \nPlease continue by typing in the following (without quotes): '*#0*#', and press CALL.\n A service/test menu should be opened. If not, you can also try '*#*#88#*#*'. \nIf neither of these work, this method will NOT work on your device.\n\n4. Once the service/test menu is open, do not touch anything on the screen. \nPlug one end of a USB cable into your computer, and the other end into the device.\n\n5. When the cable is plugged in, you may now close the message box to continue.")
-
-    for command in commands:
-        AT.send(command)
-
-    output = readOutput("AT")
-
-    if "error" in output.lower():
-        print("  FAIL")
-        print("\nThis FRP unlock method will not work on your device.")
+    if info == "Fail":
+        print(strings["deviceCheckPluggedIn2"])
         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_2024", "Fail"))
         tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
     else:
-        print("  OK")
-        print(f"Running Unlock...", end="")
-        show_messagebox_at(500, 200, "nPhoneKIT", "Please make sure the USB Debugging prompt has appeared on your phone,\n and click ALLOW. If it does not appear, \n try unplugging and replugging the cable. \n If it still does not appear, this unlock is NOT compatible.")
-        for command in ADBcommands:
-            ADB.send(command)
-        print("  OK")
-        print("\nUNLOCK should be successful! To complete the unlock, please go into settings and perform a factory reset normally!")
-        if model == "" or model == None:
-            # Retry get model
-            info = verinfo(False)
-            model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output
-        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_2024", "Success"))
-        tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+        commands = [
+            "AT+SWATD=0", # Modem unlocking
+            "AT+ACTIVATE=0,0,0", # Modem unlocking
+            "AT+DEVCONINFO", # Get device info
+            "AT+VERSNAME=3.2.3", # FRP unlocking commands
+            "AT+REACTIVE=1,0,0", # FRP unlocking commands
+            "AT+SWATD=0", # Re-Modem unlocking
+            "AT+ACTIVATE=0,0,0", # Re-Modem unlocking
+            "AT+SWATD=1", # Lock quickly
+            "AT+SWATD=1", # Lock again
+            "AT+PRECONFIG=2,VZW", # Quickly change CSC
+            "AT+PRECONFIG=1,0", # Quickly change it back
+        ]
+
+        ADBcommands = [ # Run list of commands in order to complete the unlock with newly-enabled ADB
+            "shell settings put global setup_wizard_has_run 1", 
+            "shell settings put secure user_setup_complete 1",
+            "shell content insert --uri content://settings/secure --bind name:s:DEVICE_PROVISIONED --bind value:i:1",
+            "shell content insert --uri content://settings/secure --bind name:s:user_setup_complete --bind value:i:1",
+            "shell content insert --uri content://settings/secure --bind name:s:INSTALL_NON_MARKET_APPS --bind value:i:1",
+            "shell am start -c android.intent.category.HOME -a android.intent.action.MAIN"
+        ]
+
+        show_messagebox_at(500, 200, "nPhoneKIT", strings["misuseFrpGuidance2024"])
+
+        print(strings["attemptingEnableAdb"], end="")
+
+        show_messagebox_at(500, 200, "nPhoneKIT", strings["frpUnlockSteps2024"])
+
+        for command in commands:
+            AT.send(command)
+
+        output = readOutput("AT")
+
+        if "error" in output.lower():
+            print(strings["failText"])
+            print(strings["frpNotCompatible"])
+            tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_2024", "Fail"))
+            tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+        else:
+            print(strings["okText"])
+            print(strings["runUnlock"], end="")
+            show_messagebox_at(500, 200, "nPhoneKIT", strings["usbDebuggingPromptCheck"])
+            for command in ADBcommands:
+                ADB.send(command)
+            print(strings["okText"])
+            print(strings["unlockSuccess"])
+            if model == "" or model == None:
+                # Retry get model
+                info = verinfo(False, False)
+                model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output
+            tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_2024", "Success"))
+            tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
 
 def general_frp_unlock(): # Not completed yet
     info = verinfo(False)
@@ -764,16 +802,16 @@ def general_frp_unlock(): # Not completed yet
         frp_unlock_pre_aug2022()
     else:
         # to do, add FULLY universal FRP unlock
-        print("Your device is not supported.")
+        print(strings["deviceNotSupportedUniversal"])
 
 def LG_screen_unlock(): # Screen unlock on supported LG devices *untested*
     info = verinfo(False)
     model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output (may not work)
 
-    show_messagebox_at(500, 200, "nPhoneKIT", "🔓 LG Screen Unlock\n\nThe LG Screen Unlock will simply unlock the phone's \nscreen, without erasing data whatsoever.\n\nIt is only supported on these LG phones. \nPlease UNPLUG all devices and CLOSE this window if you do not have one of the below devices:\n\nLG G4 H815\nLG G4 H811\nLG G4 VS986\nLG V10 H901\nLG V10 H960\nLG G3 D855\nLG G3 D851\nLG Stylo 2 LS775\nLG Tribute HD LS676\nLG Phoenix 2 K371\nLG Aristo M210\nLG Leon H345\n\nIf one of these devices is yours, you may click OK and follow the instructions.")
-    print(f"Running Screen Unlock Command...", end="")
+    show_messagebox_at(500, 200, "nPhoneKIT", strings["lgScreenUnlockSupportedDevs"])
+    print(strings["lgRunningScreenUnlock"], end="")
     # Prepare phone for unlock
-    show_messagebox_at(600, 100, "nPhoneKIT", "🔓 LG Screen Unlock\n\nPlease plug your LG phone into your computer, \nthen press OK. \n\n(Note: For this step, you will need GCC \n installed on your machine. If it's not installed, \nplease install it now, then click OK once your phone is plugged in.)")
+    show_messagebox_at(600, 100, "nPhoneKIT", strings["lgScreenUnlockSteps"])
     
     time.sleep(1)
     if AT.usbswitch("-l", "LG Screen Unlock"):
@@ -783,14 +821,14 @@ def LG_screen_unlock(): # Screen unlock on supported LG devices *untested*
             output = f.read()
         # debug only: print("\n\nOutput: \n\n" + output + "\n\n")
         if "error" in output or "Error" in output:
-            print("  FAIL\n")
-            print("There was an error in unlocking the screen. Please open a GitHub issue with your phone model, and the contents of tmp_output.txt which should be in the same directory as main.py.")
+            print(strings["failText"] + "\n")
+            print(strings["lgScreenUnlockError"])
             tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "LG_Screen_Unlock", "Fail"))
             tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
         else:
             rt()
-            print("  OK\n")
-            print("Screen should be unlocked. If it's not, please open a GitHub issue with your phone model, and exactly what you did.")
+            print(strings["okText"] + "\n")
+            print(strings["lgScreenUnlockSuccess"])
             tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "LG_Screen_Unlock", "Success"))
             tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
 
@@ -798,31 +836,31 @@ def LG_screen_unlock(): # Screen unlock on supported LG devices *untested*
 #  Simple functions that do stuff to the device
 # ==============================================
 
-def verinfo(gui=True): # Get version info on the device. Pretty simple. (not simple, this has taken me hours.)
+def verinfo(gui=True, showtext=True): # Get version info on the device. Pretty simple. (not simple, this has taken me hours.)
     if gui:
         if enable_preload: # Skip all the nonsense and cut straight to the action, no "testAT" nonsense. We're prioritizing speed.
-            print("Getting version info...", end="")
+            print(strings["getVerInfo"], end="")
             AT.send("AT+DEVCONINFO") # Only works when the modem is working with modemUnlock("SAMSUNG")
             output = readOutput("AT") # Output is retrieved from the command
             if output == "" or output == None:
                 AT.send("AT+DEVCONINFO") # Only works when the modem is working with modemUnlock("SAMSUNG")
                 output = readOutput("AT")
                 if output == "" or output == None:
-                    print("  FAIL")
-                    print("Error: Please check your connnection to your device: \n1. Make sure the device is plugged in.\n2. Make sure the device is in MTP mode (allow access to phone data)\n3. Try enabling DEVELOPER SETTINGS on your device and try again.")
+                    print(strings["failText"])
+                    print(strings["verInfoCheckConn"])
                     model = re.search(r'Model:\s*(\S+)', output) # Extract only the model no. from the output
                     tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "VersionInfo", "Fail"))
                     tthread.start() # Sends basic, anonymized success_checks info with only the model number.
             else:
-                print("  OK")
+                print(strings["okText"])
                 model = re.search(r'Model:\s*(\S+)', output) # Extract only the model no. from the output
                 tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "VersionInfo", "Success"))
                 tthread.start() # Sends basic, anonymized success_checks info with only the model number.
             output = parse_devconinfo(output) # Make the output actually readable
             print(output) # Print the version info to the output box
         else: 
-            print("Getting version info...", end="")
-            if testAT(True, text=f"Getting version info..."): # We should verify AT is working before running the below code (testAT is deprecated)
+            print(strings["getVerInfo"], end="")
+            if testAT(True, text=strings["getVerInfo"]): # We should verify AT is working before running the below code (testAT is deprecated)
                 if not enable_preload:
                     modemUnlock("SAMSUNG") # Run the command to allow more AT access for SAMSUNG devices unless preloading is enabled
                     rt() # Flush the command output file
@@ -836,33 +874,33 @@ def verinfo(gui=True): # Get version info on the device. Pretty simple. (not sim
                         output = readOutput("AT")
                         try:
                             if output == "" or output == None:
-                                print("  FAIL")
-                                print("Error: Please check your connnection to your device: \n1. Make sure the device is plugged in.\n2. Make sure the device is in MTP mode (allow access to phone data)\n3. Try enabling DEVELOPER SETTINGS on your device and try again.")
+                                print(strings["failText"])
+                                print(strings["verInfoCheckConn"])
                             else:
                                 output = parse_devconinfo(output) # Make the output actually readable
                                 model = re.search(r'Model:\s*(\S+)', output) # Extract only the model no. from the output
                                 tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "VersionInfo", "Success"))
                                 tthread.start() # Sends basic, anonymized success_checks info with only the model number.
-                                print("  OK")
+                                print(strings["okText"])
                         except Exception:
-                            print("Error: Please check your connnection to your device: \n1. Make sure the device is plugged in.\n2. Make sure the device is in MTP mode (allow access to phone data)\n3. Try enabling DEVELOPER SETTINGS on your device and try again.")
+                            print(strings["verInfoCheckConn"])
                     else:
                         output = parse_devconinfo(output) # Make the output actually readable
                         model = re.search(r'Model:\s*(\S+)', output) # Extract only the model no. from the output
                         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "VersionInfo", "Success"))
                         tthread.start() # Sends basic, anonymized success_checks info with only the model number.
-                        print("  OK")
+                        print(strings["okText"])
                         print(output) # Print the version info to the output box
                 else:
                     output = parse_devconinfo(output) # Make the output actually readable
                     model = re.search(r'Model:\s*(\S+)', output) # Extract only the model no. from the output
                     tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "VersionInfo", "Success"))
                     tthread.start() # Sends basic, anonymized success_checks info with only the model number.
-                    print("  OK")
+                    print(strings["okText"])
                     print(output) # Print the version info to the output box
     else:
-        #print("Getting version info...", end="")
-        if testAT(True, text=f"Getting version info..."): # We should verify AT is working before running the below code (deprecated)
+        #print(strings["getVerInfo"], end="")
+        if testAT(True, text=strings["getVerInfo"]): # We should verify AT is working before running the below code (deprecated)
             if not enable_preload:
                 modemUnlock("SAMSUNG") # Run the command to allow more AT access for SAMSUNG devices unless preloading is enabled
                 rt() # Flush the command output file
@@ -872,12 +910,21 @@ def verinfo(gui=True): # Get version info on the device. Pretty simple. (not sim
                 AT.send("AT+DEVCONINFO") # Only works when the modem is working with modemUnlock("SAMSUNG")
                 output = readOutput("AT")
                 if output == "" or output == None:
-                    print("  FAIL")
+                    if showtext:
+                        print(strings["failText"])
+                else:
+                    if showtext:
+                        print(strings["okText"])
             output = parse_devconinfo(output) # Make the output actually readable (parse the output)
             model = re.search(r'Model:\s*(\S+)', output) # Extract only the model no. from the output
-            tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "VersionInfo", "Success"))
-            tthread.start() # Sends basic, anonymized success_checks info with only the model number.
-            return output # Return the version info
+            if output == "" or output == None:
+                tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "VersionInfo", "Fail"))
+                tthread.start() # Sends basic, anonymized success_checks info with only the model number.
+                return "Fail"
+            else:
+                tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "VersionInfo", "Success"))
+                tthread.start() # Sends basic, anonymized success_checks info with only the model number.
+                return output # Return the version info
 
 def wifitest(): # Opens a hidden WLANTEST menu on Samsung devices
     info = verinfo(False)
@@ -888,7 +935,7 @@ def wifitest(): # Opens a hidden WLANTEST menu on Samsung devices
     "OK"
     ]
 
-    print(f"Opening WIFITEST...", end="")
+    print(strings["openingWifitest"], end="")
     MTPmenu()
     modemUnlock("SAMSUNG") # Unlock modem
     AT.send("AT+SWATD=1") # Modem must be relocked for this to work
@@ -900,16 +947,16 @@ def wifitest(): # Opens a hidden WLANTEST menu on Samsung devices
         if i in output:
             counter += 1
     if counter == 3:
-        print("  OK")
+        print(strings["okText"])
         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "WIFITEST", "Success"))
         tthread.start() # Sends basic, anonymized success_checks info with only the model number.
     else:
-        print("  FAIL")
+        print(strings["failText"])
         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "WIFITEST", "Fail"))
         tthread.start() # Sends basic, anonymized success_checks info with only the model number.
 
 def reboot(): # Crash an android phone to reboot
-    print(f"Crashing phone to reboot...", end="")
+    print(strings["crashingToReboot"], end="")
     MTPmenu()
     info = verinfo(False)
     model = re.search(r'Model:\s*(\S+)', info)
@@ -918,18 +965,18 @@ def reboot(): # Crash an android phone to reboot
         AT.send("AT+CFUN=1,1") # Crashes the phone immediately.
     except Exception as e:
         if "disconnected" in str(e):
-            print("  OK") # Error opening serial means that the command worked, because it reset the phone before it could give a response.
+            print(strings["okText"]) # Error opening serial means that the command worked, because it reset the phone before it could give a response.
             tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "REBOOT", "Success"))
             tthread.start() # Sends basic, anonymized success_checks info with only the model number.
     output = readOutput("AT")
     if "OK" in output:
-        print("  FAIL")
-        print("\nThe phone did not seem to crash. (If this is a Samsung phone, you must click the reboot option in the SAMSUNG tab on the left.)")
+        print(strings["failText"])
+        print(strings["crashRebootFailed"])
         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "REBOOT", "Fail"))
         tthread.start() # Sends basic, anonymized success_checks info with only the model number.
 
 def reboot_sam(): # Crash a Samsung phone to reboot
-    print(f"Crashing phone to reboot...", end="")
+    print(strings["crashingToReboot"], end="")
     MTPmenu()
     modemUnlock("SAMSUNG", True)
     info = verinfo(False)
@@ -939,23 +986,103 @@ def reboot_sam(): # Crash a Samsung phone to reboot
         AT.send("AT+CFUN=1,1") # Crashes the phone immediately.
     except Exception as e:
         if "disconnected" in str(e):
-            print("  OK") # Error opening serial means that the command worked, because it reset the phone before it could give a response.
+            print(strings["okText"]) # Error opening serial means that the command worked, because it reset the phone before it could give a response.
             tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "REBOOT_SAM", "Success"))
             tthread.start() # Sends basic, anonymized success_checks info with only the model number.
     output = readOutput("AT")
     if "OK" in output:
-        print("  FAIL")
-        print("\nThe phone did not seem to crash. (If this is a Samsung phone, you must click the reboot option in the SAMSUNG tab on the left.)")
+        print(strings["failText"])
+        print(strings["crashRebootFailed"])
         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "REBOOT_SAM", "Fail"))
         tthread.start() # Sends basic, anonymized success_checks info with only the model number.
 
 def bloatRemove():
+    print(strings["uninstallingPackages"], end="")
     adbMenu()
-    print("Not implemented!")
-    # UNFINISHED
+    # Samsung ONLY
+    packages = [
+        # Samsung default bloatware
+        "com.microsoft.office.outlook",
+        "com.samsung.android.bixby.ondevice.frfr",
+        "com.google.android.apps.photos",
+        "com.sec.android.app.sbrowser",
+        "com.samsung.android.calendar",
+        "com.samsung.android.app.reminder",
+        "com.google.android.apps.youtube.music",
+        "com.sec.android.app.shealth",
+        "com.samsung.android.nmt.apps.t2t.languagepack.enfr",
+        "com.sec.android.app.popupcalculator",
+        "com.booking.aidprovider",
+        "com.samsung.SMT.lang_en_us_l03",
+        "com.samsung.android.bixby.ondevice.enus",
+        "com.google.android.apps.docs",
+        "com.samsung.android.arzone",
+        "com.samsung.android.voc",
+        "com.samsung.android.app.tips",
+        "com.sec.android.app.clockpackage",
+        "com.samsung.android.app.find",
+        "com.samsung.android.app.notes",
+        "com.amazon.appmanager",
+        "com.google.android.videos",
+        "com.sec.android.app.voicenote",
+        "com.amazon.mShop.android.shopping",
+        "com.facebook.katana",
+        "com.samsung.sree",
+        "com.samsung.android.app.spage",
+        "com.samsung.android.oneconnect",
+        "com.samsung.android.game.gamehome",
+        "com.samsung.SMT.lang_fr_fr_l01",
+        "com.microsoft.office.officehubrow",
+        "com.samsung.android.spay",
+        "com.samsung.android.app.watchmanager",
+        "com.samsung.android.tvplus",
+        "com.sec.android.app.kidshome",
+        "com.booking",
+        # Verizon bloatware
+        "com.verizon.appmanager",
+        "com.vzwnavigator",
+        "com.vzw.syncservice",
+        "com.verizon.syncservice",
+        "com.verizon.login",
+        "com.vzw.voicemail",
+        "com.vzw.nflmobile",
+        "com.vzw.familybase",
+        "com.vzw.familylocator",
+        # AT&T bloatware
+        "com.att.devicehelp",
+        "com.att.addressbooksync",
+        "com.dti.att",
+        "com.dti.folderlauncher",
+        "com.myatt.mobile",
+        # T-Mobile bloatware
+        "com.tmobile.nameid",
+        "com.tmobile.visualvm",
+        "com.tmobile.account",
+        "com.tmobile.appmanager",
+        "com.tmobile.appselector",
+        "com.tmobile.pr.mytmobile",
+        "com.tmobile.echolocate",
+        "com.ironsrc.aura.tmo",
+        "com.tmobile.pr.adapt"
+    ]
+    for package in packages:
+        ADB.send(f"shell pm uninstall --user 0 {package}")
+        if "Success" in readOutput("ADB") or "[n" in readOutput("ADB") or "age:" in readOutput("ADB"):
+            continue
+        else:
+            print(strings["failText"])
+            print(strings["devNotConnectedOrOtherErr"])
+            tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), None, "DEBLOAT_SAM", "Fail"))
+            tthread.start() # Sends basic, anonymized success_checks info with only the model number.
+            break
+    if "Success" in readOutput("ADB") or "[n" in readOutput("ADB") or "age:" in readOutput("ADB"):
+        print(strings["okText"])
+        print(strings["debloatSucceeded"])
+        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), None, "DEBLOAT_SAM", "Success"))
+        tthread.start() # Sends basic, anonymized success_checks info with only the model number.
 
 def reboot_download_sam(): # Reboot Samsung device to download mode
-    print("Rebooting to Download Mode...", end="")
+    print(strings["rebootingDownloadMode"], end="")
     MTPmenu() 
     AT.send("AT+FUS?") # Thankfully, no modem unlocking required for this command.
     if basic_success_checks:
@@ -971,7 +1098,7 @@ def imeicheck():
     match = re.search(r'IMEI:\s*([0-9]+)', info)
     if match:
         imei = match.group(1)
-        messagebox.showinfo("nPhoneKIT", "Please click OK, then in the browser, press 'Check Blacklist Status.' \nYou will then see whether your phone is blacklisted or not.\n\nMAKE SURE NOT TO CLICK ON ADS. SCROLL PAST THEM.")
+        messagebox.showinfo("nPhoneKIT", strings["imeiCheckGuide"])
         if os_config == "WINDOWS":
             webbrowser.open_new_tab(f"https://www.imei.info/services/blacklist-simple/samsung/check-free/?imei={str(imei)}")
         elif os_config == "LINUX":
@@ -979,9 +1106,9 @@ def imeicheck():
             original_user = os.environ.get("SUDO_USER", "yourusername")  # linux is complicated :/
             cmd = f'su - {original_user} -c "DISPLAY=$DISPLAY DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS xdg-open \\"{url}\\""'
             os.system(cmd)
-        print("IMEI checked in your Default Web Browser.  OK")
+        print(strings["imeiChecked"])
     else:
-        print("❌ IMEI not found.")
+        print(strings["imeiNotFound"])
 
 def mtkclient():
     if os_config == "WINDOWS":
@@ -1020,7 +1147,7 @@ class RedirectText: # Redirect all print() statements to the output terminal
     def flush(self):
         pass
 
-current_brand = "Android"  
+current_brand = strings["brandCurrent"]
 brand_buttons = {}  
 brand_frames = {} 
 
@@ -1058,7 +1185,7 @@ def main(): # Tkinter GUI
     button_bar = tk.Frame(left_frame, bg=background_color_1)
     button_bar.pack(fill="x")
 
-    for name in ["Samsung", "LG", "MediaTek", "Android"]:
+    for name in [strings["brandSamsung"], strings["brandLg"], strings["brandMediatek"], strings["brandAndroid"]]:
         btn = tk.Button(button_bar, text=name, font=("Helvetica", 20), width=15,
                         command=lambda n=name: select_brand(n), bg=background_color_2)
         btn.pack(side="left", padx=10, pady=10)
@@ -1105,10 +1232,10 @@ def main(): # Tkinter GUI
 
     tk.Button(top_outputbar, text="Settings", command=open_settings_window).pack(side="left", padx=(30, 100))
 
-    brand_frames["Samsung"] = samsung_frame_A
-    brand_frames["MediaTek"] = mediatek_frame
-    brand_frames["LG"] = lg_frame
-    brand_frames["Android"] = general_frame
+    brand_frames[strings["brandSamsung"]] = samsung_frame_A
+    brand_frames[strings["brandMediatek"]] = mediatek_frame
+    brand_frames[strings["brandLg"]] = lg_frame
+    brand_frames[strings["brandAndroid"]] = general_frame
 
     emoji_font_bold = font.Font(family="Noto Color Emoji", size=10, weight="bold")
     emoji_font = font.Font(family="Noto Color Emoji", size=10)
@@ -1163,31 +1290,33 @@ def main(): # Tkinter GUI
 
 
     # For the FRP buttons, the year numbers are Mathematical Sans Unicode, because otherwise Noto Color Emoji would replace the numbers with emojis.
-    add_button(samsung_frame_A, "FRP Unlock \n(Security Patch 𝟤𝟢𝟤𝟦)\n Works on most devices! 🔓", frp_unlock_2024, "Attempts to unlock a phone \nwhich has been FRP locked. \n\n Usually works on most devices,\nincluding some devices with \nSecurity Patch Level 𝟤𝟢𝟤𝟦.", emoji_font_bold)
-    add_button(samsung_frame_A, "FRP Unlock \n(Security Patch August-𝟤𝟢𝟤𝟤 \nthrough December-𝟤𝟢𝟤𝟤) 🔓", frp_unlock_aug2022_to_dec2022, "Attempts to unlock a phone \nwhich has been FRP locked. \n\n Usually only works on older devices,\nspecifically from Security\n Patch Level August 𝟤𝟢𝟤𝟤 through\n the December 𝟤𝟢𝟤𝟤 patch.", emoji_font_smaller)
-    add_button(samsung_frame_A, "FRP Unlock \n(Security Patch Pre-August-𝟤𝟢𝟤𝟤) 🔓", frp_unlock_pre_aug2022, "Attempts to unlock a phone \nwhich has been FRP locked. \n\n Usually only works on older devices,\nspecifically before Security\n Patch Level August 𝟤𝟢𝟤𝟤", emoji_font_smaller)
-    add_button(samsung_frame_A, "Get Version Info 📝", verinfo, "Gets firmware version info from most SAMSUNG phones. \n\n(Works on S24 Series)")
-    add_button(samsung_frame_A, "   Reboot 🔄   ", reboot_sam, "Crashes the phone using AT commands as an\nalternate reboot method.")
-    add_button(samsung_frame_A, "Reboot to Download Mode", reboot_download_sam, "Reboots into Download Mode easily.")
-    add_button(samsung_frame_A, "  WIFITEST 🛜  ", wifitest, "Opens a hidden WIFITEST app, even \nif the setup wizard hasn't completed. \n\n(Works on S24 Series)")
-    add_button(samsung_frame_A, "IMEI Check (via IMEI.INFO)", imeicheck, "Checks whether the connected device is\n blacklisted, reported as lost, or reported\n as stolen.")
+    add_button(samsung_frame_A, strings["frpUnlock2024"], frp_unlock_2024, strings["frpUnlock2024info"], emoji_font_bold)
+    add_button(samsung_frame_A, strings["frpUnlock2022"], frp_unlock_aug2022_to_dec2022, strings["frpUnlock2022info"], emoji_font_smaller)
+    add_button(samsung_frame_A, strings["frpUnlockPre2022"], frp_unlock_pre_aug2022, strings["frpUnlockPre2022info"], emoji_font_smaller)
+    add_button(samsung_frame_A, strings["getVerInfo"], verinfo, strings["getVerInfoTooltip"])
+    add_button(samsung_frame_A, strings["crashReboot"], reboot_sam, strings["crashRebootInfo"])
+    add_button(samsung_frame_A, strings["samRebootDownloadMode"], reboot_download_sam, strings["samRebootDownloadModeInfo"])
+    add_button(samsung_frame_A, strings["samWifitest"], wifitest, strings["samWifitestInfo"])
+    add_button(samsung_frame_A, strings["samImeiCheck"], imeicheck, strings["samImeiCheckInfo"])
+    add_button(samsung_frame_A, strings["samRemoveBloat"], bloatRemove, strings["samRemoveBloatInfo"])
+    
 
+    add_button(lg_frame, strings["lgScreenUnlockLabel"], LG_screen_unlock, strings["lgScreenUnlockTooltip"])
     
-    add_button(lg_frame, "Screen Unlock 🔓", LG_screen_unlock,"Unlock the screen of an LG phone, without losing data.\n\nOnly click if you are using one of the following phones:\n\nLG G4 H815\nLG G4 H811\nLG G4 VS986\nLG V10 H901\nLG V10 H960\nLG G3 D855\nLG G3 D851\nLG Stylo 2 LS775\nLG Tribute HD LS676\nLG Phoenix 2 K371\nLG Aristo M210\nLG Leon H345")
     
-    
-    add_button(mediatek_frame, "MTK Client", mtkclient ,"Starts the MTKCLIENT GUI. This may take a few minutes\n if you're doing it for the first time.")
+    add_button(mediatek_frame, strings["mtkClientLabel"], mtkclient, strings["mtkClientTooltip"])
 
 
     #add_button(general_frame, "Universal FRP Unlock 🔓", general_frp_unlock, "This is a universal FRP unlock method. It \nshould work on most manufacturers. \n\n=======================================\n\nAttempts to unlock a phone \nwhich has been FRP locked. \n\n Usually only works on older devices,\nspecifically =< Android 8")
-    add_button(general_frame, "   Reboot 🔄   ", reboot, "Crashes the phone using AT commands as an\nalternate reboot method.")
+    add_button(general_frame, strings["crashReboot"], reboot, strings["crashRebootInfo"])
     #add_button(general_frame, "Remove Carrier Bloatware", bloatRemove, "")
 
     # Select default brand
     select_brand(current_brand)
 
-    print(f"Welcome to nPhoneKIT v{version}")
-    print(f"\n\nNew in v1.3.0: Cleaned up codebase, added built-in settings, made more user-friendly, easier to install, better GUI. \n\nFull Changelog on https://github.com/nlckysolutions/nPhoneKIT/releases/tag/v1.3.0")
+    print(strings["nPhoneKITwelcome"].format(version=version))
+    print(strings["newIn1.3.2"])
+    #print(f"\nNew in v1.3.0: Cleaned up codebase, added built-in settings, made more user-friendly, easier to install, better GUI. \n\nFull Changelog on https://github.com/nlckysolutions/nPhoneKIT/releases/tag/v1.3.0\n\n")
     #print(f"\n\nNew in v1.2.5: Fixed bugs on Windows")
     #print(f"\n\nNew in v1.2.4: Added basic Windows support")
     #print(f"\n\nNew in v1.2.1: Made all AT commands 10-20x faster by including pySerial in main.py")
@@ -1211,7 +1340,7 @@ if not is_root():
     root = tk.Tk()
     root.withdraw()
 
-    messagebox.showwarning("nPhoneKIT", "Please close this window and rerun using SUDO (or Run as Administrator on Windows). Most features/tools will not work otherwise.")
+    messagebox.showwarning("nPhoneKIT", strings["sudoReqdError"])
     sys.exit(1)
 
 if update_check:
