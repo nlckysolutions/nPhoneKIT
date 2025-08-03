@@ -1,12 +1,14 @@
 # nPhoneKIT
 
+## READ THE WHOLE README FOR A COMPLETE UNDERSTANDING OF EVERYTHING NPHONEKIT WILL/CAN DO!
+
 **nPhoneKIT** is a fully open-source, community-powered toolbox for Android devices — built to replace bloated, sketchy, and closed-source tools that *hide* what they’re doing to your phone.
 
 Unlike some other tools 👀 that are obfuscated, flagged by antivirus scanners, and hide everything behind cryptic buttons, **nPhoneKIT** is:
 
 - ✅ 100% open Python code
 - ✅ Actually shows you the commands
-- ✅ Doesn’t ping weird servers or drop mystery EXEs in Temp folders
+- ✅ Doesn’t drop mystery EXEs in Temp folders
 - ✅ Does most of the things that other tools can do anyway
 
 ### Why choose a tool that *won’t* tell you what it’s doing?
@@ -83,6 +85,12 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands, real tran
 
 ---
 
+## ⚠️⚠️⚠️ Important Notes:
+
+- **nPhoneKIT has a feature called "Success Checks" which will contact external servers, telling them whether a said feature worked on your phone model. No personal data is sent. This helps improve nPhoneKIT. (You may inspect the full success check code if you would like, this is only used to improve and debug. Personal identifiers are anonymized, hashed, and made untraceable)**
+
+---
+
 ### 🔍 Transparency vs. Obfuscation
 
 | Feature                  | **nPhoneKIT**         | SAMFW Tool                |
@@ -93,12 +101,6 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands, real tran
 | Works on Linux?          | ✅ Native Python code | ❌ Not really             |
 | Entirely free, always?   | ✅ Absolutely         | ❌ Has a paid FRP unlock  |
 | Works with other apps installed? | ✅ Totally!   | ❌ Literally checks for Wireshark and closes itself |
-
----
-
-### Notes:
-
-- nPhoneKIT has a feature called "Success Checks" which will contact external servers, telling them whether a said feature worked on your phone model. No personal data is sent. This helps improve nPhoneKIT.
 
 ---
 
