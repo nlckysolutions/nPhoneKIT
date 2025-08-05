@@ -31,7 +31,7 @@ import xml.etree.ElementTree as ET
 # Open a new tab in the default browser
 # Checking and getting basic information about the current system
 
-version = "1.3.2"
+version = "1.3.2.5"
 
 # This program is free software: you can redistribute it and/or modify it 
 # under the terms of the GNU General Public License as published by the Free Software Foundation, 
@@ -97,15 +97,15 @@ else:
         json.dump(settings, f, indent=2)
 
 # Inject into variables (your original style)
-dark_theme = settings["dark_theme"]
-hacker_font = settings["hacker_font"]
-slower_animations = settings["slower_animations"]
-update_check = settings["update_check"]
-impatient = settings["impatient"]
-enable_preload = settings["enable_preload"]
-debug_info = settings["debug_info"]
-i_know_what_im_doing = settings["i_know_what_im_doing"]
-basic_success_checks = settings["basic_success_checks"]
+dark_theme = settings['dark_theme']
+hacker_font = settings['hacker_font']
+slower_animations = settings['slower_animations']
+update_check = settings['update_check']
+impatient = settings['impatient']
+enable_preload = settings['enable_preload']
+debug_info = settings['debug_info']
+i_know_what_im_doing = settings['i_know_what_im_doing']
+basic_success_checks = settings['basic_success_checks']
 
 def load_strings(xml_path):
     tree = ET.parse(xml_path)
@@ -133,7 +133,7 @@ def open_settings_window():
     settings = load_settings()
     win = tk.Toplevel()
     win.geometry('800x300')
-    win.title(strings["settingsMenuTitleText"])
+    win.title(strings['settingsMenuTitleText'])
 
     vars = {}
     row = 0
@@ -149,10 +149,10 @@ def open_settings_window():
 
     def open_dev_settings():
         dev_win = tk.Toplevel()
-        dev_win.title(strings["devSettingsTitle"])
+        dev_win.title(strings['devSettingsTitle'])
         dev_vars = {}
 
-        for i, key in enumerate(["debug_info", "i_know_what_im_doing", "basic_success_checks"]):
+        for i, key in enumerate(['debug_info", "i_know_what_im_doing", "basic_success_checks']):
             tk.Label(dev_win, text=key).grid(row=i, column=0, sticky="w")
             var = tk.BooleanVar(value=settings[key])
             chk = tk.Checkbutton(dev_win, variable=var)
@@ -165,7 +165,7 @@ def open_settings_window():
             save_settings(settings)
             dev_win.destroy()
 
-        tk.Button(dev_win, text=strings["applyText"], command=apply_dev).grid(row=i+1, columnspan=2)
+        tk.Button(dev_win, text=strings['applyText'], command=apply_dev).grid(row=i+1, columnspan=2)
 
     def apply_main():
         for k, v in vars.items():
@@ -173,8 +173,8 @@ def open_settings_window():
         save_settings(settings)
         win.destroy()
 
-    tk.Button(win, text=strings["applyText"], command=apply_main).grid(row=row, column=0)
-    tk.Button(win, text=strings["devSettingsTitle"], command=open_dev_settings, font=("Segoe UI", 5), width=20, height=1).grid(row=row+1, column=0)
+    tk.Button(win, text=strings['applyText'], command=apply_main).grid(row=row, column=0)
+    tk.Button(win, text=strings['devSettingsTitle'], command=open_dev_settings, font=("Segoe UI", 5), width=20, height=1).grid(row=row+1, column=0)
 
 os_config = "WINDOWS" if platform.system() == "Windows" else "LINUX" # Auto-get OS and save to var
 
@@ -202,15 +202,15 @@ class SerialManager: # AT command sender via class
 
         if not self.port: # No device connected
             if debug_info:
-                print(strings["noDeviceSermanError"]) 
+                print(strings['noDeviceSermanError']) 
         elif self.port:
             try:
                 self.ser = serial.Serial(self.port, self.baud, timeout=2) # Save the port for use with the rest of the class
                 time.sleep(0.5)
                 if debug_info:
-                    print(f"{strings["sermanConnectedPort"]}{self.port}")
+                    print(f"{strings['sermanConnectedPort']}{self.port}")
             except serial.SerialException as e:
-                raise RuntimeError(f"{strings["sermanOpeningPortError"]}{self.port}: {e}")
+                raise RuntimeError(f"{strings['sermanOpeningPortError']}{self.port}: {e}")
 
     def reset(self):
         self.__init__()
@@ -241,9 +241,9 @@ class SerialManager: # AT command sender via class
         if not self.ser or not self.ser.is_open:
             if preload_samsung_modem:
                 if debug_info:
-                    print(strings["noDeviceGenericError"])
+                    print(strings['noDeviceGenericError'])
             else:
-                print(strings["noDeviceGenericError"])
+                print(strings['noDeviceGenericError'])
         else:
             self.ser.flushInput()
             self.ser.flushOutput()
@@ -272,7 +272,7 @@ class SerialManagerWindows: # Version of SerialManager class specifically for Wi
         :param debug: Print connection details if True.
         """
         if platform.system() != "Windows":
-            raise RuntimeError(strings["sermanWindowsOsError"])
+            raise RuntimeError(strings['sermanWindowsOsError'])
 
         self.debug = debug
         self.baud = baud
@@ -281,15 +281,15 @@ class SerialManagerWindows: # Version of SerialManager class specifically for Wi
         # allow override, else auto-detect
         self.port = port or self.detect_port()
         if not self.port:
-            raise RuntimeError(strings["sermanNoComPort"])
+            raise RuntimeError(strings['sermanNoComPort'])
 
         try:
             self.ser = serial.Serial(self.port, self.baud, timeout=2)
             time.sleep(0.5)
             if self.debug:
-                print(f"{strings["sermanConnectedPort"]}{self.port} @ {self.baud} baud")
+                print(f"{strings['sermanConnectedPort']}{self.port} @ {self.baud} baud")
         except serial.SerialException as e:
-            raise RuntimeError(f"{strings["sermanOpeningPortError"]}{self.port}: {e}")
+            raise RuntimeError(f"{strings['sermanOpeningPortError']}{self.port}: {e}")
         
     def reset(self):
         self.__init__()
@@ -298,11 +298,11 @@ class SerialManagerWindows: # Version of SerialManager class specifically for Wi
         """Return the first COM* port or None."""
         ports = list_ports.comports()
         if self.debug:
-            print(f"{strings["sermanWinAvailablePorts"]}{[p.device for p in ports]}")
+            print(f"{strings['sermanWinAvailablePorts']}{[p.device for p in ports]}")
         for p in ports:
             if p.device.upper().startswith("COM"):
                 if self.debug:
-                    print(f"{strings["sermanWinDev"]}{p.device}")
+                    print(f"{strings['sermanWinDev']}{p.device}")
                 return p.device
         return None
 
@@ -313,7 +313,7 @@ class SerialManagerWindows: # Version of SerialManager class specifically for Wi
         :param wait: Seconds to pause before reading.
         """
         if not self.ser or not self.ser.is_open:
-            raise RuntimeError(strings["serPortNotOpen"])
+            raise RuntimeError(strings['serPortNotOpen'])
 
         self.ser.reset_input_buffer()
         self.ser.reset_output_buffer()
@@ -333,7 +333,7 @@ class SerialManagerWindows: # Version of SerialManager class specifically for Wi
         if self.ser and self.ser.is_open:
             self.ser.close()
             if self.debug:
-                print(strings["sermanWinConClosed"])
+                print(strings['sermanWinConClosed'])
 
 if os_config == "WINDOWS": # Choose which serial manager to use based on OS
     serman = SerialManagerWindows()
@@ -368,7 +368,7 @@ class AT:
                     f.write(result)
                 except Exception:
                     # Device must not be plugged in?
-                    print(strings["deviceConCheckNotPlugged"])
+                    print(strings['deviceConCheckNotPlugged'])
     
 class ADB: # ADB class for sending ADB commands if needed
     def send(command):
@@ -405,23 +405,23 @@ async def preload_samsung_modem(serman2):
 
         if "samsung" in output.lower():
             if debug_info:
-                print(strings["samPreloadUsbDetected"])
+                print(strings['samPreloadUsbDetected'])
             # If a Samsung device is plugged in, preload its modem using the below commands
             set_brand("Samsung") # For convenience, auto-select the SAMSUNG menu in the nPhoneKIT GUI
             serman2.send("AT+SWATD=0")  # Send without await since it's serial and blocking
             serman2.send("AT+ACTIVATE=0,0,0") # This and the above command do the same thing as modemUnlock("SAMSUNG"), except without infinitely waiting for preload_done, since modemUnlock uses the AT class which will follow preload_done
             if debug_info:
-                print(strings["samPreloadComplete"])
+                print(strings['samPreloadComplete'])
             preload_error = False
         else:
             if debug_info:
-                print(strings["samNoUsbFound"])
+                print(strings['samNoUsbFound'])
             enable_preload = False
             preload_error = True
 
     except Exception as e:
         if debug_info:
-            print(strings["samPreloadError"], e) # Usually error, but works most of the time reguardless.
+            print(strings['samPreloadError'], e) # Usually error, but works most of the time reguardless.
         enable_preload = False
         preload_error = True
 
@@ -438,8 +438,8 @@ def check_for_update():
         with urllib.request.urlopen(url) as response:
             data = json.loads(response.read().decode())
 
-            latest_version_raw = data["tag_name"]
-            latest_version = data["tag_name"].lstrip("v")
+            latest_version_raw = data['tag_name']
+            latest_version = data['tag_name'].lstrip("v")
 
             # If the tag is different then the current version, assume it's newer, and prompt update.
 
@@ -448,17 +448,17 @@ def check_for_update():
             if latest_version != version:
                 if "ⅴ" in latest_version_raw:
                     messagebox.showinfo(
-                        strings["updateReqd"],
-                        strings["updateReqdString"].format(version=version, latest_version=latest_version)
+                        strings['updateReqd'],
+                        strings['updateReqdString'].format(version=version, latest_version=latest_version)
                     )
                     sys.exit(0) # Exit and do not let user use nPhoneKIT if the update is REQUIRED or critical
                 else:   
                     messagebox.showinfo(
-                        strings["updateAvail"],
-                        strings["updateAvailString"].format(version=version, latest_version=latest_version)
+                        strings['updateAvail'],
+                        strings['updateAvailString'].format(version=version, latest_version=latest_version)
                     )
     except Exception as e:
-        print(strings["updateCheckFailed"])
+        print(strings['updateCheckFailed'])
 
 def get_public_hardware_uuid():
     mac = uuid.getnode()
@@ -509,11 +509,11 @@ def success_checks(uuid, model, action, status, first=True):
 # =============================================
 
 def MTPmenu():
-    show_messagebox_at(500, 200, "nPhoneKIT", strings["mtpMenu"])
+    show_messagebox_at(500, 200, "nPhoneKIT", strings['mtpMenu'])
     # Show user instructions to enable MTP mode
 
 def adbMenu():
-    show_messagebox_at(500, 200, "nPhoneKIT", strings["adbMenu"])
+    show_messagebox_at(500, 200, "nPhoneKIT", strings['adbMenu'])
     # Show user instructions to enable ADB mode
 
 # ================================================
@@ -629,12 +629,12 @@ def testAT(MTPinstruction=False, text=f"Testing USB access (ETA: {ETA[3]})..."):
 # =============================================
 
 def frp_unlock_pre_aug2022(): # FRP unlock for pre-aug2022 security patch update
-    print(strings["getVerInfo"], end="")
+    print(strings['getVerInfo'], end="")
     info = verinfo(False)
     model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output
 
     if info == "Fail":
-        print(strings["deviceCheckPluggedIn2"])
+        print(strings['deviceCheckPluggedIn2'])
         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Pre_2022", "Fail"))
         tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
     else:
@@ -656,11 +656,11 @@ def frp_unlock_pre_aug2022(): # FRP unlock for pre-aug2022 security patch update
             "shell am start -c android.intent.category.HOME -a android.intent.action.MAIN"
         ]
 
-        show_messagebox_at(500, 200, "nPhoneKIT", strings["misuseFrpGuidance"])
+        show_messagebox_at(500, 200, "nPhoneKIT", strings['misuseFrpGuidance'])
 
-        print(strings["attemptingEnableAdb"], end="")
+        print(strings['attemptingEnableAdb'], end="")
 
-        show_messagebox_at(500, 200, "nPhoneKIT", strings["frpUnlockStepsPre2022"])
+        show_messagebox_at(500, 200, "nPhoneKIT", strings['frpUnlockStepsPre2022'])
 
         for command in ATcommands:
             AT.send(command)
@@ -668,28 +668,28 @@ def frp_unlock_pre_aug2022(): # FRP unlock for pre-aug2022 security patch update
         output = readOutput("AT")
 
         if "error" in output.lower():
-            print(strings["failText"])
-            print(strings["frpNotCompatible"])
+            print(strings['failText'])
+            print(strings['frpNotCompatible'])
             tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Pre_2022", "Fail"))
             tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
         else:
-            print(strings["okText"])
-            print(strings["runUnlock"], end="")
-            show_messagebox_at(500, 200, "nPhoneKIT", strings["usbDebuggingPromptCheck"])
+            print(strings['okText'])
+            print(strings['runUnlock'], end="")
+            show_messagebox_at(500, 200, "nPhoneKIT", strings['usbDebuggingPromptCheck'])
             for command in ADBcommands:
                 ADB.send(command)
-            print(strings["okText"])
-            print(strings["unlockSuccess"])
+            print(strings['okText'])
+            print(strings['unlockSuccess'])
             tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Pre_2022", "Success"))
             tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
 
 def frp_unlock_aug2022_to_dec2022(): # FRP unlock for aug2022-dec2022 security patch update
-    print(strings["getVerInfo"], end="")
+    print(strings['getVerInfo'], end="")
     info = verinfo(False)
     model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output
 
     if info == "Fail":
-        print(strings["deviceCheckPluggedIn2"])
+        print(strings['deviceCheckPluggedIn2'])
         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Aug_To_Dec_2022", "Fail"))
         tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
     else:
@@ -705,11 +705,11 @@ def frp_unlock_aug2022_to_dec2022(): # FRP unlock for aug2022-dec2022 security p
             "shell am start -c android.intent.category.HOME -a android.intent.action.MAIN"
         ]
 
-        show_messagebox_at(500, 200, "nPhoneKIT", strings["misuseFrpGuidance2022"])
+        show_messagebox_at(500, 200, "nPhoneKIT", strings['misuseFrpGuidance2022'])
 
-        print(strings["attemptingEnableAdb"], end="")
+        print(strings['attemptingEnableAdb'], end="")
 
-        show_messagebox_at(500, 200, "nPhoneKIT", strings["frpUnlockSteps2022"])
+        show_messagebox_at(500, 200, "nPhoneKIT", strings['frpUnlockSteps2022'])
 
         for command in commands:
             AT.send(command)
@@ -717,28 +717,28 @@ def frp_unlock_aug2022_to_dec2022(): # FRP unlock for aug2022-dec2022 security p
         output = readOutput("AT")
 
         if "error" in output.lower():
-            print(strings["failText"])
-            print(strings["frpNotCompatible"])
+            print(strings['failText'])
+            print(strings['frpNotCompatible'])
             tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Aug_To_Dec_2022", "Fail"))
             tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
         else:
-            print(strings["okText"])
-            print(strings["runUnlock"], end="")
-            show_messagebox_at(500, 200, "nPhoneKIT", strings["usbDebuggingPromptCheck"])
+            print(strings['okText'])
+            print(strings['runUnlock'], end="")
+            show_messagebox_at(500, 200, "nPhoneKIT", strings['usbDebuggingPromptCheck'])
             for command in ADBcommands:
                 ADB.send(command)
-            print(strings["okText"])
-            print(strings["unlockSuccess"])
+            print(strings['okText'])
+            print(strings['unlockSuccess'])
             tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Aug_To_Dec_2022", "Success"))
             tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
 
 def frp_unlock_2024(): # FRP unlock for early 2024-ish security patch update
-    print(strings["getVerInfo"], end="")
+    print(strings['getVerInfo'], end="")
     info = verinfo(False)
     model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output
 
     if info == "Fail":
-        print(strings["deviceCheckPluggedIn2"])
+        print(strings['deviceCheckPluggedIn2'])
         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_2024", "Fail"))
         tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
     else:
@@ -765,11 +765,11 @@ def frp_unlock_2024(): # FRP unlock for early 2024-ish security patch update
             "shell am start -c android.intent.category.HOME -a android.intent.action.MAIN"
         ]
 
-        show_messagebox_at(500, 200, "nPhoneKIT", strings["misuseFrpGuidance2024"])
+        show_messagebox_at(500, 200, "nPhoneKIT", strings['misuseFrpGuidance2024'])
 
-        print(strings["attemptingEnableAdb"], end="")
+        print(strings['attemptingEnableAdb'], end="")
 
-        show_messagebox_at(500, 200, "nPhoneKIT", strings["frpUnlockSteps2024"])
+        show_messagebox_at(500, 200, "nPhoneKIT", strings['frpUnlockSteps2024'])
 
         for command in commands:
             AT.send(command)
@@ -777,18 +777,18 @@ def frp_unlock_2024(): # FRP unlock for early 2024-ish security patch update
         output = readOutput("AT")
 
         if "error" in output.lower():
-            print(strings["failText"])
-            print(strings["frpNotCompatible"])
+            print(strings['failText'])
+            print(strings['frpNotCompatible'])
             tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_2024", "Fail"))
             tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
         else:
-            print(strings["okText"])
-            print(strings["runUnlock"], end="")
-            show_messagebox_at(500, 200, "nPhoneKIT", strings["usbDebuggingPromptCheck"])
+            print(strings['okText'])
+            print(strings['runUnlock'], end="")
+            show_messagebox_at(500, 200, "nPhoneKIT", strings['usbDebuggingPromptCheck'])
             for command in ADBcommands:
                 ADB.send(command)
-            print(strings["okText"])
-            print(strings["unlockSuccess"])
+            print(strings['okText'])
+            print(strings['unlockSuccess'])
             if model == "" or model == None:
                 # Retry get model
                 info = verinfo(False, False)
@@ -802,16 +802,16 @@ def general_frp_unlock(): # Not completed yet
         frp_unlock_pre_aug2022()
     else:
         # to do, add FULLY universal FRP unlock
-        print(strings["deviceNotSupportedUniversal"])
+        print(strings['deviceNotSupportedUniversal'])
 
 def LG_screen_unlock(): # Screen unlock on supported LG devices *untested*
     info = verinfo(False)
     model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output (may not work)
 
-    show_messagebox_at(500, 200, "nPhoneKIT", strings["lgScreenUnlockSupportedDevs"])
-    print(strings["lgRunningScreenUnlock"], end="")
+    show_messagebox_at(500, 200, "nPhoneKIT", strings['lgScreenUnlockSupportedDevs'])
+    print(strings['lgRunningScreenUnlock'], end="")
     # Prepare phone for unlock
-    show_messagebox_at(600, 100, "nPhoneKIT", strings["lgScreenUnlockSteps"])
+    show_messagebox_at(600, 100, "nPhoneKIT", strings['lgScreenUnlockSteps'])
     
     time.sleep(1)
     if AT.usbswitch("-l", "LG Screen Unlock"):
@@ -821,14 +821,14 @@ def LG_screen_unlock(): # Screen unlock on supported LG devices *untested*
             output = f.read()
         # debug only: print("\n\nOutput: \n\n" + output + "\n\n")
         if "error" in output or "Error" in output:
-            print(strings["failText"] + "\n")
-            print(strings["lgScreenUnlockError"])
+            print(strings['failText'] + "\n")
+            print(strings['lgScreenUnlockError'])
             tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "LG_Screen_Unlock", "Fail"))
             tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
         else:
             rt()
-            print(strings["okText"] + "\n")
-            print(strings["lgScreenUnlockSuccess"])
+            print(strings['okText'] + "\n")
+            print(strings['lgScreenUnlockSuccess'])
             tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "LG_Screen_Unlock", "Success"))
             tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
 
@@ -839,28 +839,28 @@ def LG_screen_unlock(): # Screen unlock on supported LG devices *untested*
 def verinfo(gui=True, showtext=True): # Get version info on the device. Pretty simple. (not simple, this has taken me hours.)
     if gui:
         if enable_preload: # Skip all the nonsense and cut straight to the action, no "testAT" nonsense. We're prioritizing speed.
-            print(strings["getVerInfo"], end="")
+            print(strings['getVerInfo'], end="")
             AT.send("AT+DEVCONINFO") # Only works when the modem is working with modemUnlock("SAMSUNG")
             output = readOutput("AT") # Output is retrieved from the command
             if output == "" or output == None:
                 AT.send("AT+DEVCONINFO") # Only works when the modem is working with modemUnlock("SAMSUNG")
                 output = readOutput("AT")
                 if output == "" or output == None:
-                    print(strings["failText"])
-                    print(strings["verInfoCheckConn"])
+                    print(strings['failText'])
+                    print(strings['verInfoCheckConn'])
                     model = re.search(r'Model:\s*(\S+)', output) # Extract only the model no. from the output
                     tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "VersionInfo", "Fail"))
                     tthread.start() # Sends basic, anonymized success_checks info with only the model number.
             else:
-                print(strings["okText"])
+                print(strings['okText'])
                 model = re.search(r'Model:\s*(\S+)', output) # Extract only the model no. from the output
                 tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "VersionInfo", "Success"))
                 tthread.start() # Sends basic, anonymized success_checks info with only the model number.
             output = parse_devconinfo(output) # Make the output actually readable
             print(output) # Print the version info to the output box
         else: 
-            print(strings["getVerInfo"], end="")
-            if testAT(True, text=strings["getVerInfo"]): # We should verify AT is working before running the below code (testAT is deprecated)
+            print(strings['getVerInfo'], end="")
+            if testAT(True, text=strings['getVerInfo']): # We should verify AT is working before running the below code (testAT is deprecated)
                 if not enable_preload:
                     modemUnlock("SAMSUNG") # Run the command to allow more AT access for SAMSUNG devices unless preloading is enabled
                     rt() # Flush the command output file
@@ -874,33 +874,33 @@ def verinfo(gui=True, showtext=True): # Get version info on the device. Pretty s
                         output = readOutput("AT")
                         try:
                             if output == "" or output == None:
-                                print(strings["failText"])
-                                print(strings["verInfoCheckConn"])
+                                print(strings['failText'])
+                                print(strings['verInfoCheckConn'])
                             else:
                                 output = parse_devconinfo(output) # Make the output actually readable
                                 model = re.search(r'Model:\s*(\S+)', output) # Extract only the model no. from the output
                                 tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "VersionInfo", "Success"))
                                 tthread.start() # Sends basic, anonymized success_checks info with only the model number.
-                                print(strings["okText"])
+                                print(strings['okText'])
                         except Exception:
-                            print(strings["verInfoCheckConn"])
+                            print(strings['verInfoCheckConn'])
                     else:
                         output = parse_devconinfo(output) # Make the output actually readable
                         model = re.search(r'Model:\s*(\S+)', output) # Extract only the model no. from the output
                         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "VersionInfo", "Success"))
                         tthread.start() # Sends basic, anonymized success_checks info with only the model number.
-                        print(strings["okText"])
+                        print(strings['okText'])
                         print(output) # Print the version info to the output box
                 else:
                     output = parse_devconinfo(output) # Make the output actually readable
                     model = re.search(r'Model:\s*(\S+)', output) # Extract only the model no. from the output
                     tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "VersionInfo", "Success"))
                     tthread.start() # Sends basic, anonymized success_checks info with only the model number.
-                    print(strings["okText"])
+                    print(strings['okText'])
                     print(output) # Print the version info to the output box
     else:
-        #print(strings["getVerInfo"], end="")
-        if testAT(True, text=strings["getVerInfo"]): # We should verify AT is working before running the below code (deprecated)
+        #print(strings['getVerInfo'], end="")
+        if testAT(True, text=strings['getVerInfo']): # We should verify AT is working before running the below code (deprecated)
             if not enable_preload:
                 modemUnlock("SAMSUNG") # Run the command to allow more AT access for SAMSUNG devices unless preloading is enabled
                 rt() # Flush the command output file
@@ -911,10 +911,10 @@ def verinfo(gui=True, showtext=True): # Get version info on the device. Pretty s
                 output = readOutput("AT")
                 if output == "" or output == None:
                     if showtext:
-                        print(strings["failText"])
+                        print(strings['failText'])
                 else:
                     if showtext:
-                        print(strings["okText"])
+                        print(strings['okText'])
             output = parse_devconinfo(output) # Make the output actually readable (parse the output)
             model = re.search(r'Model:\s*(\S+)', output) # Extract only the model no. from the output
             if output == "" or output == None:
@@ -935,7 +935,7 @@ def wifitest(): # Opens a hidden WLANTEST menu on Samsung devices
     "OK"
     ]
 
-    print(strings["openingWifitest"], end="")
+    print(strings['openingWifitest'], end="")
     MTPmenu()
     modemUnlock("SAMSUNG") # Unlock modem
     AT.send("AT+SWATD=1") # Modem must be relocked for this to work
@@ -947,16 +947,16 @@ def wifitest(): # Opens a hidden WLANTEST menu on Samsung devices
         if i in output:
             counter += 1
     if counter == 3:
-        print(strings["okText"])
+        print(strings['okText'])
         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "WIFITEST", "Success"))
         tthread.start() # Sends basic, anonymized success_checks info with only the model number.
     else:
-        print(strings["failText"])
+        print(strings['failText'])
         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "WIFITEST", "Fail"))
         tthread.start() # Sends basic, anonymized success_checks info with only the model number.
 
 def reboot(): # Crash an android phone to reboot
-    print(strings["crashingToReboot"], end="")
+    print(strings['crashingToReboot'], end="")
     MTPmenu()
     info = verinfo(False)
     model = re.search(r'Model:\s*(\S+)', info)
@@ -965,18 +965,18 @@ def reboot(): # Crash an android phone to reboot
         AT.send("AT+CFUN=1,1") # Crashes the phone immediately.
     except Exception as e:
         if "disconnected" in str(e):
-            print(strings["okText"]) # Error opening serial means that the command worked, because it reset the phone before it could give a response.
+            print(strings['okText']) # Error opening serial means that the command worked, because it reset the phone before it could give a response.
             tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "REBOOT", "Success"))
             tthread.start() # Sends basic, anonymized success_checks info with only the model number.
     output = readOutput("AT")
     if "OK" in output:
-        print(strings["failText"])
-        print(strings["crashRebootFailed"])
+        print(strings['failText'])
+        print(strings['crashRebootFailed'])
         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "REBOOT", "Fail"))
         tthread.start() # Sends basic, anonymized success_checks info with only the model number.
 
 def reboot_sam(): # Crash a Samsung phone to reboot
-    print(strings["crashingToReboot"], end="")
+    print(strings['crashingToReboot'], end="")
     MTPmenu()
     modemUnlock("SAMSUNG", True)
     info = verinfo(False)
@@ -986,18 +986,18 @@ def reboot_sam(): # Crash a Samsung phone to reboot
         AT.send("AT+CFUN=1,1") # Crashes the phone immediately.
     except Exception as e:
         if "disconnected" in str(e):
-            print(strings["okText"]) # Error opening serial means that the command worked, because it reset the phone before it could give a response.
+            print(strings['okText']) # Error opening serial means that the command worked, because it reset the phone before it could give a response.
             tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "REBOOT_SAM", "Success"))
             tthread.start() # Sends basic, anonymized success_checks info with only the model number.
     output = readOutput("AT")
     if "OK" in output:
-        print(strings["failText"])
-        print(strings["crashRebootFailed"])
+        print(strings['failText'])
+        print(strings['crashRebootFailed'])
         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "REBOOT_SAM", "Fail"))
         tthread.start() # Sends basic, anonymized success_checks info with only the model number.
 
 def bloatRemove():
-    print(strings["uninstallingPackages"], end="")
+    print(strings['uninstallingPackages'], end="")
     adbMenu()
     # Samsung ONLY
     packages = [
@@ -1070,19 +1070,19 @@ def bloatRemove():
         if "Success" in readOutput("ADB") or "[n" in readOutput("ADB") or "age:" in readOutput("ADB"):
             continue
         else:
-            print(strings["failText"])
-            print(strings["devNotConnectedOrOtherErr"])
+            print(strings['failText'])
+            print(strings['devNotConnectedOrOtherErr'])
             tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), None, "DEBLOAT_SAM", "Fail"))
             tthread.start() # Sends basic, anonymized success_checks info with only the model number.
             break
     if "Success" in readOutput("ADB") or "[n" in readOutput("ADB") or "age:" in readOutput("ADB"):
-        print(strings["okText"])
-        print(strings["debloatSucceeded"])
+        print(strings['okText'])
+        print(strings['debloatSucceeded'])
         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), None, "DEBLOAT_SAM", "Success"))
         tthread.start() # Sends basic, anonymized success_checks info with only the model number.
 
 def reboot_download_sam(): # Reboot Samsung device to download mode
-    print(strings["rebootingDownloadMode"], end="")
+    print(strings['rebootingDownloadMode'], end="")
     MTPmenu() 
     AT.send("AT+FUS?") # Thankfully, no modem unlocking required for this command.
     if basic_success_checks:
@@ -1098,7 +1098,7 @@ def imeicheck():
     match = re.search(r'IMEI:\s*([0-9]+)', info)
     if match:
         imei = match.group(1)
-        messagebox.showinfo("nPhoneKIT", strings["imeiCheckGuide"])
+        messagebox.showinfo("nPhoneKIT", strings['imeiCheckGuide'])
         if os_config == "WINDOWS":
             webbrowser.open_new_tab(f"https://www.imei.info/services/blacklist-simple/samsung/check-free/?imei={str(imei)}")
         elif os_config == "LINUX":
@@ -1106,9 +1106,9 @@ def imeicheck():
             original_user = os.environ.get("SUDO_USER", "yourusername")  # linux is complicated :/
             cmd = f'su - {original_user} -c "DISPLAY=$DISPLAY DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS xdg-open \\"{url}\\""'
             os.system(cmd)
-        print(strings["imeiChecked"])
+        print(strings['imeiChecked'])
     else:
-        print(strings["imeiNotFound"])
+        print(strings['imeiNotFound'])
 
 def mtkclient():
     if os_config == "WINDOWS":
@@ -1147,7 +1147,7 @@ class RedirectText: # Redirect all print() statements to the output terminal
     def flush(self):
         pass
 
-current_brand = strings["brandCurrent"]
+current_brand = strings['brandCurrent']
 brand_buttons = {}  
 brand_frames = {} 
 
@@ -1185,7 +1185,7 @@ def main(): # Tkinter GUI
     button_bar = tk.Frame(left_frame, bg=background_color_1)
     button_bar.pack(fill="x")
 
-    for name in [strings["brandSamsung"], strings["brandLg"], strings["brandMediatek"], strings["brandAndroid"]]:
+    for name in [strings['brandSamsung'], strings['brandLg'], strings['brandMediatek'], strings['brandAndroid']]:
         btn = tk.Button(button_bar, text=name, font=("Helvetica", 20), width=15,
                         command=lambda n=name: select_brand(n), bg=background_color_2)
         btn.pack(side="left", padx=10, pady=10)
@@ -1232,10 +1232,10 @@ def main(): # Tkinter GUI
 
     tk.Button(top_outputbar, text="Settings", command=open_settings_window).pack(side="left", padx=(30, 100))
 
-    brand_frames[strings["brandSamsung"]] = samsung_frame_A
-    brand_frames[strings["brandMediatek"]] = mediatek_frame
-    brand_frames[strings["brandLg"]] = lg_frame
-    brand_frames[strings["brandAndroid"]] = general_frame
+    brand_frames[strings['brandSamsung']] = samsung_frame_A
+    brand_frames[strings['brandMediatek']] = mediatek_frame
+    brand_frames[strings['brandLg']] = lg_frame
+    brand_frames[strings['brandAndroid']] = general_frame
 
     emoji_font_bold = font.Font(family="Noto Color Emoji", size=10, weight="bold")
     emoji_font = font.Font(family="Noto Color Emoji", size=10)
@@ -1290,32 +1290,32 @@ def main(): # Tkinter GUI
 
 
     # For the FRP buttons, the year numbers are Mathematical Sans Unicode, because otherwise Noto Color Emoji would replace the numbers with emojis.
-    add_button(samsung_frame_A, strings["frpUnlock2024"], frp_unlock_2024, strings["frpUnlock2024info"], emoji_font_bold)
-    add_button(samsung_frame_A, strings["frpUnlock2022"], frp_unlock_aug2022_to_dec2022, strings["frpUnlock2022info"], emoji_font_smaller)
-    add_button(samsung_frame_A, strings["frpUnlockPre2022"], frp_unlock_pre_aug2022, strings["frpUnlockPre2022info"], emoji_font_smaller)
-    add_button(samsung_frame_A, strings["getVerInfo"], verinfo, strings["getVerInfoTooltip"])
-    add_button(samsung_frame_A, strings["crashReboot"], reboot_sam, strings["crashRebootInfo"])
-    add_button(samsung_frame_A, strings["samRebootDownloadMode"], reboot_download_sam, strings["samRebootDownloadModeInfo"])
-    add_button(samsung_frame_A, strings["samWifitest"], wifitest, strings["samWifitestInfo"])
-    add_button(samsung_frame_A, strings["samImeiCheck"], imeicheck, strings["samImeiCheckInfo"])
-    add_button(samsung_frame_A, strings["samRemoveBloat"], bloatRemove, strings["samRemoveBloatInfo"])
+    add_button(samsung_frame_A, strings['frpUnlock2024'], frp_unlock_2024, strings['frpUnlock2024info'], emoji_font_bold)
+    add_button(samsung_frame_A, strings['frpUnlock2022'], frp_unlock_aug2022_to_dec2022, strings['frpUnlock2022info'], emoji_font_smaller)
+    add_button(samsung_frame_A, strings['frpUnlockPre2022'], frp_unlock_pre_aug2022, strings['frpUnlockPre2022info'], emoji_font_smaller)
+    add_button(samsung_frame_A, strings['getVerInfo'], verinfo, strings['getVerInfoTooltip'])
+    add_button(samsung_frame_A, strings['crashReboot'], reboot_sam, strings['crashRebootInfo'])
+    add_button(samsung_frame_A, strings['samRebootDownloadMode'], reboot_download_sam, strings['samRebootDownloadModeInfo'])
+    add_button(samsung_frame_A, strings['samWifitest'], wifitest, strings['samWifitestInfo'])
+    add_button(samsung_frame_A, strings['samImeiCheck'], imeicheck, strings['samImeiCheckInfo'])
+    add_button(samsung_frame_A, strings['samRemoveBloat'], bloatRemove, strings['samRemoveBloatInfo'])
     
 
-    add_button(lg_frame, strings["lgScreenUnlockLabel"], LG_screen_unlock, strings["lgScreenUnlockTooltip"])
+    add_button(lg_frame, strings['lgScreenUnlockLabel'], LG_screen_unlock, strings['lgScreenUnlockTooltip'])
     
     
-    add_button(mediatek_frame, strings["mtkClientLabel"], mtkclient, strings["mtkClientTooltip"])
+    add_button(mediatek_frame, strings['mtkClientLabel'], mtkclient, strings['mtkClientTooltip'])
 
 
     #add_button(general_frame, "Universal FRP Unlock 🔓", general_frp_unlock, "This is a universal FRP unlock method. It \nshould work on most manufacturers. \n\n=======================================\n\nAttempts to unlock a phone \nwhich has been FRP locked. \n\n Usually only works on older devices,\nspecifically =< Android 8")
-    add_button(general_frame, strings["crashReboot"], reboot, strings["crashRebootInfo"])
+    add_button(general_frame, strings['crashReboot'], reboot, strings['crashRebootInfo'])
     #add_button(general_frame, "Remove Carrier Bloatware", bloatRemove, "")
 
     # Select default brand
     select_brand(current_brand)
 
-    print(strings["nPhoneKITwelcome"].format(version=version))
-    print(strings["newIn1.3.2"])
+    print(strings['nPhoneKITwelcome'].format(version=version))
+    print(strings['newIn1.3.2'])
     #print(f"\nNew in v1.3.0: Cleaned up codebase, added built-in settings, made more user-friendly, easier to install, better GUI. \n\nFull Changelog on https://github.com/nlckysolutions/nPhoneKIT/releases/tag/v1.3.0\n\n")
     #print(f"\n\nNew in v1.2.5: Fixed bugs on Windows")
     #print(f"\n\nNew in v1.2.4: Added basic Windows support")
@@ -1340,7 +1340,7 @@ if not is_root():
     root = tk.Tk()
     root.withdraw()
 
-    messagebox.showwarning("nPhoneKIT", strings["sudoReqdError"])
+    messagebox.showwarning("nPhoneKIT", strings['sudoReqdError'])
     sys.exit(1)
 
 if update_check:
