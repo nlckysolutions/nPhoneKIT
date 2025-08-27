@@ -17,8 +17,7 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands, real tran
 ---
 
 ### Bugs:
-- FRP unlock buttons attempt to work but say OK and FAIL at the same time. Should be fixed in v1.3.2
-- "preloaderror" variable stops nPhoneKIT from launching on Windows. Should be fixed in v1.3.2
+- No current bugs as of v1.3.2.5
 
 > [!IMPORTANT]
 > If you find a bug, **make sure to open a GitHub issue.** This will help me fix the error and make nPhoneKIT better for everyone!
