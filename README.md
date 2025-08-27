@@ -28,9 +28,11 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands, real tran
 - **MediaTek features work only using MTKCLIENT, which is in the DEPS folder. Sourced from: https://github.com/bkerler/mtkclient. MTKCLIENT is provided by bkerler and IS NOT owned or created by nPhoneKIT in ANY WAY.**
 - **IMEI Checking features work by opening a new tab of www.imei.info in order to check your IMEI yourself.**
 
+---
+
 ## Installation
 
-### Windows
+### Windows 🪟
 
 - Go to the latest release, download Source Code as ZIP.
 - Make sure you have Python and Pip installed.
@@ -42,7 +44,7 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands, real tran
 - Then, (every time you want to run nPhoneKIT you will need to run this in the source folder) (before running the below command, make sure Command Prompt is started as Administrator):
   python main.py
 
-### Linux
+### Linux 🐧
 
 - Go to the latest release, download Source Code as ZIP.
 - Extract the zip, open Terminal, and cd into the source code directory.
@@ -55,7 +57,7 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands, real tran
   sudo python3 main.py
   ```
 
-  ## IMPORTANT! If you want MediaTek features on LINUX:
+  ## ⚠️ IMPORTANT! If you want MediaTek features on LINUX:
   - In order to enable MTKCLIENT features, please run these additional commands in the source folder which contains main.py.
     ```
     sudo python3 -m venv ./deps/venv
