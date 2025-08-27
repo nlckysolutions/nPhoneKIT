@@ -76,9 +76,14 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands, real tran
 - Get Version/Firmware Info on All Samsung Devices
 - Reboot Samsung Devices (Normal or into Download Mode)
 - Open Hidden WLANTEST Menu on All Samsung Devices
+- IMEI Check Feature
+- Remove Bloatware
     
 ### LG
 - Legacy Screen Unlock (Pre-G5)
+
+### Mediatek
+- MTK Client (by [@bkerler](https://github.com/bkerler/mtkclient))
 
 ### Generic Android
 - Reboot
