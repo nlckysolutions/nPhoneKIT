@@ -38,7 +38,7 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands, real tran
 - Extract the zip, open Command Prompt as Administrator, and cd into the source code directory.
 - Run the following command:
   ```
-  pip install pyserial requests
+  pip install pyserial requests && pip install -r ./deps/mtkclient/requirements.txt
   ```
 - Then, (every time you want to run nPhoneKIT you will need to run this in the source folder) (before running the below command, make sure Command Prompt is started as Administrator):
   python main.py
