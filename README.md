@@ -42,7 +42,9 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands, real tran
   pip install pyserial requests && pip install -r ./deps/mtkclient/requirements.txt
   ```
 - Then, (every time you want to run nPhoneKIT you will need to run this in the source folder) (before running the below command, make sure Command Prompt is started as Administrator):
-  python main.py
+  ```
+python main.py
+```
 
 ### Linux 🐧
 
