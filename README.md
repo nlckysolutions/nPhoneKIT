@@ -1,18 +1,27 @@
-# nPhoneKIT
+<div align="center" markdown="1">
+<h1>nPhoneKIT</h1>
+  
+<img src="images/nphonekit-screenshot.png" height=700px width=700px>
 
-## READ THE WHOLE README FOR A COMPLETE UNDERSTANDING OF EVERYTHING NPHONEKIT WILL/CAN DO!
+<u>**Safe, free, open-source.**</u>
 
-**nPhoneKIT** is a fully open-source, community-powered toolbox for Android devices — built to replace bloated, sketchy, and closed-source tools that *hide* what they’re doing to your phone.
+![Built with Python](https://img.shields.io/badge/Built%20with-Python-Purple)
+</div>
 
-Unlike some other tools 👀 that are obfuscated, flagged by antivirus scanners, and hide everything behind cryptic buttons, **nPhoneKIT** is:
+---
+
+# About the project
+
+**nPhoneKIT** is a fully open-source, community-powered toolbox for Android devices, replacing certain closed-source tools that *hide* what they’re doing to your phone.
+
+Unlike some other tools, that are obfuscated and flagged by antivirus scanners, **nPhoneKIT** is:
 
 - ✅ 100% open Python code
 - ✅ Actually shows you the commands
-- ✅ Doesn’t drop mystery EXEs in Temp folders
 - ✅ Does most of the things that other tools can do anyway
 
 ### Why choose a tool that *won’t* tell you what it’s doing?
-With **nPhoneKIT**, there’s no "magic click" – just real commands, real transparency, and zero smoke and mirrors.
+With **nPhoneKIT**, there’s no "magic click" – just real commands and real transparency.
 
 ---
 
