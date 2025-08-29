@@ -22,7 +22,9 @@ import requests # Requesting different servers
 import uuid # Parsing and creating UUIDs
 import hashlib # Hashing strings
 import webbrowser # Opening browser to any page
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ET # Importing strings.xml
+from PyQt5 import QtCore, QtGui, QtWidgets # GUI
+from functools import partial
 
 ## nPhoneKIT permissions (these are the things that nPhoneKIT is capable of doing):
 
@@ -31,7 +33,7 @@ import xml.etree.ElementTree as ET
 # Open a new tab in the default browser
 # Checking and getting basic information about the current system
 
-version = "1.3.2.5"
+version = "1.3.3"
 
 # This program is free software: you can redistribute it and/or modify it 
 # under the terms of the GNU General Public License as published by the Free Software Foundation, 
@@ -502,7 +504,6 @@ def success_checks(uuid, model, action, status, first=True):
                     response = requests.post(f"{FIREBASE_URL}/success_checks.json", json=data)
                 except Exception as e:
                     silentError = 1
-        
 
 # =============================================
 #  Different instructions for the user
@@ -1120,211 +1121,640 @@ def mtkclient():
         os.system('sudo apt install libxcb-cursor0')
         os.system("sudo bash -c 'source ./deps/venv/bin/activate && python3 ./deps/mtkclient/mtk_gui.py'")
 
+def featureRequest():
+    # to do
+
+    data = {
+        "timestamp": time.time(), 
+        "uuid": str(uuid),
+        "featureDesc": featureDesc,
+        "phoneKITversion": version
+    }
+
+    try:
+        response = requests.post(f"{FIREBASE_URL}/success_checks.json", json=data)
+        status = "Feature request submitted successfully!"
+    except Exception as e:
+        status = "Error: Feature request failed to send. Check your connection?"
+    return status
+
 # ===================================
-#  Tkinter GUI Stuff
+#  PyQt5 GUI Stuff
 # ===================================
 
-class RedirectText: # Redirect all print() statements to the output terminal
-    def __init__(self, text_ctrl):
-        self.output = text_ctrl
-        # compile once for speed
+# ------------ theme & assets helpers ------------
+ACCENT = "#7C4DFF"        # deep purple accent (material-ish)
+ACCENT_HOVER = "#5E35B1"
+SURFACE = "#121212"
+SURFACE_2 = "#1E1E1E"
+TEXT = "#EAEAEA"
+TEXT_DIM = "#B9B9B9"
+OK_COLOR = "#35D07F"
+FAIL_COLOR = "#FF6B6B"
+
+def _find_logo():
+    for p in ("assets/logo.png", "logo.png", "./assets/logo.png", "./logo.png"):
+        if os.path.exists(p):
+            return p
+    return None
+
+def _material_qss(dark=True, hacker=False):
+    base_font = "JetBrains Mono" if hacker else "Inter, 'Segoe UI', Roboto, Helvetica, Arial"
+    mono_font = "JetBrains Mono" if hacker else "Fira Code, Consolas, 'Courier New'"
+    if dark:
+        return f"""
+        * {{
+            font-family: {base_font};
+            color: {TEXT};
+        }}
+        QMainWindow {{
+            background: {SURFACE};
+        }}
+        QToolTip {{
+            background: #FFD54F;            /* warm yellow */
+            color: #111111;                 /* readable text */
+            border: 1px solid #E6B800;      /* subtle darker yellow border */
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-family: "Noto Color Emoji", Inter, 'Segoe UI', Roboto, Helvetica, Arial;
+        }}
+        QPushButton {{
+            background: {SURFACE_2};
+            border: 1px solid #2A2A2A;
+            padding: 10px 14px;
+            border-radius: 10px;
+        }}
+        QPushButton:hover {{ background: #262626; border-color: #333; }}
+        QPushButton:pressed {{ background: {ACCENT}; color: white; }}
+        QTabWidget::pane {{
+            border: 1px solid #2A2A2A; border-radius: 12px; background: {SURFACE_2};
+        }}
+        QTabBar::tab {{
+            background: transparent; color: {TEXT_DIM};
+            padding: 10px 18px; margin: 6px; border-radius: 10px;
+        }}
+        QTabBar::tab:hover {{ background: #262626; color: {TEXT}; }}
+        QTabBar::tab:selected {{ background: {ACCENT}; color: white; }}
+        QFrame#Header {{
+            background: qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 {ACCENT}, stop:1 {ACCENT_HOVER});
+            border-bottom-left-radius: 0px; border-bottom-right-radius: 0px;
+        }}
+        QLabel#AppTitle {{ color: white; font-size: 22px; font-weight: 700; }}
+        QPlainTextEdit, QTextEdit {{
+            background: #0E0E0E; border: 1px solid #2A2A2A; border-radius: 12px; padding: 10px;
+            font-family: {mono_font}; font-size: 13px;
+        }}
+        QProgressBar {{
+            border: 1px solid #2A2A2A; border-radius: 8px;
+            background: #0E0E0E; text-align: center; color: {TEXT_DIM};
+        }}
+        QProgressBar::chunk {{ background: {ACCENT}; border-radius: 8px; }}
+        QCheckBox::indicator {{
+            width: 36px; height: 20px; border-radius: 10px; background: #2A2A2A;
+        }}
+        QCheckBox::indicator:checked {{ background: {ACCENT}; }}
+        QCheckBox::indicator::handle {{
+            width: 16px; height: 16px; margin: 2px; border-radius: 8px; background: #B0B0B0;
+        }}
+        QSplitter::handle {{ background: #1A1A1A; width: 6px; }}
+        QPushButton {{
+            font-family: "Noto Color Emoji";
+        }}
+        """
+    else:
+        # light mode (kept simple)
+        return f"""
+        * {{ color: #1A1A1A; font-family: {base_font}; }}
+        QMainWindow {{ background: #FAFAFA; }}
+        QToolTip {{
+            background: #FFEB3B;            /* bright yellow for light theme */
+            color: #111111;
+            border: 1px solid #E6B800;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-family: "Noto Color Emoji", Inter, 'Segoe UI', Roboto, Helvetica, Arial;
+        }}
+        QPushButton {{
+            background: #FFFFFF; border: 1px solid #E0E0E0; padding: 10px 14px; border-radius: 10px;
+        }}
+        QPushButton:hover {{ background: #F2F2F2; }}
+        QPushButton:pressed {{ background: {ACCENT}; color: white; }}
+        QTabWidget::pane {{ border: 1px solid #E0E0E0; border-radius: 12px; background: #FFFFFF; }}
+        QTabBar::tab {{
+            background: transparent; color: #666;
+            padding: 10px 18px; margin: 6px; border-radius: 10px;
+        }}
+        QTabBar::tab:hover {{ background: #F2F2F2; color: #222; }}
+        QTabBar::tab:selected {{ background: {ACCENT}; color: white; }}
+        QFrame#Header {{
+            background: qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 {ACCENT}, stop:1 {ACCENT_HOVER});
+        }}
+        QLabel#AppTitle {{ color: white; font-size: 22px; font-weight: 700; }}
+        QPlainTextEdit, QTextEdit {{
+            background: #FFFFFF; border: 1px solid #E0E0E0; border-radius: 12px; padding: 10px;
+            font-family: {mono_font}; font-size: 13px; color: #222;
+        }}
+        QProgressBar {{
+            border: 1px solid #E0E0E0; border-radius: 8px; background: #FFF; text-align: center; color: #555;
+        }}
+        QProgressBar::chunk {{ background: {ACCENT}; border-radius: 8px; }}
+        QCheckBox::indicator {{
+            width: 36px; height: 20px; border-radius: 10px; background: #DDD;
+        }}
+        QCheckBox::indicator:checked {{ background: {ACCENT}; }}
+        QCheckBox::indicator::handle {{
+            width: 16px; height: 16px; margin: 2px; border-radius: 8px; background: #FFF;
+        }}
+        QSplitter::handle {{ background: #EEE; width: 6px; }}
+        QPushButton {{
+            font-family: "Noto Color Emoji";
+        }}
+        """
+
+# ------------ busy spinner overlay ------------
+class BusyOverlay(QtWidgets.QWidget):
+    def __init__(self, parent=None, text="Working…"):
+        super().__init__(parent)
+        self.setAttribute(QtCore.Qt.WA_TransparentForMouseEvents, False)
+        self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.SubWindow)
+        self._angle = 0
+        self._timer = QtCore.QTimer(self)
+        self._timer.timeout.connect(self._tick)
+        self._label = QtWidgets.QLabel(text, self)
+        self._label.setStyleSheet(f"color:{TEXT}; font-size:14px;")
+        self.hide()
+
+    def _tick(self):
+        self._angle = (self._angle + 8) % 360
+        self.update()
+
+    def start(self):
+        self.setGeometry(self.parent().rect())
+        self.show()
+        self.raise_()
+        self._timer.start(16)
+
+    def stop(self):
+        self._timer.stop()
+        self.hide()
+
+    def resizeEvent(self, e):
+        self.setGeometry(self.parent().rect())
+        self._label.adjustSize()
+        self._label.move(self.width()//2 - self._label.width()//2, self.height()//2 + 26)
+        super().resizeEvent(e)
+
+    def paintEvent(self, e):
+        p = QtGui.QPainter(self)
+        p.setRenderHint(QtGui.QPainter.Antialiasing)
+        # dim background
+        p.fillRect(self.rect(), QtGui.QColor(0,0,0,120))
+        # spinner donut
+        radius = 22
+        center = QtCore.QPoint(self.width()//2, self.height()//2 - 8)
+        pen = QtGui.QPen(QtGui.QColor(255,255,255,220), 3)
+        p.setPen(pen)
+        # draw faint ring
+        p.setOpacity(0.2); p.drawEllipse(center, radius, radius)
+        # draw rotating arc
+        p.setOpacity(1.0)
+        p.save()
+        p.translate(center)
+        p.rotate(self._angle)
+        rect = QtCore.QRectF(-radius, -radius, radius*2, radius*2)
+        p.drawArc(rect, 0, 110*16)  # 110 degrees
+        p.restore()
+
+# ------------ worker to run blocking functions off UI thread ------------
+class WorkerSignals(QtCore.QObject):
+    finished = QtCore.pyqtSignal()
+    error = QtCore.pyqtSignal(str)
+
+class Worker(QtCore.QRunnable):
+    def __init__(self, fn, *args, **kwargs):
+        super().__init__()
+        self.fn = fn
+        self.args = args
+        self.kwargs = kwargs
+        self.signals = WorkerSignals()
+        self.setAutoDelete(True)
+
+    @QtCore.pyqtSlot()
+    def run(self):
+        try:
+            self.fn(*self.args, **self.kwargs)
+        except Exception as e:
+            self.signals.error.emit(str(e))
+        finally:
+            self.signals.finished.emit()
+
+# ------------ stdout redirector -> QTextEdit with token coloring ------------
+class QtRedirectText(QtCore.QObject):
+    new_text = QtCore.pyqtSignal(str)
+    def __init__(self, widget):
+        super().__init__()
+        self.widget = widget
         self.pattern = re.compile(r"( FAIL| OK)")
+        self.new_text.connect(self._append)
 
-    def write(self, string):
-        idx = 0
-        for m in self.pattern.finditer(string):
-            # insert text before match
-            self.output.insert("end", string[idx:m.start()])
-            token = m.group(1)
-            # choose tag based on token
-            tag = "fail" if token.strip() == "FAIL" else "ok"
-            self.output.insert("end", token, tag)
-            idx = m.end()
-        # insert any trailing text
-        self.output.insert("end", string[idx:])
-        self.output.see("end")
+    def write(self, s: str):
+        # ensure on gui thread
+        self.new_text.emit(s)
 
-    def flush(self):
+    def flush(self):  # required for file-like
         pass
 
-current_brand = strings['brandCurrent']
-brand_buttons = {}  
-brand_frames = {} 
+    def _append(self, s: str):
+        # token colorize -> HTML
+        def _esc(x): return QtGui.QTextDocument().toPlainText() if False else x  # no-op fast path
+        parts = []
+        last = 0
+        for m in self.pattern.finditer(s):
+            parts.append(QtGui.QTextDocument().toPlainText() if False else s[last:m.start()])
+            token = m.group(1).strip()
+            color = OK_COLOR if token == "OK" else FAIL_COLOR
+            parts.append(f'<span style="color:{color}; font-weight:700;"> {token}</span>')
+            last = m.end()
+        parts.append(s[last:])
+        html = "".join(parts).replace("\n", "<br>")
+        self.widget.moveCursor(QtGui.QTextCursor.End)
+        self.widget.insertHtml(html)
+        self.widget.moveCursor(QtGui.QTextCursor.End)
 
-def select_brand(name): # Choose the brand based on the detected connected device
+# ------------ settings dialog ------------
+class SettingsDialog(QtWidgets.QDialog):
+    def __init__(self, parent=None, settings=None):
+        super().__init__(parent)
+        self.setWindowTitle(strings.get('settingsMenuTitleText','Settings'))
+        self.setModal(True)
+        self.resize(520, 380)
+
+        self.settings = dict(settings or {})
+
+        self.setStyleSheet("""
+            QDialog {
+                background-color: #000000;
+            }
+            QCheckBox {
+                color: white;
+            }
+            QCheckBox::indicator {
+                width: 18px;
+                height: 18px;
+                border: 2px solid #888;
+                border-radius: 4px;
+                background: black;
+            }
+            QCheckBox::indicator:checked {
+                background: #4CAF50;
+                border: 2px solid #4CAF50;
+            }
+        """)
+
+        
+
+        # main toggles
+        main_keys = ["dark_theme","hacker_font","slower_animations","update_check","impatient","enable_preload"]
+        dev_keys  = ["debug_info","i_know_what_im_doing","basic_success_checks"]
+
+        layout = QtWidgets.QVBoxLayout(self)
+
+        # logo row
+        logo = self._logo_widget()
+        layout.addWidget(logo)
+
+        grid = QtWidgets.QGridLayout()
+        self.boxes = {}
+        r = 0
+        for k in main_keys:
+            cb = QtWidgets.QCheckBox(k.replace("_"," ").title())
+            cb.setChecked(bool(self.settings.get(k, False)))
+            self.boxes[k] = cb
+            grid.addWidget(cb, r//2, r%2)
+            r += 1
+        layout.addLayout(grid)
+
+        layout.addSpacing(8)
+        dev_label = QtWidgets.QLabel(strings.get('devSettingsTitle','Developer Settings'))
+        dev_label.setStyleSheet("color:#aaa; font-weight:600; margin-top:6px;")
+        layout.addWidget(dev_label)
+
+        dev_grid = QtWidgets.QGridLayout()
+        for i, k in enumerate(dev_keys):
+            cb = QtWidgets.QCheckBox(k.replace("_"," ").title())
+            cb.setChecked(bool(self.settings.get(k, False)))
+            self.boxes[k] = cb
+            dev_grid.addWidget(cb, i//2, i%2)
+        layout.addLayout(dev_grid)
+
+        layout.addStretch(1)
+        btns = QtWidgets.QHBoxLayout()
+        btnCancel = QtWidgets.QPushButton("Cancel")
+        btnApply  = QtWidgets.QPushButton(strings.get('applyText','Apply'))
+        btns.addStretch(1); btns.addWidget(btnCancel); btns.addWidget(btnApply)
+        layout.addLayout(btns)
+
+        btnCancel.clicked.connect(self.reject)
+        btnApply.clicked.connect(self._apply)
+
+    def _apply(self):
+        for k, cb in self.boxes.items():
+            self.settings[k] = bool(cb.isChecked())
+        save_settings(self.settings)
+        self.accept()
+
+    def _logo_widget(self):
+        w = QtWidgets.QFrame()
+        h = QtWidgets.QHBoxLayout(w)
+        pic = QtWidgets.QLabel()
+        pic.setFixedSize(40,40)
+        pth = _find_logo()
+        if pth:
+            pm = QtGui.QPixmap(pth).scaled(40,40, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
+            pic.setPixmap(pm)
+        else:
+            # draw placeholder gradient
+            pm = QtGui.QPixmap(40,40); pm.fill(QtCore.Qt.transparent)
+            qp = QtGui.QPainter(pm)
+            grad = QtGui.QLinearGradient(0,0,40,40)
+            grad.setColorAt(0, QtGui.QColor(124,77,255))
+            grad.setColorAt(1, QtGui.QColor(3,218,198))
+            qp.setBrush(grad); qp.setPen(QtCore.Qt.NoPen); qp.drawRoundedRect(0,0,40,40,8,8); qp.end()
+            pic.setPixmap(pm)
+        title = QtWidgets.QLabel(strings.get('settingsMenuTitleText','Settings'))
+        title.setStyleSheet("font-size:18px; font-weight:700;")
+        h.addWidget(pic); h.addSpacing(10); h.addWidget(title); h.addStretch(1)
+        return w
+
+# ------------ main window ------------
+class MainWindow(QtWidgets.QMainWindow):
+    instance = None  # for set_brand() global bridge
+
+    def __init__(self):
+        super().__init__()
+        MainWindow.instance = self
+
+        self.setWindowTitle("nPhoneKIT")
+        self.resize(1550, 860)
+        self.pool = QtCore.QThreadPool.globalInstance()
+
+        # theming
+        self._settings = load_settings()
+        self.apply_theme(self._settings.get("dark_theme", True), self._settings.get("hacker_font", False))
+
+        # layout: splitter (left content tabs, right output console)
+        splitter = QtWidgets.QSplitter()
+        splitter.setOrientation(QtCore.Qt.Horizontal)
+        self.setCentralWidget(splitter)
+
+        # left: brand tabs + actions
+        left = QtWidgets.QWidget(); lyt = QtWidgets.QVBoxLayout(left); lyt.setContentsMargins(16,16,16,16); lyt.setSpacing(12)
+        self.tabs = QtWidgets.QTabWidget()
+        # fancy round tabs
+        self.tabs.setDocumentMode(True)
+        self.tabs.setTabPosition(QtWidgets.QTabWidget.North)
+        lyt.addWidget(self.tabs)
+        splitter.addWidget(left)
+
+        # right: header + output
+        right = QtWidgets.QWidget(); rlyt = QtWidgets.QVBoxLayout(right); rlyt.setContentsMargins(0,0,12,12); rlyt.setSpacing(10)
+        header = self._build_header()
+        rlyt.addWidget(header)
+        self.output = QtWidgets.QTextEdit()
+        self.output.setReadOnly(True)
+        rlyt.addWidget(self.output, 1)
+        splitter.addWidget(right)
+
+        splitter.setStretchFactor(0, 1)
+        splitter.setStretchFactor(1, 1)
+
+        # redirect stdout/stderr
+        self._redirector = QtRedirectText(self.output)
+        sys.stdout = self._redirector
+        sys.stderr = self._redirector
+
+        # busy overlay on whole window
+        self.overlay = BusyOverlay(self)
+
+        # tabs and buttons
+        self._brand_index = {}
+        self._build_brand_tabs()
+
+        # welcome text
+        print(strings.get('nPhoneKITwelcome', 'Welcome to nPhoneKIT').format(version=version))
+        print(strings.get('newIn1.3.2', ''))
+
+        # window animation
+        self._fade_in()
+
+    def resizeEvent(self, e):
+        super().resizeEvent(e)
+        if self.overlay and self.overlay.isVisible():
+            self.overlay.setGeometry(self.rect())
+
+    # ----- UI construction helpers -----
+    def _build_header(self):
+        bar = QtWidgets.QFrame()
+        bar.setObjectName("Header")
+        hlay = QtWidgets.QHBoxLayout(bar); hlay.setContentsMargins(16,10,16,10)
+        # logo
+        logo = QtWidgets.QLabel(); logo.setFixedSize(36,36)
+        pth = _find_logo()
+        if pth:
+            pm = QtGui.QPixmap(pth).scaled(36,36, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
+            logo.setPixmap(pm)
+        else:
+            pm = QtGui.QPixmap(36,36); pm.fill(QtCore.Qt.transparent)
+            qp = QtGui.QPainter(pm)
+            grad = QtGui.QLinearGradient(0,0,36,36)
+            grad.setColorAt(0, QtGui.QColor(124,77,255))
+            grad.setColorAt(1, QtGui.QColor(3,218,198))
+            qp.setBrush(grad); qp.setPen(QtCore.Qt.NoPen); qp.drawRoundedRect(0,0,36,36,8,8); qp.end()
+            logo.setPixmap(pm)
+        title = QtWidgets.QLabel("nPhoneKIT")
+        title.setObjectName("AppTitle")
+        subtitle = QtWidgets.QLabel(f"v{version}")
+        subtitle.setStyleSheet("color: rgba(255,255,255,0.85); font-size:13px;")
+
+        tbox = QtWidgets.QVBoxLayout(); tbox.setSpacing(0)
+        tbox.addWidget(title); tbox.addWidget(subtitle)
+
+        btnSettings = QtWidgets.QPushButton(strings.get('settingsMenuTitleText','Settings'))
+        btnSettings.clicked.connect(self.open_settings)
+
+        hlay.addWidget(logo); hlay.addSpacing(10); hlay.addLayout(tbox); hlay.addStretch(1); hlay.addWidget(btnSettings)
+        return bar
+
+    def _brand_tab(self, title, actions):
+        w = QtWidgets.QWidget(); grid = QtWidgets.QGridLayout(w)
+        grid.setContentsMargins(8,8,8,8); grid.setHorizontalSpacing(12); grid.setVerticalSpacing(12)
+        # build pretty buttons
+        font_big = QtGui.QFont(); font_big.setPointSize(12); font_big.setBold(True)
+        for i, (label, tooltip, fn) in enumerate(actions):
+            btn = QtWidgets.QPushButton(label)
+            btn.setToolTip(tooltip)
+            btn.setMinimumHeight(44)
+            btn.clicked.connect(partial(self.run_task, fn))
+            # put into a card-like holder
+            card = QtWidgets.QFrame(); card.setStyleSheet("QFrame { background: rgba(255,255,255,0.03); border: 1px solid #2A2A2A; border-radius: 12px; }")
+            v = QtWidgets.QVBoxLayout(card); v.setContentsMargins(10,10,10,10)
+            btn.setFont(font_big)
+            v.addWidget(btn)
+            grid.addWidget(card, i//2, i%2)
+        return w
+
+    def _build_brand_tabs(self):
+        # actions must call your existing backend functions
+        samsung_actions = [
+            (strings.get('frpUnlock2024','FRP Unlock 2024 🔓'), strings.get('frpUnlock2024info',''), frp_unlock_2024),
+            (strings.get('frpUnlock2022','FRP Unlock 2022 ⛓️'), strings.get('frpUnlock2022info',''), frp_unlock_aug2022_to_dec2022),
+            (strings.get('frpUnlockPre2022','FRP Unlock pre-2022 🔓'), strings.get('frpUnlockPre2022info',''), frp_unlock_pre_aug2022),
+            (strings.get('getVerInfo','Get Version Info 🧾'), strings.get('getVerInfoTooltip',''), verinfo),
+            (strings.get('crashReboot','Crash/Reboot ⚡'), strings.get('crashRebootInfo',''), reboot_sam),
+            (strings.get('samRebootDownloadMode','Reboot to Download ⬇️'), strings.get('samRebootDownloadModeInfo',''), reboot_download_sam),
+            (strings.get('samWifitest','WIFITEST 🔧'), strings.get('samWifitestInfo',''), wifitest),
+            (strings.get('samImeiCheck','IMEI Check 🔍'), strings.get('samImeiCheckInfo',''), imeicheck),
+            (strings.get('samRemoveBloat','Remove Bloat 🧹'), strings.get('samRemoveBloatInfo',''), bloatRemove),
+        ]
+        lg_actions = [
+            (strings.get('lgScreenUnlockLabel','LG Screen Unlock 🔓'), strings.get('lgScreenUnlockTooltip',''), LG_screen_unlock),
+        ]
+        mtk_actions = [
+            (strings.get('mtkClientLabel','MTK Client GUI 🚀'), strings.get('mtkClientTooltip',''), mtkclient),
+        ]
+        android_actions = [
+            (strings.get('crashReboot','Crash/Reboot ⚡'), strings.get('crashRebootInfo',''), reboot),
+        ]
+
+        tabspec = [
+            (strings.get('brandSamsung','Samsung'), samsung_actions),
+            (strings.get('brandLg','LG'), lg_actions),
+            (strings.get('brandMediatek','MediaTek'), mtk_actions),
+            (strings.get('brandAndroid','Android'), android_actions),
+        ]
+        self.tabs.clear()
+        self._brand_index.clear()
+        for i, (title, acts) in enumerate(tabspec):
+            page = self._brand_tab(title, acts)
+            self.tabs.addTab(page, title)
+            self._brand_index[title] = i
+
+        # select default
+        want = "Samsung"
+        self.set_brand(want)
+
+    # ----- public: programmatic brand selection -----
+    def set_brand(self, name):
+        idx = self._brand_index.get(name)
+        if idx is not None:
+            self.tabs.setCurrentIndex(idx)
+
+    # ----- run task with spinner & thread -----
+    def run_task(self, fn):
+        self.overlay.start()
+        worker = Worker(fn)
+        worker.signals.finished.connect(self.overlay.stop)
+        worker.signals.error.connect(lambda e: print(f" FAIL {e}"))
+        self.pool.start(worker)
+
+    # ----- settings -----
+    def open_settings(self):
+        dlg = SettingsDialog(self, settings=self._settings)
+        if dlg.exec_() == QtWidgets.QDialog.Accepted:
+            self._settings = dlg.settings
+            # immediately apply theme if toggled
+            self.apply_theme(self._settings.get("dark_theme", True), self._settings.get("hacker_font", False))
+
+    def apply_theme(self, dark, hacker):
+        self.setStyleSheet(_material_qss(dark=dark, hacker=hacker))
+
+    # ----- nice fade-in -----
+    def _fade_in(self):
+        self.setWindowOpacity(0.0)
+        anim = QtCore.QPropertyAnimation(self, b"windowOpacity", self)
+        anim.setDuration(400 if not self._settings.get("slower_animations", False) else 900)
+        anim.setStartValue(0.0); anim.setEndValue(1.0); anim.start(QtCore.QAbstractAnimation.DeleteWhenStopped)
+
+current_brand = strings.get('brandCurrent', 'Samsung')
+
+def select_brand(name):
     global current_brand
     current_brand = name
-    for bname, btn in brand_buttons.items():
-        btn.config(relief="raised", bg="#cccccc")
-    brand_buttons[name].config(relief="sunken", bg="#9999ff")
-
-    for bname, frame in brand_frames.items():
-        frame.pack_forget()
-    brand_frames[name].pack(fill="y")
+    if MainWindow.instance:
+        MainWindow.instance.set_brand(name)
 
 def set_brand(name):
-    select_brand(name) # Change selected brand from anywhere in the script
+    select_brand(name)
 
-def main(): # Tkinter GUI
-    root = tk.Tk()
-    root.title("nPhoneKIT")
-    root.geometry("1550x800")
+# --- Instant / Tunable Tooltips for PyQt5 ---
+class InstantTooltips(QtCore.QObject):
+    """
+    Global tooltip accelerator.
+    - delay_ms: how long to wait before showing (0 = instant)
+    - hide_ms: auto-hide after N ms (<=0 disables auto-hide)
+    """
+    def __init__(self, delay_ms=100, hide_ms=0, parent=None):
+        super().__init__(parent)
+        self.delay_ms = max(0, int(delay_ms))
+        self.hide_ms = int(hide_ms)
+        self._timer = QtCore.QTimer(self)
+        self._timer.setSingleShot(True)
+        self._pending = None  # (global_pos, widget, text)
 
-    emoji_font = font.Font(family="Helvetica", size=10)
-
-    if dark_theme:
-        background_color_1 = "#000000"
-        background_color_2 = "#444444"
-    else:
-        background_color_1 = "#dddddd"
-        background_color_2 = "#cccccc"
-
-    left_frame = tk.Frame(root, width=1050, bg=background_color_1, bd=0, relief="flat")
-    left_frame.pack(side="left", fill="y")
-
-    button_bar = tk.Frame(left_frame, bg=background_color_1)
-    button_bar.pack(fill="x")
-
-    for name in [strings['brandSamsung'], strings['brandLg'], strings['brandMediatek'], strings['brandAndroid']]:
-        btn = tk.Button(button_bar, text=name, font=("Helvetica", 20), width=15,
-                        command=lambda n=name: select_brand(n), bg=background_color_2)
-        btn.pack(side="left", padx=10, pady=10)
-        brand_buttons[name] = btn
-
-    content_area = tk.Frame(left_frame, bg=background_color_1, bd=0, relief="flat")
-    content_area.pack(fill="both", expand=True)
-
-    samsung_frame_A = tk.Frame(content_area, bg=background_color_1, bd=0, relief="flat")
-    lg_frame = tk.Frame(content_area, bg=background_color_1, bd=0, relief="flat")
-    mediatek_frame = tk.Frame(content_area, bg=background_color_1, bd=0, relief="flat")
-    general_frame = tk.Frame(content_area, bg=background_color_1, bd=0, relief="flat")
-
-    # Output frame
-    right_frame = tk.Frame(root, width=200, bd=0, relief="flat")
-    right_frame.pack(side="right", fill="both")
-    if dark_theme:
-        top_outputbar = tk.Frame(right_frame, bg="#9191eb", height=100)
-    else:
-        top_outputbar = tk.Frame(right_frame, bg="#6969f1", height=100)
-    top_outputbar.pack(fill="x")
-    if dark_theme:
-        if hacker_font:
-            output_box = tk.Text(right_frame, width=525, wrap="word", bg="#000000", fg="#2FD948", font=("Courier", 15), bd=0, relief="flat", highlightthickness=0)
-        else:
-            output_box = tk.Text(right_frame, width=525, wrap="word", bg="#000000", fg="#FFFFFF", font=("Courier", 15), bd=0, relief="flat", highlightthickness=0)
-    else:
-        if hacker_font:
-            output_box = tk.Text(right_frame, width=525, wrap="word", bg="#f5f5f5", fg="#2FD948", font=("Courier", 15), bd=0, relief="flat", highlightthickness=0)
-        else:
-            output_box = tk.Text(right_frame, width=525, wrap="word", bg="#f5f5f5", font=("Courier", 15), bd=0, relief="flat", highlightthickness=0)
-    output_box.pack(expand=True, fill="both")
-    output_box.tag_configure("fail", foreground="red")
-    output_box.tag_configure("ok",  foreground="green")
-    
-    sys.stdout = RedirectText(output_box)
-    sys.stderr = RedirectText(output_box)
-
-    # Header
-    if dark_theme:
-        tk.Label(top_outputbar, text="nPhoneKIT", bg="#9191eb", fg="black", font=("Helvetica", 24, "bold"), width=10).pack(pady=10, side="left")
-    else:
-        tk.Label(top_outputbar, text="nPhoneKIT", bg="#6969f1", fg="white", font=("Helvetica", 24, "bold"), width=10).pack(pady=10, side="left")
-
-    tk.Button(top_outputbar, text="Settings", command=open_settings_window).pack(side="left", padx=(30, 100))
-
-    brand_frames[strings['brandSamsung']] = samsung_frame_A
-    brand_frames[strings['brandMediatek']] = mediatek_frame
-    brand_frames[strings['brandLg']] = lg_frame
-    brand_frames[strings['brandAndroid']] = general_frame
-
-    emoji_font_bold = font.Font(family="Noto Color Emoji", size=10, weight="bold")
-    emoji_font = font.Font(family="Noto Color Emoji", size=10)
-    emoji_font_smaller = font.Font(family="Noto Color Emoji", size=8)
-
-    # Tooltip label (hidden by default)
-    tooltip = tk.Label(root, text="", bg="yellow", font=("Helvetica", 12), bd=1, relief="solid")
-    tooltip.place_forget()
-
-    if slower_animations:
-        anim_speed = 8
-    else:
-        anim_speed = 16
-
-    def animate_window_open(target_width=1700, speed=anim_speed, delay=1):
-        def expand():
-            nonlocal current_width
-            if current_width < target_width:
-                current_width += speed
-                root.geometry(f"{current_width}x800")  # assuming fixed height
-                root.after(delay, expand)
+    def eventFilter(self, obj, event):
+        et = event.type()
+        if et == QtCore.QEvent.ToolTip:
+            text = obj.toolTip() if hasattr(obj, "toolTip") else ""
+            if not text:
+                QtWidgets.QToolTip.hideText()
+                return True
+            pos = obj.mapToGlobal(event.pos())
+            if self.delay_ms == 0:
+                QtWidgets.QToolTip.showText(pos, text, obj)
+                if self.hide_ms > 0:
+                    QtCore.QTimer.singleShot(self.hide_ms, QtWidgets.QToolTip.hideText)
             else:
-                root.geometry(f"{target_width}x800")  # ensure final size exact
-        current_width = 1
-        root.geometry("1x800")  # Start tiny
-        root.after(10, expand)  # Start expanding after 10ms
+                self._pending = (pos, obj, text)
+                self._timer.stop()
+                self._timer.timeout.disconnect() if self._timer.receivers(self._timer.timeout) else None
+                self._timer.timeout.connect(self._show_pending)
+                self._timer.start(self.delay_ms)
+            return True  # we handled it (prevents default slow tooltip)
+        elif et in (QtCore.QEvent.Leave, QtCore.QEvent.FocusOut):
+            QtWidgets.QToolTip.hideText()
+        return False
 
-    def show_tooltip(event, text):
-        tooltip.config(text=text)
-        x = event.x_root - root.winfo_rootx() + 10
-        y = event.y_root - root.winfo_rooty() + 10
-        tooltip.place(x=x, y=y)
-        tooltip.lift()
+    def _show_pending(self):
+        if not self._pending:
+            return
+        pos, w, text = self._pending
+        self._pending = None
+        if w and w.isVisible():
+            QtWidgets.QToolTip.showText(pos, text, w)
+            if self.hide_ms > 0:
+                QtCore.QTimer.singleShot(self.hide_ms, QtWidgets.QToolTip.hideText)
 
-    def hide_tooltip(event):
-        tooltip.place_forget()
+# ------------- entry point -------------
+def main():
+    app = QtWidgets.QApplication(sys.argv)
+    # apply tooltip palette for visibility
+    pal = app.palette()
+    pal.setColor(QtGui.QPalette.ToolTipBase, QtGui.QColor(42,42,42))
+    pal.setColor(QtGui.QPalette.ToolTipText, QtGui.QColor(240,240,240))
+    app.setPalette(pal)
 
-    def add_button(frame, text, cmd, prefix, fontType=emoji_font):
-        if dark_theme:
-            if hacker_font:
-                btn = tk.Button(frame, text=text, bg="#444444", fg="#2FD948", command=cmd, font=fontType)
-            else:
-                btn = tk.Button(frame, text=text, bg="#444444", fg="#cccccc", command=cmd, font=fontType)
-        else:
-            if hacker_font:
-                btn = tk.Button(frame, text=text, bg="#cccccc", fg="#2FD948", command=cmd, font=fontType)
-            else:
-                btn = tk.Button(frame, text=text, bg="#cccccc", fg="#444444", command=cmd, font=fontType)
-        btn.pack(pady=10)
-        btn.bind("<Enter>", lambda e, t=text: show_tooltip(e, f"{prefix}"))
-        btn.bind("<Leave>", hide_tooltip)
+    fast_tips = InstantTooltips(delay_ms=1, hide_ms=299000)
+    app.installEventFilter(fast_tips)
 
+    win = MainWindow()
+    win.show()
+    sys.exit(app.exec_())
 
-    # For the FRP buttons, the year numbers are Mathematical Sans Unicode, because otherwise Noto Color Emoji would replace the numbers with emojis.
-    add_button(samsung_frame_A, strings['frpUnlock2024'], frp_unlock_2024, strings['frpUnlock2024info'], emoji_font_bold)
-    add_button(samsung_frame_A, strings['frpUnlock2022'], frp_unlock_aug2022_to_dec2022, strings['frpUnlock2022info'], emoji_font_smaller)
-    add_button(samsung_frame_A, strings['frpUnlockPre2022'], frp_unlock_pre_aug2022, strings['frpUnlockPre2022info'], emoji_font_smaller)
-    add_button(samsung_frame_A, strings['getVerInfo'], verinfo, strings['getVerInfoTooltip'])
-    add_button(samsung_frame_A, strings['crashReboot'], reboot_sam, strings['crashRebootInfo'])
-    add_button(samsung_frame_A, strings['samRebootDownloadMode'], reboot_download_sam, strings['samRebootDownloadModeInfo'])
-    add_button(samsung_frame_A, strings['samWifitest'], wifitest, strings['samWifitestInfo'])
-    add_button(samsung_frame_A, strings['samImeiCheck'], imeicheck, strings['samImeiCheckInfo'])
-    add_button(samsung_frame_A, strings['samRemoveBloat'], bloatRemove, strings['samRemoveBloatInfo'])
-    
-
-    add_button(lg_frame, strings['lgScreenUnlockLabel'], LG_screen_unlock, strings['lgScreenUnlockTooltip'])
-    
-    
-    add_button(mediatek_frame, strings['mtkClientLabel'], mtkclient, strings['mtkClientTooltip'])
-
-
-    #add_button(general_frame, "Universal FRP Unlock 🔓", general_frp_unlock, "This is a universal FRP unlock method. It \nshould work on most manufacturers. \n\n=======================================\n\nAttempts to unlock a phone \nwhich has been FRP locked. \n\n Usually only works on older devices,\nspecifically =< Android 8")
-    add_button(general_frame, strings['crashReboot'], reboot, strings['crashRebootInfo'])
-    #add_button(general_frame, "Remove Carrier Bloatware", bloatRemove, "")
-
-    # Select default brand
-    select_brand(current_brand)
-
-    print(strings['nPhoneKITwelcome'].format(version=version))
-    print(strings['newIn1.3.2'])
-    #print(f"\nNew in v1.3.0: Cleaned up codebase, added built-in settings, made more user-friendly, easier to install, better GUI. \n\nFull Changelog on https://github.com/nlckysolutions/nPhoneKIT/releases/tag/v1.3.0\n\n")
-    #print(f"\n\nNew in v1.2.5: Fixed bugs on Windows")
-    #print(f"\n\nNew in v1.2.4: Added basic Windows support")
-    #print(f"\n\nNew in v1.2.1: Made all AT commands 10-20x faster by including pySerial in main.py")
-    #print(f"\n\nNew in v1.2.0: Confirmed WIFITEST and VER_INFO support for S24 Series\n\n")
-
-    animate_window_open()
-
-    root.mainloop()
+# ===================================
+#  Preparing to start the app
+# ===================================
 
 def is_root():
     if os_config == "WINDOWS":  # Windows
