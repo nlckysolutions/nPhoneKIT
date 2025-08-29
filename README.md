@@ -21,7 +21,7 @@ Unlike some other tools, that are obfuscated and flagged by antivirus scanners, 
 - ✅ Does most of the things that other tools can do anyway
 
 ### Why choose a tool that *won’t* tell you what it’s doing?
-With **nPhoneKIT**, there’s no "magic click" – just real commands and real transparency.
+With **nPhoneKIT**, there’s no "magic click" – just real commands and real transparency. More features coming soon 👀
 
 ---
 
