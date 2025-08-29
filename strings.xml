@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
     <string name="welcomeText">Welcome to nPhoneKIT </string>
-    <string name="settingsMenuTitleText">nPhoneKIT Settings (you must restart nPhoneKIT to fully apply)</string>
+    <string name="settingsMenuTitleText">Preferences</string>
     <string name="devSettingsTitle">Developer Settings</string>
     <string name="applyText">Apply</string>
     <string name="noDeviceSermanError">NO DEVICE CONNECTED, CANNOT USE.</string>
@@ -67,7 +67,7 @@
     <string name="frpUnlock2024info">Attempts to unlock a phone \nwhich has been FRP locked. \n\n Usually works on most devices,\nincluding some devices with \nSecurity Patch Level 𝟤𝟢𝟤𝟦.</string>
     <string name="frpUnlock2022">FRP Unlock \n(Security Patch August-𝟤𝟢𝟤𝟤 \nthrough December-𝟤𝟢𝟤𝟤) 🔓</string>
     <string name="frpUnlock2022info">Attempts to unlock a phone \nwhich has been FRP locked. \n\n Usually only works on older devices,\nspecifically from Security\n Patch Level August 𝟤𝟢𝟤𝟤 through\n the December 𝟤𝟢𝟤𝟤 patch.</string>
-    <string name="frpUnlockPre2022">FRP Unlock \n(Security Patch Pre-August-𝟤𝟢𝟤𝟤) 🔓</string>
+    <string name="frpUnlockPre2022">FRP Unlock \n(Security Patch \nPre-August-𝟤𝟢𝟤𝟤) 🔓</string>
     <string name="frpUnlockPre2022info">Attempts to unlock a phone \nwhich has been FRP locked. \n\n Usually only works on older devices,\nspecifically before Security\n Patch Level August 𝟤𝟢𝟤𝟤</string>
     <string name="getVerInfo">Get Version Info 📝</string>
     <string name="getVerInfoTooltip">Gets firmware version info from most SAMSUNG phones. \n\n(Works on S24 Series)</string>
