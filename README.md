@@ -26,7 +26,7 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
 ---
 
 ### Bugs:
-- No current bugs as of v1.3.2.5
+- No current bugs as of v1.3.3
 
 > [!IMPORTANT]
 > If you find a bug, **make sure to open a GitHub issue.** This will help me fix the error and make nPhoneKIT better for everyone!
@@ -48,7 +48,7 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
 - Extract the zip, open Command Prompt as Administrator, and cd into the source code directory.
 - Run the following command:
   ```
-  pip install pyserial requests && pip install -r ./deps/mtkclient/requirements.txt
+  pip install pyserial requests pyqt5 && pip install -r ./deps/mtkclient/requirements.txt
   ```
 - Then, (every time you want to run nPhoneKIT you will need to run this in the source folder) (before running the below command, make sure Command Prompt is started as Administrator):
   ```
@@ -61,7 +61,7 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
 - Extract the zip, open Terminal, and cd into the source code directory.
 - Run the following command:
   ```
-  sudo apt install python3 python3-tk python3-serial python3-requests adb
+  sudo apt install python3 python3-tk python3-serial python3-requests python3-pyqt5 adb
   ```
 - Then, (every time you want to run nPhoneKIT you will need to run this command in the source folder) (make sure to use SUDO):
   ```
