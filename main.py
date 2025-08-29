@@ -78,7 +78,7 @@ SETTINGS_PATH = Path("settings.json")
 firstunlock = False
 
 default_settings = {
-    "dark_theme": False,
+    "dark_theme": True,
     "hacker_font": False,
     "slower_animations": False,
     "update_check": True,
