@@ -88,4 +88,16 @@
     <string name="nPhoneKITwelcome">Welcome to nPhoneKIT v{version}</string>
     <string name="newIn1.3.2">\nNew in v1.3.2: Bug fixes for FRP unlock and version info, improved language compatibility via a strings.xml. \n\nFull Changelog on https://github.com/nlckysolutions/nPhoneKIT/releases/tag/v1.3.2\n\n</string>
     <string name="sudoReqdError">Please close this window and rerun using SUDO (or Run as Administrator on Windows). Most features/tools will not work otherwise.</string>
+    <string name="feedback">Feedback</string>
+    <string name="bugReport">Bug Report 🪲</string>
+    <string name="featureRequest">Feature Request 💡</string>
+    <string name="bugReportInfo">Submit a Bug Report</string>
+    <string name="featureRequestInfo">Submit a Feature Request</string>
+    <string name="fbp">Set a Fake Battery Percentage</string>
+    <string name="fbpInfo">Make the phone display a custom battery percentage using ADB.\nnPhoneKIT is not responsible for damage to your device (although unlikely)</string>
+    <string name="rbp">Reset Fake Battery Percentage</string>
+    <string name="rbpInfo">Make the phone display the correct, normal percentage using ADB.\nnPhoneKIT is not responsible for damage to your device (although unlikely)</string>
+    <string name="motoFastbootUnlockFRP1">Fastboot-Based FRP Unlock</string>
+    <string name="fbbFRPu1tooltip">Attempts to FRP unlock a Motorola Phone via erasing partitions with fastboot</string>
+    <string name="motoFastbootGuide">Steps to enable fastboot to prepare for FRP unlock on your Motorola phone:\n\n1. Power off the device, by holding the power button\n and pressing power off on the screen.\n\n2. Make sure your phone is unplugged for now,\n and the phone is fully powered off. \n\n3. Whilst holding down the volume down button, plug your phone into \nthis computer. Keep holding volume down until some sort of screen or text \nshows up which may say something like "Fastboot". Then, close this window to continue.</string>
 </resources>
