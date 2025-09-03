@@ -6,7 +6,7 @@
 <u>**Safe, free, open-source.**</u>
 
 ![Built with Python](https://img.shields.io/badge/Built%20with-Python-Purple)
-![Mastodon](https://img.shields.io/badge/-MASTODON-%232B90D9?style=plastic&logo=mastodon&logoColor=white)
+![Mastodon](https://img.shields.io/badge/-MASTODON-%232B90D9?logo=mastodon&logoColor=white)
 </div>
 
 ---
