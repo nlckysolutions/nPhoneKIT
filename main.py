@@ -1,12 +1,23 @@
+#
+#             ███████████  █████                                   █████   ████ █████ ███████████
+#            ░░███░░░░░███░░███                                   ░░███   ███░ ░░███ ░█░░░███░░░█
+#  ████████   ░███    ░███ ░███████    ██████  ████████    ██████  ░███  ███    ░███ ░   ░███  ░ 
+# ░░███░░███  ░██████████  ░███░░███  ███░░███░░███░░███  ███░░███ ░███████     ░███     ░███    
+#  ░███ ░███  ░███░░░░░░   ░███ ░███ ░███ ░███ ░███ ░███ ░███████  ░███░░███    ░███     ░███    
+#  ░███ ░███  ░███         ░███ ░███ ░███ ░███ ░███ ░███ ░███░░░   ░███ ░░███   ░███     ░███    
+#  ████ █████ █████        ████ █████░░██████  ████ █████░░██████  █████ ░░████ █████    █████   
+# ░░░░ ░░░░░ ░░░░░        ░░░░ ░░░░░  ░░░░░░  ░░░░ ░░░░░  ░░░░░░  ░░░░░   ░░░░ ░░░░░    ░░░░░    
+#
+
 # IMPORTS AND WHY EACH ONE IS NEEDED
 
 import time # Waiting before executing something
 import os # Executing most commands
-import tkinter as tk # Main GUI
+import tkinter as tk # Main GUI (deprecated, slowly being removed)
 from tkinter import ttk # Styling for GUI (deprecated)
 from tkinter import messagebox # Opening message/warning boxes
 from tkinter import font # Customizing GUI font
-from pathlib import Path # Importing deps (deprecated)
+from pathlib import Path # Importing settings
 from serial.tools import list_ports # Listing connected devices
 import sys # Getting basic system info
 import re # Finding strings within text
@@ -24,7 +35,14 @@ import hashlib # Hashing strings
 import webbrowser # Opening browser to any page
 import xml.etree.ElementTree as ET # Importing strings.xml
 from PyQt5 import QtCore, QtGui, QtWidgets # GUI
-from functools import partial
+from PyQt5.QtWidgets import (
+    QApplication, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QPushButton, QListWidget, QListWidgetItem
+)
+from PyQt5.QtCore import Qt, QTimer, QPointF
+from PyQt5.QtGui import QPainter, QPen, QFont
+from datetime import datetime, timedelta
+from functools import partial # Register button clicks to functions
+import shutil # Fastboot partition eraser for Motorola
 
 ## nPhoneKIT permissions (these are the things that nPhoneKIT is capable of doing):
 
@@ -33,7 +51,7 @@ from functools import partial
 # Open a new tab in the default browser
 # Checking and getting basic information about the current system
 
-version = "1.3.3"
+version = "1.4.0"
 
 # This program is free software: you can redistribute it and/or modify it 
 # under the terms of the GNU General Public License as published by the Free Software Foundation, 
@@ -70,12 +88,11 @@ version = "1.3.3"
 # You shouldn't edit anything below this line unless you know what you're doing #
 # ============================================================================= #
 
-import json
-from pathlib import Path
+debugMode = False # If True, removes root/admin requirement. Most serial/usb features will stop working.
 
-SETTINGS_PATH = Path("settings.json")
+SETTINGS_PATH = Path("settings.json") # Load settings externally
 
-firstunlock = False
+firstunlock = False # This variable helps ModemPreload work
 
 default_settings = {
     "dark_theme": True,
@@ -89,8 +106,7 @@ default_settings = {
     "basic_success_checks": True
 }
 
-# Load or initialize
-if SETTINGS_PATH.exists():
+if SETTINGS_PATH.exists(): # If settings, load, otherwise use default settings.
     with open(SETTINGS_PATH, "r") as f:
         settings = json.load(f)
 else:
@@ -98,7 +114,6 @@ else:
     with open(SETTINGS_PATH, "w") as f:
         json.dump(settings, f, indent=2)
 
-# Inject into variables (your original style)
 dark_theme = settings['dark_theme']
 hacker_font = settings['hacker_font']
 slower_animations = settings['slower_animations']
@@ -109,7 +124,7 @@ debug_info = settings['debug_info']
 i_know_what_im_doing = settings['i_know_what_im_doing']
 basic_success_checks = settings['basic_success_checks']
 
-def load_strings(xml_path):
+def load_strings(xml_path): 
     tree = ET.parse(xml_path)
     root = tree.getroot()
     return {
@@ -118,7 +133,7 @@ def load_strings(xml_path):
     }
 
 # Load strings
-strings = load_strings("strings.xml")
+strings = load_strings("strings.xml") # Load almost every string from strings.xml (ez translations)
 
 # Load settings
 def load_settings():
@@ -129,54 +144,6 @@ def load_settings():
 def save_settings(new_settings):
     with open(SETTINGS_PATH, "w") as f:
         json.dump(new_settings, f, indent=2)
-
-# Settings GUI
-def open_settings_window():
-    settings = load_settings()
-    win = tk.Toplevel()
-    win.geometry('800x300')
-    win.title(strings['settingsMenuTitleText'])
-
-    vars = {}
-    row = 0
-
-    for key in ["dark_theme", "hacker_font", "slower_animations", "update_check",
-                "impatient", "enable_preload"]:
-        tk.Label(win, text=key).grid(row=row, column=0, sticky="w")
-        var = tk.BooleanVar(value=settings[key])
-        chk = tk.Checkbutton(win, variable=var)
-        chk.grid(row=row, column=1)
-        vars[key] = var
-        row += 1
-
-    def open_dev_settings():
-        dev_win = tk.Toplevel()
-        dev_win.title(strings['devSettingsTitle'])
-        dev_vars = {}
-
-        for i, key in enumerate(['debug_info", "i_know_what_im_doing", "basic_success_checks']):
-            tk.Label(dev_win, text=key).grid(row=i, column=0, sticky="w")
-            var = tk.BooleanVar(value=settings[key])
-            chk = tk.Checkbutton(dev_win, variable=var)
-            chk.grid(row=i, column=1)
-            dev_vars[key] = var
-
-        def apply_dev():
-            for k, v in dev_vars.items():
-                settings[k] = v.get()
-            save_settings(settings)
-            dev_win.destroy()
-
-        tk.Button(dev_win, text=strings['applyText'], command=apply_dev).grid(row=i+1, columnspan=2)
-
-    def apply_main():
-        for k, v in vars.items():
-            settings[k] = v.get()
-        save_settings(settings)
-        win.destroy()
-
-    tk.Button(win, text=strings['applyText'], command=apply_main).grid(row=row, column=0)
-    tk.Button(win, text=strings['devSettingsTitle'], command=open_dev_settings, font=("Segoe UI", 5), width=20, height=1).grid(row=row+1, column=0)
 
 os_config = "WINDOWS" if platform.system() == "Windows" else "LINUX" # Auto-get OS and save to var
 
@@ -429,15 +396,743 @@ async def preload_samsung_modem(serman2):
 
     preload_done.set()
 
+import tkinter as tk
+from tkinter import ttk, font
+from datetime import datetime, timedelta
+import math
+import threading
+import multiprocessing
+from typing import List, Optional, Tuple
+
+# Helper: worker used when we need to run the dialog in a new process.
+# This must be a top-level function for multiprocessing to work reliably.
+def _stw_worker(conn, title, desc, pros, cons, minutes, execute_text, cancel_text, win_w, win_h):
+    """
+    Runs in child process: constructs a Tk window, shows it, sends result (True/False)
+    back through the connection, and exits.
+    """
+    try:
+        root = tk.Tk()
+        #root.withdraw()  # we'll show our Toplevel dialog
+    except Exception:
+        # If tk can't initialize, return False
+        try:
+            conn.send(False)
+        except Exception:
+            pass
+        conn.close()
+        return
+
+    # Local stw implementation for child (almost same as parent inline version)
+    # Colors & sizes
+    bg = "#F5F7FB"
+    card_bg = "#FFFFFF"
+    text_primary = "#0F172A"
+    text_secondary = "#374151"
+    accent1 = "#2563EB"
+    accent2 = "#0EA5E9"
+    cons_red = "#B45309"
+    pad = 14
+
+    # Fonts (best-effort)
+    try:
+        title_font = font.nametofont("TkHeadingFont").copy()
+        title_font.configure(size=18, weight="bold", family="Segoe UI")
+    except Exception:
+        title_font = ("Segoe UI", 18, "bold")
+    desc_font = ("Segoe UI", 12)
+    list_font = ("Segoe UI", 12)
+    emoji_font = ("Noto Color Emoji", 14)
+
+    # result container
+    result = {"value": False}
+
+    # build dialog
+    win = root
+    win.title("nPhoneKIT")
+    win.geometry(f"{win_w}x{win_h}")
+    win.configure(bg=bg)
+    win.resizable(False, False)
+
+    # When closed without pressing buttons
+    def _on_close():
+        result["value"] = False
+        try:
+            win.quit()
+        except Exception:
+            pass
+
+    win.protocol("WM_DELETE_WINDOW", _on_close)
+
+    # layout
+    content = tk.Frame(win, bg=bg)
+    content.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+    left_w = int((win_w - pad*3) * 0.66)
+    right_w = (win_w - pad*3) - left_w
+
+    left_frame_outer = tk.Frame(content, bg=bg)
+    left_frame_outer.place(x=pad, y=pad, width=left_w, height=win_h - pad*4 - 60)
+
+    right_frame = tk.Frame(content, bg=bg)
+    right_frame.place(x=pad + left_w + pad, y=pad, width=right_w, height=win_h - pad*4 - 60)
+
+    # Scrollable left card
+    canvas = tk.Canvas(left_frame_outer, borderwidth=0, highlightthickness=0, bg=bg)
+    vscroll = ttk.Scrollbar(left_frame_outer, orient="vertical", command=canvas.yview)
+    canvas.configure(yscrollcommand=vscroll.set)
+    vscroll.pack(side="right", fill="y")
+    canvas.pack(side="left", fill="both", expand=True)
+    left_card = tk.Frame(canvas, bg=card_bg)
+    canvas.create_window((0,0), window=left_card, anchor="nw")
+
+    def _on_configure(e):
+        canvas.configure(scrollregion=canvas.bbox("all"))
+    left_card.bind("<Configure>", _on_configure)
+
+    # --- turn OFF scrolling (quick toggle) ---
+    try:
+        # hide the scrollbar widget so it isn't visible
+        vscroll.pack_forget()
+    except Exception:
+        pass
+
+    # stop the canvas from driving the scrollbar
+    try:
+        canvas.configure(yscrollcommand=lambda *args: None)
+    except Exception:
+        pass
+
+    # stop adjusting scrollregion when left_card resizes (disable the handler if present)
+    # if you previously bound left_card to update scrollregion, replace it with a no-op:
+    try:
+        left_card.unbind("<Configure>")
+    except Exception:
+        pass
+
+    # disable mousewheel scrolling that may have been bound globally
+    try:
+        canvas.unbind_all("<MouseWheel>")
+        canvas.unbind_all("<Button-4>")
+        canvas.unbind_all("<Button-5>")
+    except Exception:
+        pass
+
+    # optionally make the canvas non-expand so it won't try to scroll content
+    try:
+        canvas.pack_configure(expand=False, fill="both")
+    except Exception:
+        pass
+
+    # Title
+    lbl_title = tk.Label(left_card, text=title, font=title_font, bg=card_bg, fg=text_primary, wraplength=left_w-40, justify="left")
+    lbl_title.pack(anchor="w", pady=(6,4))
+
+    # Description (wrapped)
+    desc_lbl = tk.Label(left_card, text=desc, font=desc_font, bg=card_bg, fg=text_secondary, wraplength=left_w-40, justify="left")
+    desc_lbl.pack(anchor="w", pady=(0,8))
+
+    # Pros
+    pros_hdr = tk.Label(left_card, text="Pros", font=("Segoe UI", 13, "bold"), bg=card_bg, fg=text_primary)
+    pros_hdr.pack(anchor="w", pady=(6,2))
+    if not pros:
+        pros = []
+    for p in pros:
+        row = tk.Frame(left_card, bg=card_bg)
+        row.pack(fill="x", anchor="w", pady=2)
+        em = tk.Label(row, text="✅", font=emoji_font, bg=card_bg)
+        em.pack(side="left", anchor="n")
+        txt = tk.Label(row, text=str(p), font=list_font, bg=card_bg, fg="#0B1720", wraplength=left_w-80, justify="left", anchor="w")
+        txt.pack(side="left", anchor="w", padx=(8,0))
+
+    # Cons
+    cons_hdr = tk.Label(left_card, text="Cons", font=("Segoe UI", 13, "bold"), bg=card_bg, fg=text_primary)
+    cons_hdr.pack(anchor="w", pady=(10,2))
+    if not cons:
+        cons = []
+    for c in cons:
+        row = tk.Frame(left_card, bg=card_bg)
+        row.pack(fill="x", anchor="w", pady=2)
+        em = tk.Label(row, text="❌", font=emoji_font, bg=card_bg)
+        em.pack(side="left", anchor="n")
+        txt = tk.Label(row, text=str(c), font=list_font, bg=card_bg, fg=cons_red, wraplength=left_w-80, justify="left")
+        txt.pack(side="left", anchor="w", padx=(8,0))
+
+    left_card.update_idletasks()
+    canvas.configure(scrollregion=canvas.bbox("all"))
+    canvas.bind_all("<MouseWheel>", lambda e: canvas.yview_scroll(int(-1*(e.delta/120)), "units"), add="+")
+
+    # Buttons area
+    btn_area = tk.Frame(content, bg=bg)
+    btn_area.place(x=pad, y=win_h - pad - 56, width=win_w - pad*2, height=56)
+
+    def _on_cancel():
+        result["value"] = False
+        win.quit()
+
+    cancel_btn = tk.Button(btn_area, text=cancel_text, command=_on_cancel,
+                           bg=card_bg, fg=text_secondary, bd=1, relief="solid", padx=12, pady=6)
+    cancel_btn.place(x=pad, y=6, width=120, height=44)
+
+    # execute button canvas (gradient)
+    exec_canvas = tk.Canvas(btn_area, bd=0, highlightthickness=0)
+    exec_canvas.place(x=win_w - pad - 160, y=6, width=160, height=44)
+
+    # draw gradient approximation
+    def _draw_gradient(cnv, x0, y0, x1, y1, color1, color2, steps=48):
+        def _hex_to_rgb(h):
+            h = h.lstrip("#")
+            return tuple(int(h[i:i+2], 16) for i in (0,2,4))
+        def _rgb_to_hex(rgb):
+            return "#{:02x}{:02x}{:02x}".format(*rgb)
+        c1 = _hex_to_rgb(color1)
+        c2 = _hex_to_rgb(color2)
+        width = x1 - x0
+        for i in range(steps):
+            t = i / steps
+            r = int(c1[0] + (c2[0]-c1[0]) * t)
+            g = int(c1[1] + (c2[1]-c1[1]) * t)
+            b = int(c1[2] + (c2[2]-c1[2]) * t)
+            cnv.create_rectangle(x0 + i*(width/steps), y0, x0 + (i+1)*(width/steps), y1, outline="", fill=_rgb_to_hex((r,g,b)))
+    _draw_gradient(exec_canvas, 0, 0, 160, 44, accent1, accent2, steps=64)
+    exec_canvas.create_text(80, 22, text=execute_text, fill="white", font=("Segoe UI", 11, "bold"))
+
+    def _on_execute(event=None):
+        result["value"] = True
+        win.quit()
+
+    exec_canvas.bind("<Button-1>", _on_execute)
+    exec_canvas.bind("<Return>", _on_execute)
+
+    # Right column: clock canvas
+    clock_w = right_w - 24
+    clock_h = (win_h - pad*4 - 60)//2
+    clock_canvas = tk.Canvas(right_frame, width=clock_w, height=clock_h, bg=card_bg, bd=0, highlightthickness=0)
+    clock_canvas.pack(pady=(0,8))
+
+    def _draw_clock():
+        clock_canvas.delete("all")
+        w = max(1, clock_canvas.winfo_width())
+        h = max(1, clock_canvas.winfo_height())
+        cx = w//2
+        cy = h//2
+        radius = int(min(w,h)*0.42)
+
+        clock_canvas.create_oval(cx-radius, cy-radius, cx+radius, cy+radius, fill="#FFFFFF", outline="#D1D5DB", width=2)
+        for i in range(60):
+            ang = math.radians(i * 6)
+            outer_x = cx + radius * math.sin(ang)
+            outer_y = cy - radius * math.cos(ang)
+            inner_len = radius * (0.90 if (i % 5 == 0) else 0.96)
+            inner_x = cx + inner_len * math.sin(ang)
+            inner_y = cy - inner_len * math.cos(ang)
+            clock_canvas.create_line(inner_x, inner_y, outer_x, outer_y, fill="#9CA3AF", width=1)
+
+        now = datetime.now()
+        end = now + timedelta(minutes=minutes)
+        minute_now = now.minute + now.second/60.0
+        minute_end = end.minute + end.second/60.0
+
+        def to_tk_angle(deg_clockwise_from_12):
+            return 90 - deg_clockwise_from_12
+
+        span_clockwise = (minute_end - minute_now) % 60.0
+        span_deg = span_clockwise * 6.0
+        start_angle = to_tk_angle(minute_now)
+        # tkinter create_arc accepts floats but better cast to ints for some backends
+        try:
+            clock_canvas.create_arc(cx-radius+8, cy-radius+8, cx+radius-8, cy+radius-8,
+                                    start=start_angle, extent=-span_deg, fill="#93C5FD", outline="")
+        except Exception:
+            clock_canvas.create_arc(int(cx-radius+8), int(cy-radius+8), int(cx+radius-8), int(cy+radius-8),
+                                    start=int(start_angle), extent=int(-span_deg), fill="#93C5FD", outline="")
+
+        def draw_hand(angle_deg, length_factor, color, width=4):
+            rad = math.radians(angle_deg)
+            x = cx + length_factor * radius * math.sin(rad)
+            y = cy - length_factor * radius * math.cos(rad)
+            clock_canvas.create_line(cx, cy, x, y, fill=color, width=width, capstyle="round")
+
+        draw_hand(minute_now*6.0, 0.78, "#2563EB", 4)
+        draw_hand(minute_end*6.0, 0.78, "#F59E0B", 4)
+        clock_canvas.create_oval(cx-4, cy-4, cx+4, cy+4, fill="#111827", outline="")
+
+    # initial draw & periodic refresh
+    win.update_idletasks()
+    _draw_clock()
+    def _tick():
+        try:
+            _draw_clock()
+            win.after(1000, _tick)
+        except tk.TclError:
+            pass
+    win.after(1000, _tick)
+
+    eta_time = (datetime.now() + timedelta(minutes=minutes)).strftime("%I:%M %p").lstrip("0")
+    eta_label = tk.Label(right_frame, text=f"⏱ {minutes} min\n🕓 Ends at: {eta_time}", bg=card_bg, fg=text_primary, font=("Segoe UI", 12), justify="center")
+    eta_label.pack(pady=(6,0))
+
+    # keyboard handling
+    def _on_key(event):
+        if event.keysym == "Return":
+            _on_execute()
+        elif event.keysym == "Escape":
+            _on_cancel()
+    win.bind_all("<Key>", _on_key)
+
+    # center window on screen
+    win.update_idletasks()
+    sw = win.winfo_screenwidth()
+    sh = win.winfo_screenheight()
+    x = (sw - win_w) // 2
+    y = (sh - win_h) // 2
+    win.geometry(f"+{x}+{y}")
+
+    # run modal mainloop
+    try:
+        win.grab_set()
+    except Exception:
+        pass
+    try:
+        root.deiconify()
+        win.focus_force()
+        root.mainloop()
+    except Exception:
+        # if mainloop crashes, ensure we still send a result
+        pass
+
+    # after mainloop ends, send result back
+    try:
+        conn.send(bool(result["value"]))
+    except Exception:
+        pass
+    try:
+        conn.close()
+    except Exception:
+        pass
+    try:
+        root.destroy()
+    except Exception:
+        pass
+
+def stw(
+    title: str,
+    desc: str,
+    pros,
+    cons,
+    minutes: int,
+    execute_text: str = "Execute",
+    cancel_text: str = "Cancel",
+    win_size: Tuple[int,int] = (660, 880),
+) -> bool:
+    """
+    Revised stw() — Pros and Cons are shown in two distinct sections (separate headers/frames).
+    Keeps multiprocessing fallback for non-main-thread calls. Window title "nPhoneKIT".
+    """
+    #pros = ["test", "test2"]
+    # normalize
+    if pros is None:
+        pros = []
+    if cons is None:
+        cons = []
+    win_w, win_h = win_size
+    win_h = 500
+
+    # If caller not main thread -> spawn child (reuse existing worker implementation)
+    if threading.current_thread() is not threading.main_thread():
+        parent_conn, child_conn = multiprocessing.Pipe(duplex=False)
+        p = multiprocessing.Process(
+            target=_stw_worker,
+            args=(child_conn, title, desc, pros, cons, minutes, execute_text, cancel_text, win_w, win_h),
+        )
+        p.start()
+        child_conn.close()
+        try:
+            res = parent_conn.recv()
+        except EOFError:
+            res = False
+        finally:
+            try:
+                parent_conn.close()
+            except Exception:
+                pass
+            p.join(timeout=0.1)
+            if p.is_alive():
+                try:
+                    p.terminate()
+                except Exception:
+                    pass
+        return bool(res)
+
+    # Main-thread path: inline dialog without extra empty root
+    created_root = False
+    parent_root = tk._default_root
+    if parent_root is None:
+        root = tk.Tk()
+        created_root = True
+        root.withdraw()
+    else:
+        root = parent_root
+
+    # Colors & fonts
+    bg = "#F5F7FB"
+    card_bg = "#FFFFFF"
+    text_primary = "#0F172A"
+    text_secondary = "#374151"
+    accent1 = "#2563EB"
+    accent2 = "#0EA5E9"
+    cons_red = "#B45309"
+    pad = 14
+
+    try:
+        title_font = font.nametofont("TkHeadingFont").copy()
+        title_font.configure(size=18, weight="bold", family="Segoe UI")
+    except Exception:
+        title_font = ("Segoe UI", 18, "bold")
+    desc_font = ("Segoe UI", 12)
+    list_font = ("Segoe UI", 12)
+    emoji_font = ("Noto Color Emoji", 14)
+
+    result = {"value": False}
+
+    win = tk.Toplevel(root)
+    win.title("nPhoneKIT")
+    win.geometry(f"{win_w}x{win_h}")
+    win.configure(bg=bg)
+    win.resizable(False, False)
+
+    def _on_close():
+        result["value"] = False
+        try:
+            if created_root:
+                win.quit()
+            else:
+                win.quit()
+        except Exception:
+            pass
+
+    win.protocol("WM_DELETE_WINDOW", _on_close)
+
+    content = tk.Frame(win, bg=bg)
+    content.place(relx=0, rely=0, relwidth=1, relheight=1)
+    left_w = int((win_w - pad*3) * 0.66)
+    right_w = (win_w - pad*3) - left_w
+
+    left_frame_outer = tk.Frame(content, bg=bg)
+    left_frame_outer.place(x=pad, y=pad, width=left_w, height=win_h - pad*4 - 60)
+    right_frame = tk.Frame(content, bg=bg)
+    right_frame.place(x=pad + left_w + pad, y=pad, width=right_w, height=win_h - pad*4 - 60)
+
+    # Scrollable left card (keeps content from overflowing)
+    canvas = tk.Canvas(left_frame_outer, borderwidth=0, highlightthickness=0, bg=bg)
+    vscroll = ttk.Scrollbar(left_frame_outer, orient="vertical", command=canvas.yview)
+    canvas.configure(yscrollcommand=vscroll.set)
+    vscroll.pack(side="right", fill="y")
+    canvas.pack(side="left", fill="both", expand=True)
+    left_card = tk.Frame(canvas, bg=card_bg)
+    # set fixed width for left_card so wraplengths behave predictably
+    left_card.pack_propagate(False)
+    canvas.create_window((0,0), window=left_card, anchor="nw", width=left_w)
+
+    def _on_config(e):
+        canvas.configure(scrollregion=canvas.bbox("all"))
+    left_card.bind("<Configure>", _on_config)
+
+    # Title and description
+    lbl_title = tk.Label(left_card, text=title, font=title_font, bg=card_bg, fg=text_primary, wraplength=left_w-40, justify="left")
+    lbl_title.pack(anchor="w", pady=(12,6), padx=12)
+    desc_lbl = tk.Label(left_card, text=desc, font=desc_font, bg=card_bg, fg=text_secondary, wraplength=left_w-40, justify="left")
+    desc_lbl.pack(anchor="w", pady=(0,10), padx=12)
+
+    # Horizontal separator
+    sep1 = ttk.Separator(left_card, orient="horizontal")
+    sep1.pack(fill="x", padx=12, pady=(4,10))
+
+    # --- PROS SECTION (distinct frame) ---
+    pros_frame = tk.Frame(left_card, bg=card_bg)
+    pros_frame.pack(fill="x", padx=12, pady=(0,8))
+
+    pros_hdr = tk.Label(pros_frame, text="PROS", font=("Segoe UI", 13, "bold"), bg=card_bg, fg=text_primary, anchor="w")
+    pros_hdr.pack(anchor="w", pady=(0,6))
+
+    # If no pros provided, show subtle 'None' label
+    if not pros:
+        none_lbl = tk.Label(pros_frame, text="(None)", font=list_font, bg=card_bg, fg=text_secondary, wraplength=left_w-40, justify="left")
+        none_lbl.pack(anchor="w", pady=2)
+    else:
+        for p in pros:
+            # Each item gets its own row with an emoji label and a text label that wraps
+            item_row = tk.Frame(pros_frame, bg=card_bg)
+            item_row.pack(fill="x", anchor="w", pady=4)
+            em = tk.Label(item_row, text="✅", font=emoji_font, bg=card_bg)
+            em.pack(side="left", anchor="n", padx=(0,6))
+            txt = tk.Label(item_row, text=str(p), font=list_font, bg=card_bg, fg="#0B1720",
+                           wraplength=left_w-80, justify="left", anchor="w")
+            txt.pack(side="left", anchor="w", fill="x", expand=True)
+
+    # separator between pros and cons
+    sep2 = ttk.Separator(left_card, orient="horizontal")
+    sep2.pack(fill="x", padx=12, pady=(10,10))
+
+    # --- CONS SECTION (distinct frame) ---
+    cons_frame = tk.Frame(left_card, bg=card_bg)
+    cons_frame.pack(fill="x", padx=12, pady=(0,12))
+
+    cons_hdr = tk.Label(cons_frame, text="CONS", font=("Segoe UI", 13, "bold"), bg=card_bg, fg=text_primary, anchor="w")
+    cons_hdr.pack(anchor="w", pady=(0,6))
+
+    if not cons:
+        none_lbl2 = tk.Label(cons_frame, text="(None)", font=list_font, bg=card_bg, fg=text_secondary, wraplength=left_w-40, justify="left")
+        none_lbl2.pack(anchor="w", pady=2)
+    else:
+        for c in cons:
+            item_row = tk.Frame(cons_frame, bg=card_bg)
+            item_row.pack(fill="x", anchor="w", pady=4)
+            em = tk.Label(item_row, text="❌", font=emoji_font, bg=card_bg)
+            em.pack(side="left", anchor="n", padx=(0,6))
+            txt = tk.Label(item_row, text=str(c), font=list_font, bg=card_bg, fg=cons_red,
+                           wraplength=left_w-80, justify="left", anchor="w")
+            txt.pack(side="left", anchor="w", fill="x", expand=True)
+
+    # finalize scroll region
+    left_card.update_idletasks()
+    canvas.configure(scrollregion=canvas.bbox("all"))
+    canvas.bind_all("<MouseWheel>", lambda e: canvas.yview_scroll(int(-1*(e.delta/120)), "units"), add="+")
+
+    # Buttons area
+    btn_area = tk.Frame(content, bg=bg)
+    btn_area.place(x=pad, y=win_h - pad - 56, width=win_w - pad*2, height=56)
+
+    def _on_cancel_local():
+        result["value"] = False
+        try:
+            if created_root:
+                win.quit()
+            else:
+                win.quit()
+        except Exception:
+            pass
+
+    cancel_btn = tk.Button(btn_area, text=cancel_text, command=_on_cancel_local,
+                           bg=card_bg, fg=text_secondary, bd=1, relief="solid", padx=12, pady=6)
+    cancel_btn.place(x=pad, y=6, width=120, height=44)
+
+    # execute gradient button (canvas)
+    exec_canvas = tk.Canvas(btn_area, bd=0, highlightthickness=0)
+    exec_canvas.place(x=win_w - pad - 160, y=6, width=160, height=44)
+    def _draw_gradient_canvas(cnv, x0, y0, x1, y1, color1, color2, steps=48):
+        def _hex_to_rgb(h):
+            h = h.lstrip("#")
+            return tuple(int(h[i:i+2], 16) for i in (0,2,4))
+        def _rgb_to_hex(rgb):
+            return "#{:02x}{:02x}{:02x}".format(*rgb)
+        c1 = _hex_to_rgb(color1)
+        c2 = _hex_to_rgb(color2)
+        width = x1 - x0
+        for i in range(steps):
+            t = i / steps
+            r = int(c1[0] + (c2[0]-c1[0]) * t)
+            g = int(c1[1] + (c2[1]-c1[1]) * t)
+            b = int(c1[2] + (c2[2]-c1[2]) * t)
+            cnv.create_rectangle(x0 + i*(width/steps), y0, x0 + (i+1)*(width/steps), y1, outline="", fill=_rgb_to_hex((r,g,b)))
+    _draw_gradient_canvas(exec_canvas, 0, 0, 160, 44, accent1, accent2, steps=64)
+    exec_canvas.create_text(80, 22, text=execute_text, fill="white", font=("Segoe UI", 11, "bold"))
+
+    def _on_execute_local(event=None):
+        result["value"] = True
+        try:
+            if created_root:
+                win.quit()
+            else:
+                win.quit()
+        except Exception:
+            pass
+    exec_canvas.bind("<Button-1>", _on_execute_local)
+    exec_canvas.bind("<Return>", _on_execute_local)
+
+    # Clock area (right)
+    clock_w = right_w - 24
+    clock_h = (win_h - pad*4 - 60)//2
+    clock_canvas = tk.Canvas(right_frame, width=clock_w, height=clock_h, bg=card_bg, bd=0, highlightthickness=0)
+    clock_canvas.pack(pady=(0,8))
+
+    def _draw_clock_local():
+        clock_canvas.delete("all")
+        w = max(1, clock_canvas.winfo_width())
+        h = max(1, clock_canvas.winfo_height())
+        cx = w//2
+        cy = h//2
+        radius = int(min(w,h)*0.42)
+        clock_canvas.create_oval(cx-radius, cy-radius, cx+radius, cy+radius, fill="#FFFFFF", outline="#D1D5DB", width=2)
+        for i in range(60):
+            ang = math.radians(i * 6)
+            outer_x = cx + radius * math.sin(ang)
+            outer_y = cy - radius * math.cos(ang)
+            inner_len = radius * (0.90 if (i % 5 == 0) else 0.96)
+            inner_x = cx + inner_len * math.sin(ang)
+            inner_y = cy - inner_len * math.cos(ang)
+            clock_canvas.create_line(inner_x, inner_y, outer_x, outer_y, fill="#9CA3AF", width=1)
+
+        now = datetime.now()
+        end = now + timedelta(minutes=minutes)
+        minute_now = now.minute + now.second/60.0
+        minute_end = end.minute + end.second/60.0
+        span_clockwise = (minute_end - minute_now) % 60.0
+        span_deg = span_clockwise * 6.0
+        start_angle = 90 - (minute_now * 6.0)
+        try:
+            clock_canvas.create_arc(cx-radius+8, cy-radius+8, cx+radius-8, cy+radius-8, start=start_angle, extent=-span_deg, fill="#93C5FD", outline="")
+        except Exception:
+            clock_canvas.create_arc(int(cx-radius+8), int(cy-radius+8), int(cx+radius-8), int(cy+radius-8), start=int(start_angle), extent=int(-span_deg), fill="#93C5FD", outline="")
+        def draw_hand(angle_deg, length_factor, color, width=4):
+            rad = math.radians(angle_deg)
+            x = cx + length_factor * radius * math.sin(rad)
+            y = cy - length_factor * radius * math.cos(rad)
+            clock_canvas.create_line(cx, cy, x, y, fill=color, width=width, capstyle="round")
+        draw_hand(minute_now*6.0, 0.78, "#2563EB", 4)
+        draw_hand(minute_end*6.0, 0.78, "#F59E0B", 4)
+        clock_canvas.create_oval(cx-4, cy-4, cx+4, cy+4, fill="#111827", outline="")
+
+    win.update_idletasks()
+    _draw_clock_local()
+    def _tick_local():
+        try:
+            _draw_clock_local()
+            win.after(1000, _tick_local)
+        except tk.TclError:
+            pass
+    win.after(1000, _tick_local)
+
+    eta_time = (datetime.now() + timedelta(minutes=minutes)).strftime("%I:%M %p").lstrip("0")
+    eta_label = tk.Label(right_frame, text=f"⏱ {minutes} min\n🕓 Ends at: {eta_time}", bg=card_bg, fg=text_primary, font=("Segoe UI", 12), justify="center")
+    eta_label.pack(pady=(6,0))
+
+    def _on_key(event):
+        if event.keysym == "Return":
+            _on_execute_local()
+        elif event.keysym == "Escape":
+            _on_cancel_local()
+    win.bind_all("<Key>", _on_key)
+
+    # center
+    win.update_idletasks()
+    sw = win.winfo_screenwidth()
+    sh = win.winfo_screenheight()
+    x = (sw - win_w) // 2
+    y = (sh - win_h) // 2
+    win.geometry(f"+{x}+{y}")
+
+    try:
+        win.grab_set()
+    except Exception:
+        pass
+
+    # Run modal/blocking logic
+    if created_root:
+        try:
+            root.focus_force()
+            root.mainloop()
+        except Exception:
+            try:
+                win.wait_window()
+            except Exception:
+                pass
+    else:
+        try:
+            win.wait_window()
+        except Exception:
+            try:
+                root.update()
+            except Exception:
+                pass
+
+    # cleanup
+    try:
+        win.destroy()
+    except Exception:
+        pass
+    if created_root:
+        try:
+            root.destroy()
+        except Exception:
+            pass
+
+    return bool(result["value"])
+
+class FastbootPartitionEraser:
+    """
+    This class attempts to erase FRP partition(s) on Motorola devices.
+    """
+
+    def __init__(self, fastboot_path='fastboot'):
+        # Ensure the fastboot executable is available
+        if not shutil.which(fastboot_path):
+            raise FileNotFoundError(f"Fastboot binary '{fastboot_path}' not found in PATH.")
+        self.fastboot = fastboot_path
+
+    def _run(self, args):
+        """
+        Internal helper to run a fastboot command.
+        Raises RuntimeError if command fails.
+        """
+        cmd = [self.fastboot] + args
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode != 0:
+            raise RuntimeError(f"Command {' '.join(cmd)} failed: {result.stderr.strip()}")
+        return result.stdout.strip()
+
+    def erase_config(self, device_id=None):
+        """
+        Erase the 'config' partition.
+        Optionally specify a device serial with device_id.
+        """
+        args = []
+        if device_id:
+            args += ['-s', device_id]
+        args += ['erase', 'config']
+        return self._run(args)
+
+    def erase_persist(self, device_id=None):
+        """
+        Erase the 'persist' partition.
+        Optionally specify a device serial with device_id.
+        """
+        args = []
+        if device_id:
+            args += ['-s', device_id]
+        args += ['erase', 'persist']
+        return self._run(args)
+
+    def erase_frp(self, device_id=None):
+        """
+        Erase the 'frp' partition.
+        Optionally specify a device serial with device_id.
+        """
+        args = []
+        if device_id:
+            args += ['-s', device_id]
+        args += ['erase', 'frp']
+        return self._run(args)
+
+    def wipe_data_cache(self, device_id=None):
+        """
+        Wipe data and cache partitions via 'fastboot -w'.
+        Optionally specify a device serial with device_id.
+        """
+        args = []
+        if device_id:
+            args += ['-s', device_id]
+        args += ['-w']
+        return self._run(args)
 
 # Check for updates
 
-def check_for_update():
+def check_for_update(): 
     try:
         repo = "nlckysolutions/nPhoneKIT"
         url = f"https://api.github.com/repos/{repo}/releases/latest"
 
-        with urllib.request.urlopen(url) as response:
+        with urllib.request.urlopen(url, timeout=4) as response:
             data = json.loads(response.read().decode())
 
             latest_version_raw = data['tag_name']
@@ -446,6 +1141,10 @@ def check_for_update():
             # If the tag is different then the current version, assume it's newer, and prompt update.
 
             # Based on the unicode "v", depending on whether it's normal or U+2174, prompt for normal update and FORCE for critical update
+            
+            # *************************************************************************
+            # It's not reccomended to change this in order to bypass a critical update.
+            # *************************************************************************
 
             if latest_version != version:
                 if "ⅴ" in latest_version_raw:
@@ -514,6 +1213,7 @@ def MTPmenu():
     # Show user instructions to enable MTP mode
 
 def adbMenu():
+    ADB.send("devices")
     show_messagebox_at(500, 200, "nPhoneKIT", strings['adbMenu'])
     # Show user instructions to enable ADB mode
 
@@ -625,177 +1325,195 @@ def parse_devconinfo(raw_input):
 def testAT(MTPinstruction=False, text=f"Testing USB access (ETA: {ETA[3]})..."): # Deprecated
     return True
 
+def lu(path="unlocks.json"):
+    return json.loads(Path(path).read_text(encoding="utf-8"))
+               
 # =============================================
 #  Unlocking methods for different devices
 # =============================================
 
 def frp_unlock_pre_aug2022(): # FRP unlock for pre-aug2022 security patch update
-    print(strings['getVerInfo'], end="")
-    info = verinfo(False)
-    model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output
+    methods = lu("unlocks.json")
+    for m in methods:
+        if m["id"] == "sam_pre_2022":
+            picked = stw(m["title"], m["desc"], m["pros"], m["cons"], m["minutes"])
+            if picked:
+                print(strings['getVerInfo'], end="")
+                info = verinfo(False)
+                model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output
 
-    if info == "Fail":
-        print(strings['deviceCheckPluggedIn2'])
-        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Pre_2022", "Fail"))
-        tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
-    else:
-        ATcommands = [
-            "AT+DUMPCTRL=1,0",
-            "AT+DEBUGLVC=0,5",
-            "AT+SWATD=0", # Removes some kind of proprietary SAMSUNG modem lock
-            "AT+ACTIVATE=0,0,0", # So that you can ACTIVATE
-            "AT+SWATD=1", # Then relocks it.
-            "AT+DEBUGLVC=0,5"
-        ]
+                if info == "Fail":
+                    print(strings['deviceCheckPluggedIn2'])
+                    tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Pre_2022", "Fail"))
+                    tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+                else:
+                    ATcommands = [
+                        "AT+DUMPCTRL=1,0",
+                        "AT+DEBUGLVC=0,5",
+                        "AT+SWATD=0", # Removes some kind of proprietary SAMSUNG modem lock
+                        "AT+ACTIVATE=0,0,0", # So that you can ACTIVATE
+                        "AT+SWATD=1", # Then relocks it.
+                        "AT+DEBUGLVC=0,5"
+                    ]
 
-        ADBcommands = [ # Run list of commands in order to complete the unlock with newly-enabled ADB
-            "shell settings put global setup_wizard_has_run 1",
-            "shell settings put secure user_setup_complete 1",
-            "shell content insert --uri content://settings/secure --bind name:s:DEVICE_PROVISIONED --bind value:i:1",
-            "shell content insert --uri content://settings/secure --bind name:s:user_setup_complete --bind value:i:1",
-            "shell content insert --uri content://settings/secure --bind name:s:INSTALL_NON_MARKET_APPS --bind value:i:1",
-            "shell am start -c android.intent.category.HOME -a android.intent.action.MAIN"
-        ]
+                    ADBcommands = [ # Run list of commands in order to complete the unlock with newly-enabled ADB
+                        "shell settings put global setup_wizard_has_run 1",
+                        "shell settings put secure user_setup_complete 1",
+                        "shell content insert --uri content://settings/secure --bind name:s:DEVICE_PROVISIONED --bind value:i:1",
+                        "shell content insert --uri content://settings/secure --bind name:s:user_setup_complete --bind value:i:1",
+                        "shell content insert --uri content://settings/secure --bind name:s:INSTALL_NON_MARKET_APPS --bind value:i:1",
+                        "shell am start -c android.intent.category.HOME -a android.intent.action.MAIN"
+                    ]
 
-        show_messagebox_at(500, 200, "nPhoneKIT", strings['misuseFrpGuidance'])
+                    show_messagebox_at(500, 200, "nPhoneKIT", strings['misuseFrpGuidance'])
 
-        print(strings['attemptingEnableAdb'], end="")
+                    print(strings['attemptingEnableAdb'], end="")
 
-        show_messagebox_at(500, 200, "nPhoneKIT", strings['frpUnlockStepsPre2022'])
+                    show_messagebox_at(500, 200, "nPhoneKIT", strings['frpUnlockStepsPre2022'])
 
-        for command in ATcommands:
-            AT.send(command)
+                    for command in ATcommands:
+                        AT.send(command)
 
-        output = readOutput("AT")
+                    output = readOutput("AT")
 
-        if "error" in output.lower():
-            print(strings['failText'])
-            print(strings['frpNotCompatible'])
-            tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Pre_2022", "Fail"))
-            tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
-        else:
-            print(strings['okText'])
-            print(strings['runUnlock'], end="")
-            show_messagebox_at(500, 200, "nPhoneKIT", strings['usbDebuggingPromptCheck'])
-            for command in ADBcommands:
-                ADB.send(command)
-            print(strings['okText'])
-            print(strings['unlockSuccess'])
-            tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Pre_2022", "Success"))
-            tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+                    if "error" in output.lower():
+                        print(strings['failText'])
+                        print(strings['frpNotCompatible'])
+                        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Pre_2022", "Fail"))
+                        tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+                    else:
+                        print(strings['okText'])
+                        print(strings['runUnlock'], end="")
+                        show_messagebox_at(500, 200, "nPhoneKIT", strings['usbDebuggingPromptCheck'])
+                        for command in ADBcommands:
+                            ADB.send(command)
+                        print(strings['okText'])
+                        print(strings['unlockSuccess'])
+                        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Pre_2022", "Success"))
+                        tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
 
 def frp_unlock_aug2022_to_dec2022(): # FRP unlock for aug2022-dec2022 security patch update
-    print(strings['getVerInfo'], end="")
-    info = verinfo(False)
-    model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output
+    methods = lu("unlocks.json")
+    for m in methods:
+        if m["id"] == "sam_2022_23":
+            picked = stw(m["title"], m["desc"], m["pros"], m["cons"], m["minutes"])
+            if picked:   
+                print(strings['getVerInfo'], end="")
+                info = verinfo(False)
+                model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output
 
-    if info == "Fail":
-        print(strings['deviceCheckPluggedIn2'])
-        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Aug_To_Dec_2022", "Fail"))
-        tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
-    else:
-        commands = ['AT+SWATD=0', 'AT+ACTIVATE=0,0,0', 'AT+DEVCONINFO','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0', 'AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5']
-        # These commands are supposed to overwhelm the phone and trick it into enabling ADB. The rest after this is the same as the other unlock method.
+                if info == "Fail":
+                    print(strings['deviceCheckPluggedIn2'])
+                    tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Aug_To_Dec_2022", "Fail"))
+                    tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+                else:
+                    commands = ['AT+SWATD=0', 'AT+ACTIVATE=0,0,0', 'AT+DEVCONINFO','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0', 'AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5','AT+SWATD=0','AT+ACTIVATE=0,0,0','AT+SWATD=1','AT+DEBUGLVC=0,5','AT+KSTRINGB=0,3','AT+DUMPCTRL=1,0','AT+DEBUGLVC=0,5']
+                    # These commands are supposed to overwhelm the phone and trick it into enabling ADB. The rest after this is the same as the other unlock method.
 
-        ADBcommands = [ # Run list of commands in order to complete the unlock with newly-enabled ADB
-            "shell settings put global setup_wizard_has_run 1",
-            "shell settings put secure user_setup_complete 1",
-            "shell content insert --uri content://settings/secure --bind name:s:DEVICE_PROVISIONED --bind value:i:1",
-            "shell content insert --uri content://settings/secure --bind name:s:user_setup_complete --bind value:i:1",
-            "shell content insert --uri content://settings/secure --bind name:s:INSTALL_NON_MARKET_APPS --bind value:i:1",
-            "shell am start -c android.intent.category.HOME -a android.intent.action.MAIN"
-        ]
+                    ADBcommands = [ # Run list of commands in order to complete the unlock with newly-enabled ADB
+                        "shell settings put global setup_wizard_has_run 1",
+                        "shell settings put secure user_setup_complete 1",
+                        "shell content insert --uri content://settings/secure --bind name:s:DEVICE_PROVISIONED --bind value:i:1",
+                        "shell content insert --uri content://settings/secure --bind name:s:user_setup_complete --bind value:i:1",
+                        "shell content insert --uri content://settings/secure --bind name:s:INSTALL_NON_MARKET_APPS --bind value:i:1",
+                        "shell am start -c android.intent.category.HOME -a android.intent.action.MAIN"
+                    ]
 
-        show_messagebox_at(500, 200, "nPhoneKIT", strings['misuseFrpGuidance2022'])
+                    show_messagebox_at(500, 200, "nPhoneKIT", strings['misuseFrpGuidance2022'])
 
-        print(strings['attemptingEnableAdb'], end="")
+                    print(strings['attemptingEnableAdb'], end="")
 
-        show_messagebox_at(500, 200, "nPhoneKIT", strings['frpUnlockSteps2022'])
+                    show_messagebox_at(500, 200, "nPhoneKIT", strings['frpUnlockSteps2022'])
 
-        for command in commands:
-            AT.send(command)
+                    for command in commands:
+                        AT.send(command)
 
-        output = readOutput("AT")
+                    output = readOutput("AT")
 
-        if "error" in output.lower():
-            print(strings['failText'])
-            print(strings['frpNotCompatible'])
-            tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Aug_To_Dec_2022", "Fail"))
-            tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
-        else:
-            print(strings['okText'])
-            print(strings['runUnlock'], end="")
-            show_messagebox_at(500, 200, "nPhoneKIT", strings['usbDebuggingPromptCheck'])
-            for command in ADBcommands:
-                ADB.send(command)
-            print(strings['okText'])
-            print(strings['unlockSuccess'])
-            tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Aug_To_Dec_2022", "Success"))
-            tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+                    if "error" in output.lower():
+                        print(strings['failText'])
+                        print(strings['frpNotCompatible'])
+                        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Aug_To_Dec_2022", "Fail"))
+                        tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+                    else:
+                        print(strings['okText'])
+                        print(strings['runUnlock'], end="")
+                        show_messagebox_at(500, 200, "nPhoneKIT", strings['usbDebuggingPromptCheck'])
+                        for command in ADBcommands:
+                            ADB.send(command)
+                        print(strings['okText'])
+                        print(strings['unlockSuccess'])
+                        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Aug_To_Dec_2022", "Success"))
+                        tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
 
 def frp_unlock_2024(): # FRP unlock for early 2024-ish security patch update
-    print(strings['getVerInfo'], end="")
-    info = verinfo(False)
-    model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output
-
-    if info == "Fail":
-        print(strings['deviceCheckPluggedIn2'])
-        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_2024", "Fail"))
-        tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
-    else:
-        commands = [
-            "AT+SWATD=0", # Modem unlocking
-            "AT+ACTIVATE=0,0,0", # Modem unlocking
-            "AT+DEVCONINFO", # Get device info
-            "AT+VERSNAME=3.2.3", # FRP unlocking commands
-            "AT+REACTIVE=1,0,0", # FRP unlocking commands
-            "AT+SWATD=0", # Re-Modem unlocking
-            "AT+ACTIVATE=0,0,0", # Re-Modem unlocking
-            "AT+SWATD=1", # Lock quickly
-            "AT+SWATD=1", # Lock again
-            "AT+PRECONFIG=2,VZW", # Quickly change CSC
-            "AT+PRECONFIG=1,0", # Quickly change it back
-        ]
-
-        ADBcommands = [ # Run list of commands in order to complete the unlock with newly-enabled ADB
-            "shell settings put global setup_wizard_has_run 1", 
-            "shell settings put secure user_setup_complete 1",
-            "shell content insert --uri content://settings/secure --bind name:s:DEVICE_PROVISIONED --bind value:i:1",
-            "shell content insert --uri content://settings/secure --bind name:s:user_setup_complete --bind value:i:1",
-            "shell content insert --uri content://settings/secure --bind name:s:INSTALL_NON_MARKET_APPS --bind value:i:1",
-            "shell am start -c android.intent.category.HOME -a android.intent.action.MAIN"
-        ]
-
-        show_messagebox_at(500, 200, "nPhoneKIT", strings['misuseFrpGuidance2024'])
-
-        print(strings['attemptingEnableAdb'], end="")
-
-        show_messagebox_at(500, 200, "nPhoneKIT", strings['frpUnlockSteps2024'])
-
-        for command in commands:
-            AT.send(command)
-
-        output = readOutput("AT")
-
-        if "error" in output.lower():
-            print(strings['failText'])
-            print(strings['frpNotCompatible'])
-            tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_2024", "Fail"))
-            tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
-        else:
-            print(strings['okText'])
-            print(strings['runUnlock'], end="")
-            show_messagebox_at(500, 200, "nPhoneKIT", strings['usbDebuggingPromptCheck'])
-            for command in ADBcommands:
-                ADB.send(command)
-            print(strings['okText'])
-            print(strings['unlockSuccess'])
-            if model == "" or model == None:
-                # Retry get model
-                info = verinfo(False, False)
+    methods = lu("unlocks.json")
+    for m in methods:
+        if m["id"] == "sam_2024":
+            picked = stw(m["title"], m["desc"], m["pros"], m["cons"], m["minutes"])
+            if picked:
+                print(strings['getVerInfo'], end="")
+                info = verinfo(False)
                 model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output
-            tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_2024", "Success"))
-            tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+
+                if info == "Fail":
+                    print(strings['deviceCheckPluggedIn2'])
+                    tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_2024", "Fail"))
+                    tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+                else:
+                    commands = [
+                        "AT+SWATD=0", # Modem unlocking
+                        "AT+ACTIVATE=0,0,0", # Modem unlocking
+                        "AT+DEVCONINFO", # Get device info
+                        "AT+VERSNAME=3.2.3", # FRP unlocking commands
+                        "AT+REACTIVE=1,0,0", # FRP unlocking commands
+                        "AT+SWATD=0", # Re-Modem unlocking
+                        "AT+ACTIVATE=0,0,0", # Re-Modem unlocking
+                        "AT+SWATD=1", # Lock quickly
+                        "AT+SWATD=1", # Lock again
+                        "AT+PRECONFIG=2,VZW", # Quickly change CSC
+                        "AT+PRECONFIG=1,0", # Quickly change it back
+                    ]
+
+                    ADBcommands = [ # Run list of commands in order to complete the unlock with newly-enabled ADB
+                        "shell settings put global setup_wizard_has_run 1", 
+                        "shell settings put secure user_setup_complete 1",
+                        "shell content insert --uri content://settings/secure --bind name:s:DEVICE_PROVISIONED --bind value:i:1",
+                        "shell content insert --uri content://settings/secure --bind name:s:user_setup_complete --bind value:i:1",
+                        "shell content insert --uri content://settings/secure --bind name:s:INSTALL_NON_MARKET_APPS --bind value:i:1",
+                        "shell am start -c android.intent.category.HOME -a android.intent.action.MAIN"
+                    ]
+
+                    show_messagebox_at(500, 200, "nPhoneKIT", strings['misuseFrpGuidance2024'])
+
+                    print(strings['attemptingEnableAdb'], end="")
+
+                    show_messagebox_at(500, 200, "nPhoneKIT", strings['frpUnlockSteps2024'])
+
+                    for command in commands:
+                        AT.send(command)
+
+                    output = readOutput("AT")
+
+                    if "error" in output.lower():
+                        print(strings['failText'])
+                        print(strings['frpNotCompatible'])
+                        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_2024", "Fail"))
+                        tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+                    else:
+                        print(strings['okText'])
+                        print(strings['runUnlock'], end="")
+                        show_messagebox_at(500, 200, "nPhoneKIT", strings['usbDebuggingPromptCheck'])
+                        for command in ADBcommands:
+                            ADB.send(command)
+                        print(strings['okText'])
+                        print(strings['unlockSuccess'])
+                        if model == "" or model == None:
+                            # Retry get model
+                            info = verinfo(False, False)
+                            model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output
+                        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_2024", "Success"))
+                        tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
 
 def general_frp_unlock(): # Not completed yet
     info = verinfo(False)
@@ -806,32 +1524,51 @@ def general_frp_unlock(): # Not completed yet
         print(strings['deviceNotSupportedUniversal'])
 
 def LG_screen_unlock(): # Screen unlock on supported LG devices *untested*
-    info = verinfo(False)
-    model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output (may not work)
+    methods = lu("unlocks.json")
+    for m in methods:
+        if m["id"] == "lg_unlock":
+            picked = stw(m["title"], m["desc"], m["pros"], m["cons"], m["minutes"])
+            if picked:
+                info = verinfo(False)
+                model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output (may not work)
 
-    show_messagebox_at(500, 200, "nPhoneKIT", strings['lgScreenUnlockSupportedDevs'])
-    print(strings['lgRunningScreenUnlock'], end="")
-    # Prepare phone for unlock
-    show_messagebox_at(600, 100, "nPhoneKIT", strings['lgScreenUnlockSteps'])
-    
-    time.sleep(1)
-    if AT.usbswitch("-l", "LG Screen Unlock"):
-        rt() # Flush the output buffer
-        AT.send('AT%KEYLOCK=0') # This AT command SHOULD unlock the screen instantly. (yes, one command.)
-        with open("tmp_output.txt", "r") as f:
-            output = f.read()
-        # debug only: print("\n\nOutput: \n\n" + output + "\n\n")
-        if "error" in output or "Error" in output:
-            print(strings['failText'] + "\n")
-            print(strings['lgScreenUnlockError'])
-            tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "LG_Screen_Unlock", "Fail"))
-            tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
-        else:
-            rt()
-            print(strings['okText'] + "\n")
-            print(strings['lgScreenUnlockSuccess'])
-            tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "LG_Screen_Unlock", "Success"))
-            tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+                show_messagebox_at(500, 200, "nPhoneKIT", strings['lgScreenUnlockSupportedDevs'])
+                print(strings['lgRunningScreenUnlock'], end="")
+                # Prepare phone for unlock
+                show_messagebox_at(600, 100, "nPhoneKIT", strings['lgScreenUnlockSteps'])
+                
+                time.sleep(1)
+                if AT.usbswitch("-l", "LG Screen Unlock"):
+                    rt() # Flush the output buffer
+                    AT.send('AT%KEYLOCK=0') # This AT command SHOULD unlock the screen instantly. (yes, one command.)
+                    with open("tmp_output.txt", "r") as f:
+                        output = f.read()
+                    # debug only: print("\n\nOutput: \n\n" + output + "\n\n")
+                    if "error" in output or "Error" in output:
+                        print(strings['failText'] + "\n")
+                        print(strings['lgScreenUnlockError'])
+                        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "LG_Screen_Unlock", "Fail"))
+                        tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+                    else:
+                        rt()
+                        print(strings['okText'] + "\n")
+                        print(strings['lgScreenUnlockSuccess'])
+                        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "LG_Screen_Unlock", "Success"))
+                        tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+
+def MotoFastbootFRP1():
+    methods = lu("unlocks.json")
+    for m in methods:
+        if m["id"] == "moto_fastboot_frp_unlock":
+            picked = stw(m["title"], m["desc"], m["pros"], m["cons"], m["minutes"])
+            if picked:
+                show_messagebox_at(200,200,"nPhoneKIT",strings["motoFastbootGuide"])
+                # erase frp partitions upon fastboot access granted
+                eraser = FastbootPartitionEraser()
+                ecf_stat = eraser.erase_config()
+                eps_stat = eraser.erase_persist()
+                efr_stat = eraser.erase_frp()
+                wdc_stat = eraser.wipe_data_cache()
 
 # ==============================================
 #  Simple functions that do stuff to the device
@@ -1121,22 +1858,146 @@ def mtkclient():
         os.system('sudo apt install libxcb-cursor0')
         os.system("sudo bash -c 'source ./deps/venv/bin/activate && python3 ./deps/mtkclient/mtk_gui.py'")
 
+def tkinput(title="Enter Value", text="Please enter a value:", placeholder="", ok_text="OK", cancel_text="Cancel"):
+    result = {"value": None}
+
+    def on_submit():
+        val = entry.get()
+        if val != placeholder:
+            result["value"] = val
+        popup.quit()
+
+    def on_cancel():
+        popup.quit()
+
+    popup = tk.Tk()
+    popup.title(title)
+    popup.geometry("300x150")
+    popup.resizable(False, False)
+
+    label = tk.Label(popup, text=text)
+    label.pack(pady=(15, 5))
+
+    entry = tk.Entry(popup, width=30)
+    entry.insert(0, placeholder)
+    entry.pack(pady=5)
+    entry.focus()
+    entry.config(fg='grey')
+
+    def on_focus_in(event):
+        if entry.get() == placeholder:
+            entry.delete(0, tk.END)
+            entry.config(fg='black')
+
+    def on_focus_out(event):
+        if entry.get() == "":
+            entry.insert(0, placeholder)
+            entry.config(fg='grey')
+
+    entry.bind("<FocusIn>", on_focus_in)
+    entry.bind("<FocusOut>", on_focus_out)
+
+    button_frame = tk.Frame(popup)
+    button_frame.pack(pady=10)
+
+    tk.Button(button_frame, text=ok_text, command=on_submit, width=10).pack(side=tk.LEFT, padx=5)
+    tk.Button(button_frame, text=cancel_text, command=on_cancel, width=10).pack(side=tk.LEFT, padx=5)
+
+    popup.protocol("WM_DELETE_WINDOW", on_cancel)
+    popup.mainloop()
+    popup.destroy()
+
+    return result["value"]
+
 def featureRequest():
-    # to do
+    featureDesc = tkinput(
+        title="nPhoneKIT",
+        text="Feature Request:",
+        placeholder="detailed feature description...",
+        ok_text="Submit",
+        cancel_text="Cancel"
+    )
+
+    if featureDesc is not None:
+        print("Submitting request: ", featureDesc)
+    else:
+        print("Canceled.")
 
     data = {
         "timestamp": time.time(), 
-        "uuid": str(uuid),
-        "featureDesc": featureDesc,
+        "uuid": str(get_public_hardware_uuid()),
+        "feature": featureDesc,
         "phoneKITversion": version
     }
 
     try:
-        response = requests.post(f"{FIREBASE_URL}/success_checks.json", json=data)
-        status = "Feature request submitted successfully!"
+        response = requests.post(f"{FIREBASE_URL}/feature_requests.json", json=data)
+        if response.status_code == 200:
+            status = "Feature request submitted successfully!  OK"
+        else:
+            status = "Error: Feature request failed to send. Check your connection?  FAIL"
     except Exception as e:
-        status = "Error: Feature request failed to send. Check your connection?"
-    return status
+        status = "Error: Feature request failed to send. Check your connection?  FAIL"
+    print(status)
+
+def bugReport():
+    bugDesc = tkinput(
+        title="nPhoneKIT",
+        text="Bug Report:",
+        placeholder="detailed bug description...",
+        ok_text="Submit",
+        cancel_text="Cancel"
+    )
+
+    if bugDesc is not None:
+        print("Submitting request: ", bugDesc)
+    else:
+        print("Canceled.")
+
+    data = {
+        "timestamp": time.time(), 
+        "uuid": str(get_public_hardware_uuid()),
+        "bug": bugDesc,
+        "phoneKITversion": version
+    }
+
+    try:
+        response = requests.post(f"{FIREBASE_URL}/bug_reports.json", json=data)
+        if response.status_code == 200:
+            status = "Bug report submitted successfully!  OK"
+        else:
+            status = "Error: Bug report failed to send. Check your connection?  FAIL"
+    except Exception as e:
+        status = "Error: Bug report failed to send. Check your connection?  FAIL"
+    print(status)
+
+def setFakeBatteryPercent():
+    percent = tkinput(
+        title="nPhoneKIT",
+        text="Fake Battery Percent:",
+        placeholder="e.g: 101",
+        ok_text="Submit",
+        cancel_text="Cancel"
+    )
+    adbMenu()
+    percent = percent.replace("%", "")
+    print(f"Setting percentage to {percent}%...", end="")
+    ADB.send(f"shell dumpsys battery set level {percent}")
+    output = readOutput("ADB")
+    if "unauthorized" in output:
+        print("  FAIL (You need to authorize the device via the USB Debugging prompt. Unplugging and replugging the device may help with this.)")
+    else:
+        print("  OK  (Restarting your phone should undo this.)")
+
+def resetBatteryPercent():
+    adbMenu()
+    print(f"Resetting percentage...", end="")
+    ADB.send(f"shell dumpsys battery reset")
+    output = readOutput("ADB")
+    if "unauthorized" in output:
+        print("  FAIL (You need to authorize the device via the USB Debugging prompt. Unplugging and replugging the device may help with this.)")
+    else:
+        print("  OK  (Restarting your phone should undo this.)")
 
 # ===================================
 #  PyQt5 GUI Stuff
@@ -1621,18 +2482,32 @@ class MainWindow(QtWidgets.QMainWindow):
         lg_actions = [
             (strings.get('lgScreenUnlockLabel','LG Screen Unlock 🔓'), strings.get('lgScreenUnlockTooltip',''), LG_screen_unlock),
         ]
+        moto_actions = [
+            (strings.get('motoFastbootUnlockFRP1','Fastboot-Based FRP Unlock'), strings.get('fbbFRPu1tooltip',''), MotoFastbootFRP1),
+        ]
         mtk_actions = [
             (strings.get('mtkClientLabel','MTK Client GUI 🚀'), strings.get('mtkClientTooltip',''), mtkclient),
         ]
         android_actions = [
             (strings.get('crashReboot','Crash/Reboot ⚡'), strings.get('crashRebootInfo',''), reboot),
         ]
+        adb_actions = [
+            (strings.get('fbp','Set Fake Battery %'), strings.get('fbpInfo',''), setFakeBatteryPercent),
+            (strings.get('rbp','Reset Fake Battery %'), strings.get('rbpInfo',''), resetBatteryPercent),
+        ]
+        feedback_actions = [
+            (strings.get('featureRequest','Feature Request'), strings.get('featureRequestInfo',''), featureRequest),
+            (strings.get('bugReport','Bug Report'), strings.get('bugReportInfo',''), bugReport),
+        ]
 
         tabspec = [
             (strings.get('brandSamsung','Samsung'), samsung_actions),
             (strings.get('brandLg','LG'), lg_actions),
+            (strings.get('brandMoto','Motorola'), moto_actions),
             (strings.get('brandMediatek','MediaTek'), mtk_actions),
             (strings.get('brandAndroid','Android'), android_actions),
+            (strings.get('ADB', 'ADB'), adb_actions),
+            (strings.get('feedback', 'Feedback'), feedback_actions),
         ]
         self.tabs.clear()
         self._brand_index.clear()
@@ -1767,11 +2642,12 @@ def is_root():
         return os.geteuid() == 0
     
 if not is_root():
-    root = tk.Tk()
-    root.withdraw()
+    if not debugMode:
+        root = tk.Tk()
+        root.withdraw()
 
-    messagebox.showwarning("nPhoneKIT", strings['sudoReqdError'])
-    sys.exit(1)
+        messagebox.showwarning("nPhoneKIT", strings['sudoReqdError'])
+        sys.exit(1)
 
 if update_check:
     check_for_update()
