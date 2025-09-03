@@ -1,0 +1,69 @@
+[
+  {
+    "id": "sam_2024",
+    "title": "2024 FRP Unlock",
+    "desc": "Attempts to use AT in order to overload and trick the system into enabling ADB, and then using that to unlock the device.",
+    "pros": [
+      "Works on most devices still on the 2024 patch",
+      "Similar functionality to older methods"
+    ],
+    "cons": [
+      "Needs a slightly more powerful PC",
+      "Only confirmed to work on U.S. models"
+    ],
+    "minutes": 15
+  },
+  {
+    "id": "sam_2022_23",
+    "title": "2022-2023 FRP Unlock",
+    "desc": "Attempts to use AT in order to overload and trick the system into enabling ADB, and then using that to unlock the device.",
+    "pros": [
+      "Works on most devices still 2022-2023 patch",
+      "Similar functionality to older methods"
+    ],
+    "cons": [
+      "Not confirmed to work on all devices"
+    ],
+    "minutes": 10
+  },
+  {
+    "id": "sam_pre_2022",
+    "title": "Pre-2022 FRP Unlock",
+    "desc": "Attempts to use AT in order to easily enable ADB, and then using that to unlock the device.",
+    "pros": [
+      "Works on most devices still pre-2022 patch",
+      "The OG unlock method used by tons of tools"
+    ],
+    "cons": [
+      "Doesn't work on anything past 2022-patch"
+    ],
+    "minutes": 10
+  },
+  {
+    "id": "lg_unlock",
+    "title": "LG Screen Unlock",
+    "desc": "Attempts to use AT in order to easily unlock the device.",
+    "pros": [
+      "Works on most devices still pre-G5"
+    ],
+    "cons": [
+      "Doesn't work on anything past-G5"
+    ],
+    "minutes": 2
+  },
+  {
+    "id": "moto_fastboot_frp_unlock",
+    "title": "Moto Fastboot FRP Unlock",
+    "desc": "This unlock method utilizes fastboot in order to attempt to delete partitions which contain FRP lock info.",
+    "pros": [
+      "Likely to unlock on most Motorola devices",
+      "Quick method, fast to try"
+    ],
+    "cons": [
+      "May not be easy for average users",
+      "Can be hard to get into fastboot",
+      "Not likely to work on more recent devices."
+    ],
+    "minutes": 10
+  }
+]
