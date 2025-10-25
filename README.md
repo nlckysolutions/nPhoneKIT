@@ -9,6 +9,8 @@
 [![Mastodon](https://img.shields.io/badge/-MASTODON-%232B90D9?logo=mastodon&logoColor=white)](https://mastodon.social/@nlckysolutions)
 </div>
 
+# LEGAL WARNING: THIS TOOL IS **ONLY** INTENDED FOR **RIGHTFUL OWNERS** TO UNLOCK **THEIR OWN DEVICES**. DO NOT USE THIS TOOL ON DEVICES YOU DO NOT OWN. NLCKYSOLUTIONS™ IS NOT RESPONSIBLE FOR MISUSE OF THIS TOOL, AND MISUSE IS HIGHLY PROHIBITED.
+
 ---
 
 # About the project
