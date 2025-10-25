@@ -11,10 +11,6 @@
 
 ---
 
-# LEGAL WARNING: THIS TOOL IS **ONLY** INTENDED FOR **RIGHTFUL OWNERS** TO UNLOCK **THEIR OWN DEVICES**. DO NOT USE THIS TOOL ON DEVICES YOU DO NOT OWN. NLCKYSOLUTIONS™ IS NOT RESPONSIBLE FOR MISUSE OF THIS TOOL, AND MISUSE IS HIGHLY PROHIBITED.
-
----
-
 # About the project
 
 **nPhoneKIT** is a fully open-source, community-powered toolbox for Android devices, replacing certain closed-source tools that *hide* what they’re doing to your phone.
@@ -41,6 +37,10 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
 ### Credits:
 - **MediaTek features work only using MTKCLIENT, which is in the DEPS folder. Sourced from: https://github.com/bkerler/mtkclient. MTKCLIENT is provided by bkerler and IS NOT owned or created by nPhoneKIT in ANY WAY.**
 - **IMEI Checking features work by opening a new tab of www.imei.info in order to check your IMEI yourself.**
+
+---
+
+# LEGAL WARNING: THIS TOOL IS **ONLY** INTENDED FOR **RIGHTFUL OWNERS** TO UNLOCK **THEIR OWN DEVICES**. DO NOT USE THIS TOOL ON DEVICES YOU DO NOT OWN. NLCKYSOLUTIONS™ IS NOT RESPONSIBLE FOR MISUSE OF THIS TOOL, AND MISUSE IS HIGHLY PROHIBITED.
 
 ---
 
