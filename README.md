@@ -26,23 +26,33 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
 
 ---
 
-### Bugs:
-- No current bugs as of v1.3.3
+# LEGAL WARNING: THIS TOOL IS **ONLY** INTENDED FOR **RIGHTFUL OWNERS** TO UNLOCK **THEIR OWN DEVICES**. DO NOT USE THIS TOOL ON DEVICES YOU DO NOT OWN. NLCKYSOLUTIONS™ IS NOT RESPONSIBLE FOR MISUSE OF THIS TOOL, AND MISUSE IS HIGHLY PROHIBITED.
+
+---
+
+### Bugs
+- Issues with ```sudo``` on select Linux distros
+- Motorola FRP not working
 
 > [!IMPORTANT]
 > If you find a bug, **make sure to open a GitHub issue.** This will help me fix the error and make nPhoneKIT better for everyone!
 
 ---
 
-### Credits:
+### Credits
 - **MediaTek features work only using MTKCLIENT, which is in the DEPS folder. Sourced from: https://github.com/bkerler/mtkclient. MTKCLIENT is provided by bkerler and IS NOT owned or created by nPhoneKIT in ANY WAY.**
 - **IMEI Checking features work by opening a new tab of www.imei.info in order to check your IMEI yourself.**
 
 ---
 
-# LEGAL WARNING: THIS TOOL IS **ONLY** INTENDED FOR **RIGHTFUL OWNERS** TO UNLOCK **THEIR OWN DEVICES**. DO NOT USE THIS TOOL ON DEVICES YOU DO NOT OWN. NLCKYSOLUTIONS™ IS NOT RESPONSIBLE FOR MISUSE OF THIS TOOL, AND MISUSE IS HIGHLY PROHIBITED.
+## Important Information (**READ!**)
 
----
+- **Motorola FRP Fastboot unlock is EXPERIMENTAL and is not likely to work.**
+- nPhoneKIT uses the same unlock methods as many other free tools, but is open-source.
+- nPhoneKIT will never ask for a payment nor will it show any ads.
+- nPhoneKIT was developed mostly for education by open-sourcing common unlock methods, but is also decently reliable.
+- nPhoneKIT is fully FOSS and while it will not ask for a payment, donations are greatly appreciated and your GitHub username can be shown on the README.MD if you would like.
+- nPhoneKIT is meant to be used responsibly by proper owners of their own phones.
 
 ## Installation
 
@@ -107,7 +117,7 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
 
 ---
 
-## ⚠️⚠️⚠️ Important Notes:
+## ⚠️⚠️⚠️ Important Notes
 
 - **nPhoneKIT has a feature called "Success Checks" which will contact external servers, telling them whether a said feature worked on your phone model. No personal data is sent. This helps improve nPhoneKIT. (You may inspect the full success check code if you would like, this is only used to improve and debug. Personal identifiers are anonymized, hashed, and made untraceable)**
 
