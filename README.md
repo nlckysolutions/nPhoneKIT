@@ -33,11 +33,17 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
 ### Bugs
 - Issues with ```sudo``` on select Linux distros
 - Motorola FRP not working
+- Errors on Windows
 
 > [!IMPORTANT]
 > If you find a bug, **make sure to open a GitHub issue.** This will help me fix the error and make nPhoneKIT better for everyone!
 
 ---
+
+### Upcoming Changes (for 1.5.0)
+- Better error system: Detailed, debuggable error codes
+- Better Windows support
+- Easier way to install, (installing by source will still be supported)
 
 ### Credits
 - **MediaTek features work only using MTKCLIENT, which is in the DEPS folder. Sourced from: https://github.com/bkerler/mtkclient. MTKCLIENT is provided by bkerler and IS NOT owned or created by nPhoneKIT in ANY WAY.**
