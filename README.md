@@ -26,7 +26,7 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
 
 ---
 
-# LEGAL WARNING: THIS TOOL IS **ONLY** INTENDED FOR **RIGHTFUL OWNERS** TO UNLOCK **THEIR OWN DEVICES**. DO NOT USE THIS TOOL ON DEVICES YOU DO NOT OWN. NLCKYSOLUTIONS™ IS NOT RESPONSIBLE FOR MISUSE OF THIS TOOL, AND MISUSE IS HIGHLY PROHIBITED.
+# LEGAL WARNING: THIS TOOL IS **ONLY** INTENDED FOR **RIGHTFUL OWNERS** TO UNLOCK **THEIR OWN DEVICES**. DO NOT USE THIS TOOL ON DEVICES YOU DO NOT OWN. NLCKYSOLUTIONS™ IS NOT RESPONSIBLE FOR MISUSE OF THIS TOOL, AND MISUSE IS HIGHLY PROHIBITED. nPhoneKIT WAS MAINLY BUILT FOR EDUCATION AND FOSS PURPOSES.
 
 ---
 
@@ -133,6 +133,6 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
 
 ### ⚖️ Legal
 
-<sub>nPhoneKIT is a tool built entirely from original Python code. It does not include, link to, or distribute any copyrighted firmware, exploits, or proprietary binaries. Any similarity in function to other tools is the result of using standard public command sets (e.g. ADB, AT). This project is not affiliated with or endorsed by Samsung, LG, Google, Wireshark, or SamFW Tool. Trademarks used for descriptive purposes only.</sub>
+<sub>nPhoneKIT is a tool built entirely from original Python code. It does not include, link to, or distribute any copyrighted firmware, exploits, or proprietary binaries. Any similarity in function to other tools is the result of using standard public command sets (e.g. ADB, AT). This project is not affiliated with or endorsed by Samsung, LG, Google, or other companies. Trademarks used for descriptive purposes only.</sub>
 
 ---
