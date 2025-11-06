@@ -36,7 +36,7 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
 - Errors on Windows
 
 > [!IMPORTANT]
-> If you find a bug, **make sure to open a GitHub issue.** This will help me fix the error and make nPhoneKIT better for everyone!
+> If you find a ***new*** bug, **make sure to open a GitHub issue.** This will help me fix the error and make nPhoneKIT better for everyone!
 
 ---
 
