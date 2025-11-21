@@ -87,7 +87,8 @@
     <string name="mtkClientTooltip">Starts the MTKCLIENT GUI. This may take a few minutes\n if you're doing it for the first time.</string>
     <string name="nPhoneKITwelcome">Welcome to nPhoneKIT v{version}</string>
     <string name="newIn1.3.2">\nNew in v1.3.2: Bug fixes for FRP unlock and version info, improved language compatibility via a strings.xml. \n\nFull Changelog on https://github.com/nlckysolutions/nPhoneKIT/releases/tag/v1.3.2\n\n</string>
-    <string name="sudoReqdError">Please close this window and rerun using SUDO (or Run as Administrator on Windows). Most features/tools will not work otherwise.</string>
+    <string name="sudoReqdErrorOld">Please close this window and rerun using SUDO (or Run as Administrator on Windows). Most features/tools will not work otherwise.</string>
+    <string name="sudoReqdError">Please close this window and rerun using Run as Administrator on Windows. This is so that nPhoneKIT can access serial ports.</string>
     <string name="feedback">Feedback</string>
     <string name="bugReport">Bug Report 🪲</string>
     <string name="featureRequest">Feature Request 💡</string>
