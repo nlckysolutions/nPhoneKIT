@@ -40,13 +40,6 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
 
 ---
 
-## Upcoming Changes (for 1.5.0)
-- Better error system: Detailed, debuggable error codes
-- Better Windows support
-- Easier way to install, (installing by source will still be supported)
-
----
-
 ### Credits
 - **MediaTek features work only using MTKCLIENT, which is in the DEPS folder. Sourced from: https://github.com/bkerler/mtkclient. MTKCLIENT is provided by bkerler and IS NOT owned or created by nPhoneKIT in ANY WAY.**
 - **IMEI Checking features work by opening a new tab of www.imei.info in order to check your IMEI yourself.**
