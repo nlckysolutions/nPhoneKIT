@@ -51,7 +51,7 @@ import shutil # Fastboot partition eraser for Motorola
 # Open a new tab in the default browser
 # Checking and getting basic information about the current system
 
-version = "1.4.0"
+version = "1.5.0"
 
 # This program is free software: you can redistribute it and/or modify it 
 # under the terms of the GNU General Public License as published by the Free Software Foundation, 
@@ -88,7 +88,7 @@ version = "1.4.0"
 # You shouldn't edit anything below this line unless you know what you're doing #
 # ============================================================================= #
 
-debugMode = False # If True, removes root/admin requirement. Most serial/usb features will stop working.
+debugMode = False # If True, removes root/admin requirement. Most serial/usb features will stop working. As of v1.5.0, this will only affect Windows users.
 
 SETTINGS_PATH = Path("settings.json") # Load settings externally
 
@@ -351,6 +351,80 @@ class ADB: # ADB class for sending ADB commands if needed
     
     def usbswitch(arg, action):
         # Later, add logic to allow switching of device interface to AT, for more compatibility.
+        return True
+
+def check_serial_permissions():
+    if os_config == "LINUX":
+        import grp
+        import getpass
+        import platform
+
+        user = getpass.getuser()
+
+        # Serial device groups used across most distros
+        serial_groups = ["dialout", "uucp", "lock", "tty"]
+
+        # Collect groups the user is currently in
+        user_groups = [g.gr_name for g in grp.getgrall() if user in g.gr_mem]
+
+        # Also check primary group ID (some distros put uucp as primary)
+        try:
+            primary_group = grp.getgrgid(os.getgid()).gr_name
+            user_groups.append(primary_group)
+        except:
+            pass
+
+        # Check if user is good
+        for g in serial_groups:
+            if g in user_groups:
+                return True  # Permissions OK
+
+        # If we reach here, user is missing required groups
+        # Decide which command to show based on distro
+        distro = platform.system()
+
+        if distro == "Linux":
+            # Try reading OS-release for better accuracy
+            import distro as distro_lib
+            name = distro_lib.id()
+
+            if name in ["ubuntu", "debian", "linuxmint", "zorin"]:
+                cmd = f"sudo usermod -aG dialout {user}"
+            elif name in ["arch", "endeavouros", "cachyos", "manjaro", "garuda"]:
+                cmd = f"sudo usermod -aG uucp,lock {user}"
+            elif name in ["fedora", "rhel", "centos"]:
+                cmd = f"sudo usermod -aG dialout {user}"
+            else:
+                # Fallback universal command
+                cmd = f"sudo usermod -aG dialout,uucp,lock {user}"
+        else:
+            cmd = "Unsupported OS for serial permissions."
+
+        # Show Tkinter window with copy-paste command
+        root = tk.Tk()
+        root.title("Serial Permission Fix Required")
+        root.geometry("500x250")
+
+        label = tk.Label(root, text="To enable serial access, run this command in your terminal:", font=("Arial", 12))
+        label.pack(pady=10)
+
+        text_box = tk.Text(root, height=2, font=("Courier", 12))
+        text_box.pack(padx=20, pady=10, fill="both")
+        text_box.insert("1.0", cmd)
+
+        # Make text read-only
+        text_box.config(state="disabled")
+
+        reboot_label = tk.Label(root, text="After running the command, reboot your system.", font=("Arial", 10))
+        reboot_label.pack(pady=10)
+
+        ok_button = tk.Button(root, text="OK", command=root.destroy)
+        ok_button.pack(pady=10)
+
+        root.mainloop()
+
+        return False
+    else:
         return True
     
 async def preload_samsung_modem(serman2):
@@ -1222,12 +1296,19 @@ def adbMenu():
 # ================================================
 
 def rt(): # Flush the output buffer. May be deprecated and replaced soon with a new output collection method
-    if os_config == "LINUX": # Flush output buffer on different OSes
+    """if os_config == "LINUX": # Flush output buffer on different OSes
         os.system("sudo bash -c 'rm -f tmp_output.txt'") 
         os.system("sudo bash -c 'rm -f tmp_output_adb.txt'")
     elif os_config == "WINDOWS":
         os.system("del /F tmp_output.txt")
-        os.system("del /F tmp_output_adb.txt")
+        os.system("del /F tmp_output_adb.txt")"""
+    
+    # Better rt() method + crossplatform + no errors
+    for f in ["tmp_output.txt", "tmp_output_adb.txt"]:
+        try:
+            os.remove(f)
+        except FileNotFoundError:
+            pass
 
 def readOutput(type): # Read the output buffer based on command type AT or ADB
     if type == "AT":
@@ -2452,7 +2533,8 @@ class MainWindow(QtWidgets.QMainWindow):
         w = QtWidgets.QWidget(); grid = QtWidgets.QGridLayout(w)
         grid.setContentsMargins(8,8,8,8); grid.setHorizontalSpacing(12); grid.setVerticalSpacing(12)
         # build pretty buttons
-        font_big = QtGui.QFont(); font_big.setPointSize(12); font_big.setBold(True)
+        #font_big = QtGui.QFont(); font_big.setPointSize(12); font_big.setBold(True)
+        font_big = QtGui.QFont("JetBrains Mono", 10)
         for i, (label, tooltip, fn) in enumerate(actions):
             btn = QtWidgets.QPushButton(label)
             btn.setToolTip(tooltip)
@@ -2461,7 +2543,7 @@ class MainWindow(QtWidgets.QMainWindow):
             # put into a card-like holder
             card = QtWidgets.QFrame(); card.setStyleSheet("QFrame { background: rgba(255,255,255,0.03); border: 1px solid #2A2A2A; border-radius: 12px; }")
             v = QtWidgets.QVBoxLayout(card); v.setContentsMargins(10,10,10,10)
-            btn.setFont(font_big)
+            #btn.setFont(font_big)
             v.addWidget(btn)
             grid.addWidget(card, i//2, i%2)
         return w
@@ -2619,6 +2701,7 @@ def main():
     pal.setColor(QtGui.QPalette.ToolTipBase, QtGui.QColor(42,42,42))
     pal.setColor(QtGui.QPalette.ToolTipText, QtGui.QColor(240,240,240))
     app.setPalette(pal)
+    app.setFont(QFont("Sans Serif"))
 
     fast_tips = InstantTooltips(delay_ms=1, hide_ms=299000)
     app.installEventFilter(fast_tips)
@@ -2640,14 +2723,19 @@ def is_root():
             return False
     elif os_config == "LINUX":  # POSIX (Linux, macOS, etc)
         return os.geteuid() == 0
-    
-if not is_root():
-    if not debugMode:
-        root = tk.Tk()
-        root.withdraw()
 
-        messagebox.showwarning("nPhoneKIT", strings['sudoReqdError'])
-        sys.exit(1)
+# Check if nPhoneKIT will be able to use serial ports:
+
+if os_config == "LINUX":
+    if not check_serial_permissions():
+        sys.exit(0)
+elif os_config == "WINDOWS":
+    if not is_root():
+        if not debugMode:
+            root = tk.Tk()
+            root.withdraw()
+            messagebox.showwarning("nPhoneKIT", strings['sudoReqdError'])
+            sys.exit(1)
 
 if update_check:
     check_for_update()
