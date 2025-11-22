@@ -57,6 +57,8 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
 
 ### Windows 🪟
 
+- Download Zadig at https://zadig.akeo.ie/, then install the WinUSB and libusb-win drivers.
+- If using a Samsung device, also download and install the Samsung USB drivers at https://developer.samsung.com/android-usb-driver
 - Go to the latest release, download Source Code as ZIP.
 - Make sure you have Python and Pip installed. You can download both [at the official website](https://www.python.org/downloads/windows). (Note: Make sure to download a version such as Python 3.10, not newer.)
 - Extract the zip, open Command Prompt as Administrator, and cd into the source code directory.
