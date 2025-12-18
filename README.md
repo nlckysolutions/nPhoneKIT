@@ -71,6 +71,8 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
   python main.py
   ```
 
+---
+
 ### Linux (Debian-based distro) 🐧
 
 - Go to the latest release, download Source Code as ZIP.
