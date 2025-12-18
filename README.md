@@ -84,11 +84,12 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
   sudo python3 main.py
   ```
 
-### Linux (Arch-based distro)
+### Linux (Arch-based distro) 🐧
 
 - Either:
   a. Go to the latest release, download Source Code as ZIP.
     - Then, extract the zip, open Terminal, and cd into the source code directory.
+  
   b. or clone the repository directly into a folder using the following command:
     ```
     git clone https://github.com/nlckysolutions/nPhoneKIT.git
@@ -97,6 +98,10 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
 - Run the following command:
   ```
   sudo pacman -Syu python3 tk python-pyserial python-requests pyqt5 android-tools adb
+  ```
+- Then, (every time you want to run nPhoneKIT you will need to run this command in the source folder) (make sure to use SUDO):
+  ```
+  sudo python3 main.py
   ```
 
   ## ⚠️ IMPORTANT! If you want MediaTek features on LINUX:
