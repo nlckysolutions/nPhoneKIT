@@ -86,7 +86,8 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
 
 ### Linux (Arch-based distro) 🐧
 
-- Either:
+- Either download the latest release or clone the repository:
+
   a. Go to the latest release, download Source Code as ZIP.
     - Then, extract the zip, open Terminal, and cd into the source code directory.
   
