@@ -7,6 +7,10 @@
 
 [![Built with Python](https://img.shields.io/badge/Built%20with-Python-Purple)](https://python.org)
 [![Mastodon](https://img.shields.io/badge/-MASTODON-%232B90D9?logo=mastodon&logoColor=white)](https://mastodon.social/@nlckysolutions)
+
+---
+
+**Need to programmatically use nPhoneKIT in Python scripts? Use [nPhoneCLI](https://github.com/nlckysolutions/nPhoneCLI).**
 </div>
 
 ---
