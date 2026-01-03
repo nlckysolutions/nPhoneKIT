@@ -15,6 +15,11 @@
 
 ---
 
+> [!IMPORTANT]
+> Technical nPhoneKIT + FRP unlocking discussion server: [#nphonekit:matrix.org](https://matrix.to/#/#nphonekit:matrix.org)
+
+---
+
 # About the project
 
 **nPhoneKIT** is a fully open-source, community-powered toolbox for Android devices, replacing certain closed-source tools that *hide* what they’re doing to your phone.
