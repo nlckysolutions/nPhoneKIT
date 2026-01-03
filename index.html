@@ -7,101 +7,298 @@
   <meta name="keywords" content="nPhoneKIT, FRP unlock, Android toolkit, open source, Python, Samsung unlock, LG unlock">
   <meta property="og:title" content="nPhoneKIT - Open Source Android Unlock Toolkit">
   <meta property="og:description" content="Unlock your Android device with transparency. FRP, screen unlock & more, all in Python, all open source.">
-  <title>nPhoneKIT – Unlock Your Android, Transparently</title>
+  <title>nPhoneKIT - Unlock Your Android, Transparently</title>
 
-  <!-- AOS Animate on Scroll -->
   <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
 
   <style>
-    :root { --brand: #6969f1; --white: #fff; --dark-blue: #000814; --light-blue: #001f3f; }
-    * { margin:0; padding:0; box-sizing:border-box; scroll-behavior: smooth; }
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      color: var(--white);
-      background: linear-gradient(to bottom, var(--light-blue), var(--dark-blue));
-      background-attachment: fixed;
-      transition: background-position 0.2s;
+    :root {
+      --bg: #05070f;
+      --panel: #0b1020;
+      --text: #eaeaf0;
+      --muted: #a0a3bd;
+      --brand: #6969f1;
+      --border: rgba(255,255,255,0.08);
     }
-    header { text-align:center; padding:6rem 1rem; position:relative; z-index:1; }
-    header h1, header p { opacity:0; animation: flyIn 1.2s ease-out forwards; }
-    header p { animation-delay: 0.6s; }
-    @keyframes flyIn { from { transform: translateY(-40px); opacity:0; } to { transform: translateY(0); opacity:1; } }
-    nav { position:fixed; top:0; width:100%; padding:1rem; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display:flex; justify-content:center; z-index:2; }
-    nav ul { display:flex; list-style:none; }
-    nav a { margin:0 1rem; color: var(--white); text-decoration:none; font-weight:600; }
-    section { padding:6rem 1rem; max-width:1000px; margin:0 auto; }
-    .features { display:grid; grid-template-columns:1fr; gap:4rem; }
-    .feature-detail { background: rgba(255,255,255,0.1); border-radius:8px; padding:3rem; transition:background 0.3s; }
-    .feature-detail:nth-child(odd) { background: rgba(255,255,255,0.15); }
-    .feature-detail h3 { margin-bottom:1rem; }
-    .feature-detail p { line-height:1.5; }
-    .screenshot { text-align:center; margin:2rem 0; }
-    .screenshot img { width:100%; max-width:1000px; border-radius:8px; box-shadow: 0 8px 30px rgba(0,0,0,0.5); transform: scale(0.9); opacity:0; animation: screenshotIn 1s ease-out 0.8s forwards; }
-    @keyframes screenshotIn { to { transform: scale(1); opacity:1; } }
-    .cta { text-align:center; padding:4rem 1rem; }
-    .cta a { background:var(--brand); color:#fff; padding:1rem 2rem; border-radius:4px; text-decoration:none; font-size:1.2rem; transition: transform 0.3s; }
-    .cta a:hover { transform:scale(1.05); }
-    footer { text-align:center; padding:2rem 1rem; font-size:0.9rem; color:rgba(255,255,255,0.7); }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: radial-gradient(1200px 600px at 10% 10%, #0f1633, var(--bg));
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      padding: 1rem 2rem;
+      background: rgba(5,7,15,0.7);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    nav ul {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    nav a {
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    nav a:hover {
+      color: var(--text);
+    }
+
+    /* HERO */
+    .hero {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 10rem 2rem 6rem;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 4vw, 3.2rem);
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 1.1rem;
+      margin-bottom: 2.5rem;
+      max-width: 480px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .btn {
+      padding: 0.9rem 1.6rem;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--brand);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    /* HERO IMAGE */
+    .hero-image {
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), transparent);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+
+    .hero-image img {
+      width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+    }
+
+    /* FEATURES */
+    section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 6rem 2rem;
+    }
+
+    section h2 {
+      font-size: 2rem;
+      margin-bottom: 3rem;
+      text-align: center;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 2rem;
+    }
+
+    .feature-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 2rem;
+      transition: transform 0.2s, border 0.2s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(105,105,241,0.4);
+    }
+
+    .feature-card h3 {
+      margin-bottom: 0.75rem;
+      font-size: 1.2rem;
+    }
+
+    .feature-card p {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    /* CTA */
+    .cta {
+      text-align: center;
+      background: linear-gradient(180deg, transparent, #080b18);
+      border-top: 1px solid var(--border);
+    }
+
+    .cta h2 {
+      margin-bottom: 1.5rem;
+    }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+
+      .hero p {
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .hero-actions {
+        justify-content: center;
+      }
+    }
   </style>
 </head>
-<body onscroll="document.body.style.backgroundPositionY = (window.pageYOffset * 0.5) + 'px'">
-  <nav data-aos="fade-down">
-    <ul>
-      <li><a href="#features">Features</a></li>
-      <li><a href="#howto">How To</a></li>
-      <li><a href="#download">Download</a></li>
-    </ul>
-  </nav>
 
-  <header>
-    <h1 data-aos="none">nPhoneKIT – Open Source FRP unlock, screen unlock & more, in Python.</h1>
-    <p data-aos="none">Unlock Your Phone, Transparently</p>
-    <div style="width:100%;" class="screenshot">
-      <img width="100%" src="./images/nphonekit-screenshot.png" alt="nPhoneKIT Desktop Window">
+<body>
+
+<nav>
+  <ul>
+    <li>NlckySolutions™ - nPhoneKIT</li>
+    <br>
+    |
+    <br>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#download">Download</a></li>
+  </ul>
+</nav>
+
+<header class="hero">
+  <div data-aos="fade-right">
+    <h1>Unlock Android devices, transparently.</h1>
+    <p>
+      nPhoneKIT is an open-source Android unlock toolkit built in Python.
+      FRP bypass, screen unlocks, modem info, and low-level control, all 
+      without shady binaries or closed tools.
+    </p>
+
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="https://github.com/nlckysolutions/nPhoneKIT" target="_blank">
+        Download on GitHub
+      </a>
+      <a class="btn btn-secondary" href="#features">
+        See Features
+      </a>
     </div>
-  </header>
+  </div>
 
-  <section id="features" data-aos="fade-up">
-    <h2>Features</h2>
-    <div class="features">
-      <div class="feature-detail" data-aos="fade-right">
-        <h3>FRP Unlock</h3>
-        <p>Bypass Factory Reset Protection on Samsung (2023–2025 patches) and many other Android devices. nPhoneKIT uses low-level AT commands to disable Samsung’s proprietary locks instantly.</p>
-      </div>
-      <div class="feature-detail" data-aos="fade-left">
-        <h3>Screen Unlock</h3>
-        <p>Unlock the screen on select LG models without losing any data. Compatible with G4, V10, G3, Stylo 2, Tribute HD, Phoenix 2, Aristo, Leon and more. One command does it all.</p>
-      </div>
-      <div class="feature-detail" data-aos="fade-right">
-        <h3>Version Info</h3>
-        <p>Fetch detailed device metadata—model, baseband, software version, serial, IMEI, region codes, straight from the modem via AT+DEVCONINFO and parsed into human-readable form.</p>
-      </div>
-      <div class="feature-detail" data-aos="fade-left">
-        <h3>WIFITEST Access</h3>
-        <p>Open Samsung’s hidden WIFITEST app even before setup completion. Run diagnostics on wireless hardware and verify signal parameters right in the setup wizard.</p>
-      </div>
-      <div class="feature-detail" data-aos="fade-right">
-        <h3>Download Mode</h3>
-        <p>Boot any Samsung phone into Download Mode with a single click—no key combinations required. Perfect for flashing custom firmware or recovery images via Odin.</p>
-      </div>
-      <div class="feature-detail" data-aos="fade-left">
-        <h3>Open Source</h3>
-        <p>Fully transparent. Inspect every line under GPLv3. No hidden binaries or obfuscation—just Python and pySerial, so you know exactly what’s happening on your device.</p>
-      </div>
+  <div class="hero-image" data-aos="fade-left">
+    <img src="https://nphonekit.dev/images/nphonekit-screenshot.png" alt="nPhoneKIT application screenshot">
+  </div>
+</header>
+
+<section id="features">
+  <h2>What it can do</h2>
+
+  <div class="features">
+    <div class="feature-card" data-aos="fade-up">
+      <h3>FRP Unlock</h3>
+      <p>Bypass Factory Reset Protection on modern Samsung devices using low-level AT command execution.</p>
     </div>
-  </section>
 
-  <section id="download" class="cta" data-aos="fade-up">
-    <h2>Ready to Go?</h2>
-    <br><br>
-    <a href="https://github.com/nlckysolutions/nPhoneKIT" target="_blank">Download Now</a>
-  </section>
+    <div class="feature-card" data-aos="fade-up" data-aos-delay="50">
+      <h3>Screen Unlock</h3>
+      <p>Unlock supported LG devices without wiping user data. One command, no recovery tricks.</p>
+    </div>
 
-  <footer data-aos="fade-in">
-    <p>&copy; 2025 nPhoneKIT. Crafted with 🔧 and ❤.</p>
-  </footer>
+    <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+      <h3>Device Intelligence</h3>
+      <p>Query modem-level device metadata including IMEI, region codes, firmware, and baseband.</p>
+    </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
-  <script> AOS.init({ duration: 800, once: true }); </script>
+    <div class="feature-card" data-aos="fade-up" data-aos-delay="150">
+      <h3>Hidden System Access</h3>
+      <p>Launch Samsung WIFITEST and diagnostics even before setup completion.</p>
+    </div>
+
+    <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+      <h3>Download Mode</h3>
+      <p>Force Samsung devices into Download Mode without physical key combos.</p>
+    </div>
+
+    <div class="feature-card" data-aos="fade-up" data-aos-delay="250">
+      <h3>Fully Open Source</h3>
+      <p>GPLv3 licensed. Pure Python. No obfuscation, no mystery binaries.</p>
+    </div>
+  </div>
+</section>
+
+<section id="download" class="cta">
+  <h2>Ready to use it?</h2>
+  <a class="btn btn-primary" href="https://github.com/nlckysolutions/nPhoneKIT" target="_blank">
+    Get nPhoneKIT
+  </a>
+</section>
+
+<footer>
+  © 2026 NlckySolutions™ - GNU GPLv3 - Built clean and by the community.
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+<script>
+  AOS.init({ once: true, duration: 700 });
+</script>
+
 </body>
 </html>
