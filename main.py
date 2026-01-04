@@ -2599,6 +2599,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def _build_brand_tabs(self):
         # actions must call your existing backend functions
         samsung_actions = [
+            ("FRP Unlock Android 15/16 🔓", "", frp_unlock_android15_16),
             (strings.get('frpUnlock2024','FRP Unlock 2024 🔓'), strings.get('frpUnlock2024info',''), frp_unlock_2024),
             (strings.get('frpUnlock2022','FRP Unlock 2022 ⛓️'), strings.get('frpUnlock2022info',''), frp_unlock_aug2022_to_dec2022),
             (strings.get('frpUnlockPre2022','FRP Unlock pre-2022 🔓'), strings.get('frpUnlockPre2022info',''), frp_unlock_pre_aug2022),
