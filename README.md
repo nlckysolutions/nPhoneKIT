@@ -6,7 +6,8 @@
 <u>**Safe, free, open-source.**</u>
 
 [![Built with Python](https://img.shields.io/badge/Built%20with-Python-Purple)](https://python.org)
-[![Mastodon](https://img.shields.io/badge/-MASTODON-%232B90D9?logo=mastodon&logoColor=white)](https://mastodon.social/@nlckysolutions)
+[![Mastodon](https://img.shields.io/badge/-Mastodon-%232B90D9?logo=mastodon&logoColor=white)](https://mastodon.social/@nlckysolutions)
+[![Matrix](https://img.shields.io/badge/Matrix-FFF?logo=matrix&logoColor=000)](https://matrix.to/#/#nphonekit:matrix.org)
 
 ---
 
@@ -16,7 +17,13 @@
 ---
 
 > [!IMPORTANT]
-> Technical nPhoneKIT + FRP unlocking discussion server: [#nphonekit:matrix.org](https://matrix.to/#/#nphonekit:matrix.org)
+> 
+
+---
+
+> [!IMPORTANT]
+> Think of any features, or see an open source unlock you'd like to see implemented? Please open an issue either for any feature requests or bugs!
+> Most submitted feature requests + bugs will be fixed/implemented in nPhoneKIT v2.0.0.
 
 ---
 
