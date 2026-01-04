@@ -17,11 +17,6 @@
 ---
 
 > [!IMPORTANT]
-> 
-
----
-
-> [!IMPORTANT]
 > Think of any features, or see an open source unlock you'd like to see implemented? Please open an issue either for any feature requests or bugs!
 > Most submitted feature requests + bugs will be fixed/implemented in nPhoneKIT v2.0.0.
 
