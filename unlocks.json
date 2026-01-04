@@ -1,5 +1,21 @@
 [
   {
+    "id": "sam_15_16",
+    "title": "Android 15/16 Samsung FRP Unlock",
+    "desc": "Uses bleeding-edge AT modem commands in order to attempt to unlock the device and remove FRP.",
+    "pros": [
+      "Works on most Samsung devices on Android 15/16",
+      "Will not cause harm upon failure",
+      "Most other tools do not have this unlock as of early Jan. 2026"
+    ],
+    "cons": [
+      "Needs a slightly more powerful PC",
+      "Not confirmed to function properly",
+      "Bleeding-edge code is less likely to work"
+    ],
+    "minutes": 15
+  },
+  {
     "id": "sam_2024",
     "title": "2024 FRP Unlock",
     "desc": "Attempts to use AT in order to overload and trick the system into enabling ADB, and then using that to unlock the device.",
