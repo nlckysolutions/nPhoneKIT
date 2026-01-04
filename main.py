@@ -51,7 +51,7 @@ import shutil # Fastboot partition eraser for Motorola
 # Open a new tab in the default browser
 # Checking and getting basic information about the current system
 
-version = "1.5.0"
+version = "1.8.0"
 
 # This program is free software: you can redistribute it and/or modify it 
 # under the terms of the GNU General Public License as published by the Free Software Foundation, 
@@ -151,17 +151,6 @@ if os_config == "WINDOWS":
     enable_preload = False # Preload doesn't work on Windows; disable it
 
 preload_done = threading.Event() # Event variable to check whether the Samsung modem preload has completed
-
-ETA = [
-    "not available", # Enabling ADB access
-    "not available", # Running FRP unlock B
-    "not available", # Running Screen Unlock
-    "00:00:05", # Testing USB access
-    "00:00:15", # Getting version info
-    "00:00:10" # Opening WIFITEST
-    "00:00:06" # Crashing a SAMSUNG phone to reboot
-    "00:00:01" # Crashing a non-SAMSUNG phone to reboot (Seems to possibly work without modem unlock, on newer Samsungs, such as S24 series. Should look into this*)
-]
 
 class SerialManager: # AT command sender via class
     def __init__(self, baud=115200): # Start the serial port early
@@ -1403,9 +1392,6 @@ def parse_devconinfo(raw_input):
                     parsed_output.append(f"{friendly_key}: {value if value else 'N/A'}")
     return "\n".join(parsed_output)
 
-def testAT(MTPinstruction=False, text=f"Testing USB access (ETA: {ETA[3]})..."): # Deprecated
-    return True
-
 def lu(path="unlocks.json"):
     return json.loads(Path(path).read_text(encoding="utf-8"))
                
@@ -1596,6 +1582,68 @@ def frp_unlock_2024(): # FRP unlock for early 2024-ish security patch update
                         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_2024", "Success"))
                         tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
 
+def frp_unlock_android15_16(): # FRP unlock for early 2024-ish security patch update
+    methods = lu("unlocks.json")
+    for m in methods:
+        if m["id"] == "sam_15_16":
+            picked = stw(m["title"], m["desc"], m["pros"], m["cons"], m["minutes"])
+            if picked:
+                print(strings['getVerInfo'], end="")
+                info = verinfo(False)
+                model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output
+
+                if info == "Fail":
+                    print(strings['deviceCheckPluggedIn2'])
+                    tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_15_16", "Fail"))
+                    tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+                else:
+                    commands = [
+                        "AT",                 # Verify AT is working
+                        "AT+KSTRINGB=0,3",    # Work with Knox
+                        "AT+DUMPCTRL=1,0",    # Activate dev mode
+                        "AT+DEBUGLVL=0,4",    # Debug Level High
+                        "AT+SWATD=0",         # Disable modem lock
+                        "AT+ACTIVATE=0,0,0",  # Activate unlock
+                        "AT+SWATD=1"          # Re-enable modem lock (Triggers the popup)
+                    ]
+
+                    ADBcommands = [ # Run list of commands in order to complete the unlock with newly-enabled ADB
+                        "shell content insert --uri content://settings/secure --bind name:s:user_setup_complete --bind value:s:1",
+                        "shell pm uninstall -k --user 0 com.google.android.gsf",
+                        "shell am start -n com.android.settings/com.android.settings.Settings"
+                    ]
+
+                    show_messagebox_at(500, 200, "nPhoneKIT", strings['misuseFrpGuidance2024'])
+
+                    print(strings['attemptingEnableAdb'], end="")
+
+                    show_messagebox_at(500, 200, "nPhoneKIT", strings['frpUnlockSteps2024'])
+
+                    for command in commands:
+                        AT.send(command)
+
+                    output = readOutput("AT")
+
+                    try:
+                        print(strings['okText'])
+                        print(strings['runUnlock'], end="")
+                        show_messagebox_at(500, 200, "nPhoneKIT", strings['usbDebuggingPromptCheck'])
+                        for command in ADBcommands:
+                            ADB.send(command)
+                        print(strings['okText'])
+                        print(strings['unlockSuccess'])
+                        if model == "" or model == None:
+                            # Retry get model
+                            info = verinfo(False, False)
+                            model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output
+                        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_15_16", "Success"))
+                        tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+                    except Exception:
+                        print(strings['failText'])
+                        print(strings['frpNotCompatible'])
+                        tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_15_16", "Fail"))
+                        tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+
 def general_frp_unlock(): # Not completed yet
     info = verinfo(False)
     if "Model: SM" in info:
@@ -1679,7 +1727,7 @@ def verinfo(gui=True, showtext=True): # Get version info on the device. Pretty s
             print(output) # Print the version info to the output box
         else: 
             print(strings['getVerInfo'], end="")
-            if testAT(True, text=strings['getVerInfo']): # We should verify AT is working before running the below code (testAT is deprecated)
+            if 1 == 1: # We should verify AT is working before running the below code (testAT is deprecated)
                 if not enable_preload:
                     modemUnlock("SAMSUNG") # Run the command to allow more AT access for SAMSUNG devices unless preloading is enabled
                     rt() # Flush the command output file
@@ -1719,7 +1767,7 @@ def verinfo(gui=True, showtext=True): # Get version info on the device. Pretty s
                     print(output) # Print the version info to the output box
     else:
         #print(strings['getVerInfo'], end="")
-        if testAT(True, text=strings['getVerInfo']): # We should verify AT is working before running the below code (deprecated)
+        if 1 == 1: # We should verify AT is working before running the below code (deprecated)
             if not enable_preload:
                 modemUnlock("SAMSUNG") # Run the command to allow more AT access for SAMSUNG devices unless preloading is enabled
                 rt() # Flush the command output file
