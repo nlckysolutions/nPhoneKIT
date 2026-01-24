@@ -1667,6 +1667,7 @@ def frp_unlock_android15_16(): # FRP unlock for early 2024-ish security patch up
                         tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
 
 def general_frp_unlock(): # Not completed yet
+    raise NotImplementedError("This function is not yet implemented.")
     info = verinfo(False)
     if "Model: SM" in info:
         frp_unlock_pre_aug2022()
