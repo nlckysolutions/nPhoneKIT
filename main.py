@@ -51,7 +51,7 @@ import shutil # Fastboot partition eraser for Motorola
 # Open a new tab in the default browser
 # Checking and getting basic information about the current system
 
-version = "1.6.0"
+version = "1.6.1"
 
 # This program is free software: you can redistribute it and/or modify it 
 # under the terms of the GNU General Public License as published by the Free Software Foundation, 
