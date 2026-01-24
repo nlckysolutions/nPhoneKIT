@@ -239,29 +239,51 @@ class SerialManagerWindows: # Version of SerialManager class specifically for Wi
         # allow override, else auto-detect
         self.port = port or self.detect_port()
         if not self.port:
-            raise RuntimeError(strings['sermanNoComPort'])
+            if self.debug:
+                print(strings['sermanNoComPort'])
+            return
 
         try:
             self.ser = serial.Serial(self.port, self.baud, timeout=2)
             time.sleep(0.5)
             if self.debug:
                 print(f"{strings['sermanConnectedPort']}{self.port} @ {self.baud} baud")
-        except serial.SerialException as e:
-            raise RuntimeError(f"{strings['sermanOpeningPortError']}{self.port}: {e}")
+        except (serial.SerialException, PermissionError) as e:
+            if self.debug:
+                print(f"{strings['sermanOpeningPortError']}{self.port}: {e}")
+            self.ser = None
         
     def reset(self):
         self.__init__()
 
     def detect_port(self) -> str:
-        """Return the first COM* port or None."""
+        """Return the first openable COM* port or None."""
         ports = list_ports.comports()
         if self.debug:
             print(f"{strings['sermanWinAvailablePorts']}{[p.device for p in ports]}")
-        for p in ports:
+        
+        # Sort ports to prioritize ones that are more likely to be phones
+        # Phones often have "USB" or "Mobile" in their description
+        sorted_ports = sorted(ports, key=lambda p: (
+            "SAMSUNG" in p.description.upper() or 
+            "MOBILE" in p.description.upper() or 
+            "MODEM" in p.description.upper() or 
+            "USB" in p.description.upper()
+        ), reverse=True)
+
+        for p in sorted_ports:
             if p.device.upper().startswith("COM"):
-                if self.debug:
-                    print(f"{strings['sermanWinDev']}{p.device}")
-                return p.device
+                try:
+                    # Try to open the port to check if it's available
+                    test_ser = serial.Serial(p.device)
+                    test_ser.close()
+                    if self.debug:
+                        print(f"{strings['sermanWinDev']}{p.device}")
+                    return p.device
+                except (serial.SerialException, PermissionError):
+                    if self.debug:
+                        print(f"[SerialManagerWindows] Port {p.device} ({p.description}) is busy or inaccessible.")
+                    continue
         return None
 
     def send(self, command: str, wait: float = 0.1) -> str:
