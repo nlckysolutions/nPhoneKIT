@@ -41,8 +41,8 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
 
 ---
 
-### Bugs (as of v1.5.0)
-- Motorola FRP not working
+### Bugs (as of v1.6.1)
+- Motorola FRP not working for most devices.
 
 > [!IMPORTANT]
 > If you find a ***new*** bug, **make sure to open a GitHub issue.** This will help me fix the error and make nPhoneKIT better for everyone!
