@@ -51,7 +51,12 @@ import shutil # Fastboot partition eraser for Motorola
 # Open a new tab in the default browser
 # Checking and getting basic information about the current system
 
-version = "1.6.1"
+# ===========================================================================================================
+# CONFIGURATION VARIABLES
+# ===========================================================================================================
+
+VERSION = "1.6.1"
+DEBUGMODE = False
 
 # This program is free software: you can redistribute it and/or modify it 
 # under the terms of the GNU General Public License as published by the Free Software Foundation, 
@@ -72,23 +77,10 @@ version = "1.6.1"
 # Python
 # Everything in requirements.txt
 # 
-# ===================================
-#
-# Already-Installed Requirements:
-#
-# usbsend.py (by nPhoneKIT) # not needed anymore but still here
-#
-# ===================================
-
-
-# CONFIG HAS BEEN MOVED TO SETTINGS.JSON, OR THE SETTINGS MENU IN THE nPhoneKIT GUI
-
 
 # ============================================================================= #
 # You shouldn't edit anything below this line unless you know what you're doing #
 # ============================================================================= #
-
-debugMode = False # If True, removes root/admin requirement. Most serial/usb features will stop working. As of v1.5.0, this will only affect Windows users.
 
 SETTINGS_PATH = Path("settings.json") # Load settings externally
 
@@ -99,10 +91,8 @@ default_settings = {
     "hacker_font": False,
     "slower_animations": False,
     "update_check": True,
-    "impatient": False,
     "enable_preload": True,
     "debug_info": False,
-    "i_know_what_im_doing": False,
     "basic_success_checks": True
 }
 
@@ -118,10 +108,8 @@ dark_theme = settings['dark_theme']
 hacker_font = settings['hacker_font']
 slower_animations = settings['slower_animations']
 update_check = settings['update_check']
-impatient = settings['impatient']
 enable_preload = settings['enable_preload']
 debug_info = settings['debug_info']
-i_know_what_im_doing = settings['i_know_what_im_doing']
 basic_success_checks = settings['basic_success_checks']
 
 def load_strings(xml_path): 
@@ -1231,17 +1219,17 @@ def check_for_update():
             # It's not reccomended to change this in order to bypass a critical update.
             # *************************************************************************
 
-            if latest_version != version:
+            if latest_version != VERSION:
                 if "ⅴ" in latest_version_raw:
                     messagebox.showinfo(
                         strings['updateReqd'],
-                        strings['updateReqdString'].format(version=version, latest_version=latest_version)
+                        strings['updateReqdString'].format(version=VERSION, latest_version=latest_version)
                     )
                     sys.exit(0) # Exit and do not let user use nPhoneKIT if the update is REQUIRED or critical
                 else:   
                     messagebox.showinfo(
                         strings['updateAvail'],
-                        strings['updateAvailString'].format(version=version, latest_version=latest_version)
+                        strings['updateAvailString'].format(version=VERSION, latest_version=latest_version)
                     )
     except Exception as e:
         print(strings['updateCheckFailed'])
@@ -1267,7 +1255,7 @@ def success_checks(uuid, model, action, status, first=True):
                     "model": model.group(1) if model else "Unknown", # Check what model that the below action works on, anonymously
                     "action": action, # The action, for example "FRP_Unlock_2024"
                     "status": status, # Whether the action succeeded or failed
-                    "phoneKITversion": version # Version of nPhoneKIT to get anonymous version usage estimation
+                    "phoneKITversion": VERSION # Version of nPhoneKIT to get anonymous version usage estimation
                 }
 
                 try:
@@ -1281,7 +1269,7 @@ def success_checks(uuid, model, action, status, first=True):
                     "model": "NOT_First",
                     "action": "NOT_First",
                     "status": "Success",
-                    "phoneKITversion": version
+                    "phoneKITversion": VERSION
                 }
 
                 try:
@@ -2079,7 +2067,7 @@ def featureRequest():
         "timestamp": time.time(), 
         "uuid": str(get_public_hardware_uuid()),
         "feature": featureDesc,
-        "phoneKITversion": version
+        "phoneKITversion": VERSION
     }
 
     try:
@@ -2110,7 +2098,7 @@ def bugReport():
         "timestamp": time.time(), 
         "uuid": str(get_public_hardware_uuid()),
         "bug": bugDesc,
-        "phoneKITversion": version
+        "phoneKITversion": VERSION
     }
 
     try:
@@ -2429,8 +2417,8 @@ class SettingsDialog(QtWidgets.QDialog):
         
 
         # main toggles
-        main_keys = ["dark_theme","hacker_font","slower_animations","update_check","impatient","enable_preload"]
-        dev_keys  = ["debug_info","i_know_what_im_doing","basic_success_checks"]
+        main_keys = ["dark_theme","hacker_font","slower_animations","update_check","enable_preload"]
+        dev_keys  = ["debug_info","basic_success_checks"]
 
         layout = QtWidgets.QVBoxLayout(self)
 
@@ -2556,7 +2544,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._build_brand_tabs()
 
         # welcome text
-        print(strings.get('nPhoneKITwelcome', 'Welcome to nPhoneKIT').format(version=version))
+        print(strings.get('nPhoneKITwelcome', 'Welcome to nPhoneKIT').format(version=VERSION))
         print(strings.get('newIn1.3.2', ''))
 
         # window animation
@@ -2588,7 +2576,7 @@ class MainWindow(QtWidgets.QMainWindow):
             logo.setPixmap(pm)
         title = QtWidgets.QLabel("nPhoneKIT")
         title.setObjectName("AppTitle")
-        subtitle = QtWidgets.QLabel(f"v{version}")
+        subtitle = QtWidgets.QLabel(f"v{VERSION}")
         subtitle.setStyleSheet("color: rgba(255,255,255,0.85); font-size:13px;")
 
         tbox = QtWidgets.QVBoxLayout(); tbox.setSpacing(0)
@@ -2803,7 +2791,7 @@ if os_config == "LINUX":
         sys.exit(0)
 elif os_config == "WINDOWS":
     if not is_root():
-        if not debugMode:
+        if not DEBUGMODE:
             root = tk.Tk()
             root.withdraw()
             messagebox.showwarning("nPhoneKIT", strings['sudoReqdError'])
