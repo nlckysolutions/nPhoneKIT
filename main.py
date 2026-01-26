@@ -2234,7 +2234,8 @@ def _find_logo():
     return None
 
 def _material_qss(dark=True, hacker=False):
-    base_font = "JetBrains Mono" if hacker else "Inter, 'Segoe UI', Roboto, Helvetica, Arial"
+    #base_font = "JetBrains Mono" if hacker else "Inter, 'Segoe UI', Roboto, Helvetica, Arial"
+    base_font = "'Fira Sans', 'JetBrains Mono', 'Segoe UI', 'Ubuntu', sans-serif"
     mono_font = "JetBrains Mono" if hacker else "Fira Code, Consolas, 'Courier New'"
     if dark:
         return f"""
@@ -2294,7 +2295,12 @@ def _material_qss(dark=True, hacker=False):
         }}
         QSplitter::handle {{ background: #1A1A1A; width: 6px; }}
         QPushButton {{
-            font-family: "Noto Color Emoji";
+            font-family: 'Fira Sans', 'Segoe UI', 'Ubuntu', 'Inter', 'Noto Color Emoji', sans-serif;
+            font-size: 13.5px;
+            font-weight: 600;
+            padding: 6px 10px;
+            min-height: 36px;
+            border-radius: 8px;
         }}
         """
     else:
