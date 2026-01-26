@@ -2630,6 +2630,10 @@ class MainWindow(QtWidgets.QMainWindow):
         # window animation
         self._fade_in()
 
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.centralWidget().setSizes([1, 1])  # 50/50 split AFTER window is visible
+
     def resizeEvent(self, e):
         super().resizeEvent(e)
         if self.overlay and self.overlay.isVisible():
