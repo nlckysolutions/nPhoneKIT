@@ -129,7 +129,7 @@ except ModuleNotFoundError:
 # CONFIGURATION VARIABLES
 # ===========================================================================================================
 
-VERSION = "1.6.1"
+VERSION = "1.6.2"
 DEBUGMODE = False
 
 # This program is free software: you can redistribute it and/or modify it 
