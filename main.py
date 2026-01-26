@@ -18,11 +18,9 @@ from tkinter import ttk # Styling for GUI (deprecated)
 from tkinter import messagebox # Opening message/warning boxes
 from tkinter import font # Customizing GUI font
 from pathlib import Path # Importing settings
-from serial.tools import list_ports # Listing connected devices
 import sys # Getting basic system info
 import re # Finding strings within text
 import subprocess # Opening new processes
-import serial # Communicating with device
 import platform # Checking the current OS
 import glob # Finding/listing ports
 import asyncio # Running different actions asynchronously
@@ -43,6 +41,82 @@ from PyQt5.QtGui import QPainter, QPen, QFont
 from datetime import datetime, timedelta
 from functools import partial # Register button clicks to functions
 import shutil # Fastboot partition eraser for Motorola
+import importlib.util # Self diagnostics of errors
+import traceback # Error handling
+
+# Self-fix function for the common PySerial import error
+def self_fix_serial():
+    # =========================
+    # Error Codes
+    # =========================
+    ERR_OK = 0
+    ERR_PYSERIAL_NOT_INSTALLED = 1001
+    ERR_WRONG_SERIAL_PACKAGE = 1002
+    ERR_PIP_FAILED = 1003
+    ERR_IMPORT_SHADOWED = 1004
+    ERR_UNKNOWN = 1999
+
+    print(f"[nPhoneKIT (Self-Fix)] Python: {sys.executable}")
+
+    # ---- Check for local shadowing ----
+    shadow = None
+    for candidate in ["serial.py", "serial"]:
+        if os.path.exists(os.path.join(os.getcwd(), candidate)):
+            shadow = os.path.join(os.getcwd(), candidate)
+            break
+
+    if shadow:
+        print(f"[nPhoneKIT (Self-Fix)] Found shadowing path: {shadow}")
+        print("[nPhoneKIT (Self-Fix)] Remove or rename this file/folder for nPhoneKIT to work.")
+        ERROR_CODE = ERR_IMPORT_SHADOWED
+    else:
+        # ---- Detect installed packages ----
+        spec = importlib.util.find_spec("serial")
+        pyspec = importlib.util.find_spec("pyserial")
+
+        print(f"[nPhoneKIT (Self-Fix)] serial spec: {spec}")
+        print(f"[nPhoneKIT (Self-Fix)] pyserial spec: {pyspec}")
+
+        # ---- Try to fix by uninstalling wrong serial + installing pyserial ----
+        print("[nPhoneKIT (Self-Fix)] Attempting auto-fix: uninstall serial, install pyserial")
+
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "uninstall", "-y", "serial"])
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pyserial"])
+        except Exception as pip_err:
+            print(f"[nPhoneKIT (Self-Fix)] pip failed: {pip_err}")
+            ERROR_CODE = ERR_PIP_FAILED
+        else:
+            # ---- Retry import ----
+            try:
+                import serial
+                print(f"[nPhoneKIT (Self-Fix)] serial fixed! version={getattr(serial, '__version__', 'unknown')}")
+                ERROR_CODE = ERR_OK
+            except Exception as retry_err:
+                print(f"[nPhoneKIT (Self-Fix)] Import still failing after attempted fix: {retry_err}")
+                print(traceback.format_exc())
+
+                # Guess most likely cause
+                if spec and not pyspec:
+                    ERROR_CODE = ERR_WRONG_SERIAL_PACKAGE
+                else:
+                    ERROR_CODE = ERR_PYSERIAL_NOT_INSTALLED
+
+    if ERROR_CODE == 0:
+        print("[nPhoneKIT (Self-Fix)] Self-fix succeeded!")
+        from serial.tools import list_ports # Listing connected devices
+    else:
+        print(f"[nPhoneKIT (Self-Fix)] Failed to fix the error. Please open a GitHub issue with the error code: {ERROR_CODE}")
+
+# Imports that have error handling because they are sometimes not installed or are the cause of another error
+try:
+    from serial.tools import list_ports # Listing connected devices
+    import serial # Communicating with device
+except ModuleNotFoundError:
+    print("[nPhoneKIT] PySerial Error, wasn't able to import serial module.")
+    x = input("Run Self-Fix Diagnostics? (RECOMMENDED, THIS USUALLY FIXES THE ISSUE) (y/n):")
+    if x == "y" or x == "Y":
+        self_fix_serial()
 
 ## nPhoneKIT permissions (these are the things that nPhoneKIT is capable of doing):
 
