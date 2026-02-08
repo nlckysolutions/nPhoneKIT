@@ -2572,6 +2572,33 @@ class SettingsDialog(QtWidgets.QDialog):
 # ------------ main window ------------
 class MainWindow(QtWidgets.QMainWindow):
     instance = None  # for set_brand() global bridge
+    
+    # UI changes - Primary and Secondary button styles
+    global PRIMARY_BTN_QSS
+    PRIMARY_BTN_QSS = f"""
+    QPushButton {{
+        background: {ACCENT};
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-weight: 700;
+        font-family: 'Fira Sans', 'Segoe UI', 'Ubuntu', 'Inter', 'Noto Color Emoji', sans-serif;
+    }}
+    QPushButton:hover {{ background: {ACCENT_HOVER}; }}
+    """
+
+    global SECONDARY_BTN_QSS
+    SECONDARY_BTN_QSS = """
+    QPushButton {
+        background: #1E1E1E;
+        border: 1px solid #2A2A2A;
+        border-radius: 10px;
+        font-family: 'Fira Sans', 'Segoe UI', 'Ubuntu', 'Inter', 'Noto Color Emoji', sans-serif;
+    }
+    QPushButton:hover {
+        background: #262626;
+    }
+    """
 
     def __init__(self):
         super().__init__()
@@ -2673,22 +2700,69 @@ class MainWindow(QtWidgets.QMainWindow):
         return bar
 
     def _brand_tab(self, title, actions):
-        w = QtWidgets.QWidget(); grid = QtWidgets.QGridLayout(w)
-        grid.setContentsMargins(8,8,8,8); grid.setHorizontalSpacing(12); grid.setVerticalSpacing(12)
-        # build pretty buttons
-        #font_big = QtGui.QFont(); font_big.setPointSize(12); font_big.setBold(True)
-        font_big = QtGui.QFont("JetBrains Mono", 10)
-        for i, (label, tooltip, fn) in enumerate(actions):
-            btn = QtWidgets.QPushButton(label)
-            btn.setToolTip(tooltip)
-            btn.setMinimumHeight(44)
-            btn.clicked.connect(partial(self.run_task, fn))
-            # put into a card-like holder
-            card = QtWidgets.QFrame(); card.setStyleSheet("QFrame { background: rgba(255,255,255,0.03); border: 1px solid #2A2A2A; border-radius: 12px; }")
-            v = QtWidgets.QVBoxLayout(card); v.setContentsMargins(10,10,10,10)
-            #btn.setFont(font_big)
-            v.addWidget(btn)
-            grid.addWidget(card, i//2, i%2)
+        w = QtWidgets.QWidget()
+        main = QtWidgets.QVBoxLayout(w)
+        main.setContentsMargins(6, 6, 6, 6)
+        main.setSpacing(16)
+
+        def add_section(section_title, items, primary_first=False):
+            # Section header
+            lbl = QtWidgets.QLabel(section_title)
+            lbl.setStyleSheet("font-size:30px; font-weight:700; font-family: 'Fira Sans', 'Segoe UI', 'Ubuntu', 'Inter', 'Noto Color Emoji', sans-serif; color:#CFCFCF; margin-left:4px;")
+            main.addWidget(lbl)
+
+            grid = QtWidgets.QGridLayout()
+            grid.setHorizontalSpacing(12)
+            grid.setVerticalSpacing(12)
+
+            for i, (label, tooltip, fn) in enumerate(items):
+                btn = QtWidgets.QPushButton(label)
+                btn.setToolTip(tooltip)
+                btn.setMinimumHeight(48)
+
+                # Primary styling for first item if requested
+                if primary_first and i == 0:
+                    btn.setStyleSheet(PRIMARY_BTN_QSS)
+                else:
+                    btn.setStyleSheet(SECONDARY_BTN_QSS)
+
+                btn.clicked.connect(partial(self.run_task, fn))
+
+                card = QtWidgets.QFrame()
+                card.setStyleSheet("""
+                    QFrame {
+                        background: rgba(255,255,255,0.02);
+                        border: 1px solid #2A2A2A;
+                        border-radius: 12px;
+                    }
+                """)
+                v = QtWidgets.QVBoxLayout(card)
+                v.setContentsMargins(10,10,10,10)
+                v.addWidget(btn)
+
+                grid.addWidget(card, i // 2, i % 2)
+
+            main.addLayout(grid)
+
+        # --- smart grouping by brand ---
+        if title == "Samsung":
+            frp = actions[:4]
+            tools = actions[4:]
+
+            add_section("🔓 FRP Unlock", frp, primary_first=True)
+            add_section("🛠 Device Tools", tools)
+        elif title == "LG":
+            #frp = actions[:4]
+            #tools = actions[4:]
+
+            #add_section("🔓 FRP Unlock", frp, primary_first=True)
+            add_section("🛠 Device Tools", actions)
+        elif title == "Feedback":
+            add_section("📩 Leave Feedback", actions, primary_first=True)
+        else:
+            add_section("🛠 Device Tools", actions, primary_first=False)
+
+        main.addStretch(1)
         return w
 
     def _build_brand_tabs(self):

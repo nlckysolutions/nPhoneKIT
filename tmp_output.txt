@@ -1,0 +1,5 @@
+AT+WIFITEST=9,9,9,1
+
++WIFITEST:9,
+
+OK
