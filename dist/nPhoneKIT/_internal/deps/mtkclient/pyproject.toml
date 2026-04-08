@@ -1,0 +1,69 @@
+[build-system]
+requires = [
+    "setuptools>=61",
+    "wheel",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mtkclient"
+description = "Mediatek reverse engineering and flashing tools"
+maintainers = [
+    {name = "Bjoern Kerler", email = "info@revskills.de"}
+]
+readme = "README.md"
+license = {file = "LICENSE"}
+version = "2.0.1"
+requires-python = ">= 3.8"
+dependencies = [
+    "pyusb",
+    "pycryptodome",
+    "pycryptodomex",
+    "colorama",
+    "shiboken6", 
+    "pyside6",
+    "mock",
+    "pyserial",
+    "fusepy"
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+  "Operating System :: OS Independent",
+]
+keywords = ["mediatek", "mtk", "flashing", "reverse engineering", "firmware"]
+
+[project.urls]
+Repository = "https://github.com/bkerler/mtkclient.git"
+Issues = "https://github.com/bkerler/mtkclient/issues"
+
+[project.scripts]
+mtk = "mtk:main"
+stage2 = "mtkclient.Tools.stage2:main"
+da_parser = "mtkclient.Tools.da_parser:main"
+brom_to_offs = "mtkclient.Tools.brom_to_offs:main"
+
+[project.gui-scripts]
+mtk_gui = "mtkclient.mtk_gui:main"
+
+[tool.setuptools]
+# See also the MANIFEST.in file.
+packages = [
+    "mtkclient.config",
+    "mtkclient.Library",
+    "mtkclient.Library.Connection",
+    "mtkclient.Library.DA",
+    "mtkclient.Library.DA.legacy",
+    "mtkclient.Library.DA.legacy.extension",
+    "mtkclient.Library.DA.xflash",
+    "mtkclient.Library.DA.xflash.extension",
+    "mtkclient.Library.DA.xml",
+    "mtkclient.Library.DA.xml.extension",
+    "mtkclient.Library.Exploit",
+    "mtkclient.Library.Filesystem",
+    "mtkclient.Library.Hardware",
+    "mtkclient.Tools",
+]
+# We want to install all the files in the package directories...
+include-package-data = true

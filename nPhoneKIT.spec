@@ -1,0 +1,69 @@
+# -*- mode: python ; coding: utf-8 -*-
+
+block_cipher = None
+
+# Asset and binary lists
+added_files = [
+    ('strings.xml', '.'),
+    ('unlocks.json', '.'),
+    ('settings.json', '.'),
+    ('index.html', '.'),
+    ('images', 'images'),
+    ('deps/mtkclient', 'deps/mtkclient'),
+    ('bin', 'bin'),
+]
+
+a = Analysis(
+    ['main.py'],
+    pathex=[],
+    binaries=[],
+    datas=added_files,
+    hiddenimports=[
+        'PyQt5.QtCore', 
+        'PyQt5.QtGui', 
+        'PyQt5.QtWidgets',
+        'serial',
+        'requests',
+    ],
+    hookspath=[],
+    hooksconfig={},
+    runtime_hooks=[],
+    excludes=[],
+    win_no_prefer_redirects=False,
+    win_private_assemblies=False,
+    cipher=block_cipher,
+    noarchive=False,
+)
+
+pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+
+exe = EXE(
+    pyz,
+    a.scripts,
+    [],
+    exclude_binaries=True,
+    name='nPhoneKIT',
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=True,
+    console=False,  # Set to False to hide console
+    disable_windowed_traceback=False,
+    argv_emulation=False,
+    target_arch=None,
+    codesign_identity=None,
+    entitlements_file=None,
+    uac_admin=True, # Require Administrator privileges
+    icon='images/nphonekit-screenshot.png' # We use a screenshot for now or a logo if we had a .ico
+)
+
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    name='nPhoneKIT',
+)

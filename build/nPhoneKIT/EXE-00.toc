@@ -1,0 +1,82 @@
+('C:\\Users\\rgonn\\Desktop\\nPhoneKIT\\build\\nPhoneKIT\\nPhoneKIT.exe',
+ False,
+ False,
+ True,
+ ['C:\\Users\\rgonn\\Desktop\\nPhoneKIT\\images/nphonekit-screenshot.png'],
+ None,
+ True,
+ False,
+ b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<assembly xmlns='
+ b'"urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">\n  <trustInfo x'
+ b'mlns="urn:schemas-microsoft-com:asm.v3">\n    <security>\n      <requested'
+ b'Privileges>\n        <requestedExecutionLevel level="requireAdministrator'
+ b'" uiAccess="false"/>\n      </requestedPrivileges>\n    </security>\n  </tr'
+ b'ustInfo>\n  <compatibility xmlns="urn:schemas-microsoft-com:compatibility'
+ b'.v1">\n    <application>\n      <supportedOS Id="{e2011457-1546-43c5-a5fe-'
+ b'008deee3d3f0}"/>\n      <supportedOS Id="{35138b9a-5d96-4fbd-8e2d-a244022'
+ b'5f93a}"/>\n      <supportedOS Id="{4a2f28e3-53b9-4441-ba9c-d69d4a4a6e38}"'
+ b'/>\n      <supportedOS Id="{1f676c76-80e1-4239-95bb-83d0f6d0da78}"/>\n    '
+ b'  <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"/>\n    </appli'
+ b'cation>\n  </compatibility>\n  <application xmlns="urn:schemas-microsoft-c'
+ b'om:asm.v3">\n    <windowsSettings>\n      <longPathAware xmlns="http://sch'
+ b'emas.microsoft.com/SMI/2016/WindowsSettings">true</longPathAware>\n    </'
+ b'windowsSettings>\n  </application>\n  <dependency>\n    <dependentAssembly>'
+ b'\n      <assemblyIdentity type="win32" name="Microsoft.Windows.Common-Con'
+ b'trols" version="6.0.0.0" processorArchitecture="*" publicKeyToken="6595b6414'
+ b'4ccf1df" language="*"/>\n    </dependentAssembly>\n  </dependency>\n</assem'
+ b'bly>',
+ True,
+ False,
+ None,
+ None,
+ None,
+ 'C:\\Users\\rgonn\\Desktop\\nPhoneKIT\\build\\nPhoneKIT\\nPhoneKIT.pkg',
+ [('pyi-contents-directory _internal', '', 'OPTION'),
+  ('PYZ-00.pyz',
+   'C:\\Users\\rgonn\\Desktop\\nPhoneKIT\\build\\nPhoneKIT\\PYZ-00.pyz',
+   'PYZ'),
+  ('struct',
+   'C:\\Users\\rgonn\\Desktop\\nPhoneKIT\\build\\nPhoneKIT\\localpycs\\struct.pyc',
+   'PYMODULE'),
+  ('pyimod01_archive',
+   'C:\\Users\\rgonn\\Desktop\\nPhoneKIT\\build\\nPhoneKIT\\localpycs\\pyimod01_archive.pyc',
+   'PYMODULE'),
+  ('pyimod02_importers',
+   'C:\\Users\\rgonn\\Desktop\\nPhoneKIT\\build\\nPhoneKIT\\localpycs\\pyimod02_importers.pyc',
+   'PYMODULE'),
+  ('pyimod03_ctypes',
+   'C:\\Users\\rgonn\\Desktop\\nPhoneKIT\\build\\nPhoneKIT\\localpycs\\pyimod03_ctypes.pyc',
+   'PYMODULE'),
+  ('pyimod04_pywin32',
+   'C:\\Users\\rgonn\\Desktop\\nPhoneKIT\\build\\nPhoneKIT\\localpycs\\pyimod04_pywin32.pyc',
+   'PYMODULE'),
+  ('pyiboot01_bootstrap',
+   'C:\\Users\\rgonn\\AppData\\Local\\Programs\\Python\\Python314\\Lib\\site-packages\\PyInstaller\\loader\\pyiboot01_bootstrap.py',
+   'PYSOURCE'),
+  ('pyi_rth_inspect',
+   'C:\\Users\\rgonn\\AppData\\Local\\Programs\\Python\\Python314\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_inspect.py',
+   'PYSOURCE'),
+  ('pyi_rth_multiprocessing',
+   'C:\\Users\\rgonn\\AppData\\Local\\Programs\\Python\\Python314\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_multiprocessing.py',
+   'PYSOURCE'),
+  ('pyi_rth_pkgutil',
+   'C:\\Users\\rgonn\\AppData\\Local\\Programs\\Python\\Python314\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_pkgutil.py',
+   'PYSOURCE'),
+  ('pyi_rth_pyqt5',
+   'C:\\Users\\rgonn\\AppData\\Local\\Programs\\Python\\Python314\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_pyqt5.py',
+   'PYSOURCE'),
+  ('pyi_rth_setuptools',
+   'C:\\Users\\rgonn\\AppData\\Local\\Programs\\Python\\Python314\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth_setuptools.py',
+   'PYSOURCE'),
+  ('pyi_rth__tkinter',
+   'C:\\Users\\rgonn\\AppData\\Local\\Programs\\Python\\Python314\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks\\pyi_rth__tkinter.py',
+   'PYSOURCE'),
+  ('main', 'C:\\Users\\rgonn\\Desktop\\nPhoneKIT\\main.py', 'PYSOURCE')],
+ [],
+ False,
+ False,
+ 1775678240,
+ [('runw.exe',
+   'C:\\Users\\rgonn\\AppData\\Local\\Programs\\Python\\Python314\\Lib\\site-packages\\PyInstaller\\bootloader\\Windows-64bit-intel\\runw.exe',
+   'EXECUTABLE')],
+ 'C:\\Users\\rgonn\\AppData\\Local\\Programs\\Python\\Python314\\python314.dll')

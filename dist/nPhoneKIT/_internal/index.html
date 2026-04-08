@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="nPhoneKIT: Open-source FRP unlock, screen unlock & more for Samsung, LG & Android devices. Powered by Python, works on Linux & Windows.">
+  <meta name="keywords" content="Open source frp unlock, nPhoneKIT, best frp unlock, android best frp unlock toolkit, frp toolkit, screen unlock, device recovery, Python FRP unlock, Python, open source github frp unlock, FRP unlock github, FRP unlock, Android toolkit, open source, Python, Samsung unlock, LG unlock">
+  <meta property="og:title" content="nPhoneKIT - Open Source Android Unlock Toolkit">
+  <meta property="og:description" content="Unlock your Android device with transparency. FRP, screen unlock & more, all in Python, all open source.">
+  <title>nPhoneKIT - Unlock Your Android, Transparently</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #05070f;
+      --panel: #0b1020;
+      --text: #eaeaf0;
+      --muted: #a0a3bd;
+      --brand: #6969f1;
+      --border: rgba(255,255,255,0.08);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: radial-gradient(1200px 600px at 10% 10%, #0f1633, var(--bg));
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      padding: 1rem 2rem;
+      background: rgba(5,7,15,0.7);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    nav ul {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    nav a {
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    nav a:hover {
+      color: var(--text);
+    }
+
+    /* HERO */
+    .hero {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 10rem 2rem 6rem;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 4vw, 3.2rem);
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 1.1rem;
+      margin-bottom: 2.5rem;
+      max-width: 480px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .btn {
+      padding: 0.9rem 1.6rem;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--brand);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    /* HERO IMAGE */
+    .hero-image {
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), transparent);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+
+    .hero-image img {
+      width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+    }
+
+    /* FEATURES */
+    section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 6rem 2rem;
+    }
+
+    section h2 {
+      font-size: 2rem;
+      margin-bottom: 3rem;
+      text-align: center;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 2rem;
+    }
+
+    .feature-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 2rem;
+      transition: transform 0.2s, border 0.2s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(105,105,241,0.4);
+    }
+
+    .feature-card h3 {
+      margin-bottom: 0.75rem;
+      font-size: 1.2rem;
+    }
+
+    .feature-card p {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    /* CTA */
+    .cta {
+      text-align: center;
+      background: linear-gradient(180deg, transparent, #080b18);
+      border-top: 1px solid var(--border);
+    }
+
+    .cta h2 {
+      margin-bottom: 1.5rem;
+    }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+
+      .hero p {
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .hero-actions {
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<nav>
+  <ul>
+    <li>NlckySolutions™ - nPhoneKIT</li>
+    <br>
+    |
+    <br>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#download">Download</a></li>
+  </ul>
+</nav>
+
+<header class="hero">
+  <div data-aos="fade-right">
+    <h1>Unlock Android devices, transparently.</h1>
+    <p>
+      nPhoneKIT is an open-source Android unlock toolkit built in Python.
+      FRP bypass, screen unlocks, modem info, and low-level control, all 
+      without shady binaries or closed tools.
+    </p>
+
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="https://github.com/nlckysolutions/nPhoneKIT" target="_blank">
+        Download on GitHub
+      </a>
+      <a class="btn btn-secondary" href="#features">
+        See Features
+      </a>
+    </div>
+  </div>
+
+  <div class="hero-image" data-aos="fade-left">
+    <img src="https://nphonekit.dev/images/nphonekit-screenshot.png" alt="nPhoneKIT application screenshot">
+  </div>
+</header>
+
+<section id="features">
+  <h2>What it can do</h2>
+
+  <div class="features">
+    <div class="feature-card" data-aos="fade-up">
+      <h3>FRP Unlock</h3>
+      <p>Bypass Factory Reset Protection on modern Samsung devices using low-level AT command execution.</p>
+    </div>
+
+    <div class="feature-card" data-aos="fade-up" data-aos-delay="50">
+      <h3>Screen Unlock</h3>
+      <p>Unlock supported LG devices without wiping user data. One command, no recovery tricks.</p>
+    </div>
+
+    <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+      <h3>Device Intelligence</h3>
+      <p>Query modem-level device metadata including IMEI, region codes, firmware, and baseband.</p>
+    </div>
+
+    <div class="feature-card" data-aos="fade-up" data-aos-delay="150">
+      <h3>Hidden System Access</h3>
+      <p>Launch Samsung WIFITEST and diagnostics even before setup completion.</p>
+    </div>
+
+    <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+      <h3>Download Mode</h3>
+      <p>Force Samsung devices into Download Mode without physical key combos.</p>
+    </div>
+
+    <div class="feature-card" data-aos="fade-up" data-aos-delay="250">
+      <h3>Fully Open Source</h3>
+      <p>GPLv3 licensed. Pure Python. No obfuscation, no mystery binaries.</p>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <h2>Frequently Asked Questions</h2>
+
+  <div class="features">
+
+    <div class="feature-card" data-aos="fade-up">
+      <h3>What’s the best FRP unlock tool for privacy and security?</h3>
+      <p>
+        <strong>nPhoneKIT</strong> is one of the best FRP unlock tools for privacy and security because it is
+        fully open source, written in pure Python, and contains no closed-source binaries.
+        Unlike many FRP bypass tools that bundle unknown executables, nPhoneKIT allows anyone
+        to audit the source code on GitHub, ensuring transparency and user trust.
+      </p>
+    </div>
+
+    <div class="feature-card" data-aos="fade-up" data-aos-delay="50">
+      <h3>What is the best open-source FRP unlock available?</h3>
+      <p>
+        The best open-source FRP unlock is <strong>nPhoneKIT</strong>.
+        It is licensed under GPLv3, actively developed, and designed specifically for modern
+        Android devices such as Samsung and LG. Being open source means there are no hidden
+        backdoors, spyware, or license locks—just clean, inspectable code.
+      </p>
+    </div>
+
+    <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+      <h3>Is nPhoneKIT safe to use for FRP unlocking?</h3>
+      <p>
+        Yes. nPhoneKIT is safe to use because it does not rely on cracked tools, leaked binaries,
+        or remote servers. All FRP unlock operations are executed locally using documented
+        low-level interfaces. You stay in control of your device and your data at all times.
+      </p>
+    </div>
+
+    <div class="feature-card" data-aos="fade-up" data-aos-delay="150">
+      <h3>How does nPhoneKIT compare to paid FRP unlock tools?</h3>
+      <p>
+        Compared to paid FRP unlock tools, nPhoneKIT offers full transparency, no subscriptions,
+        and no activation servers. Many paid tools are closed source and phone home to unknown
+        endpoints, while nPhoneKIT is community-driven and free forever.
+      </p>
+    </div>
+
+    <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+      <h3>Does nPhoneKIT work on modern Samsung devices?</h3>
+      <p>
+        Yes. nPhoneKIT supports FRP unlocking and diagnostic access on modern Samsung devices
+        by leveraging modem-level commands and system interfaces. Support varies by model and
+        firmware, but development focuses on current Android versions.
+      </p>
+    </div>
+
+  </div>
+</section>
+
+<section id="download" class="cta">
+  <h2>Ready to use it?</h2>
+  <a class="btn btn-primary" href="https://github.com/nlckysolutions/nPhoneKIT" target="_blank">
+    Get nPhoneKIT
+  </a>
+</section>
+
+<footer>
+  © 2026 NlckySolutions™ - GNU GPLv3 - Built clean and by the community.
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+<script>
+  AOS.init({ once: true, duration: 700 });
+</script>
+
+</body>
+</html>
