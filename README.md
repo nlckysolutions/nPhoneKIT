@@ -66,7 +66,22 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
 
 ## Installation
 
-### Windows 🪟
+### Windows (Recommended) 🪟
+
+1. **Download the Installer**: Go to the [latest release](https://github.com/GonnyTech/nPhoneKIT/releases) and download `nPhoneKIT_Setup.exe`.
+2. **Run and Install**: Double-click the installer and follow the wizard. It will automatically set up the application, shortcuts, and required tools (ADB/Fastboot).
+3. **Run as Admin**: The application will automatically request Administrator privileges to communicate with your device.
+
+> [!NOTE]
+> If you are using a Samsung device, you should also download and install the official [Samsung USB Drivers](https://developer.samsung.com/android-usb-driver).
+
+---
+
+### Linux & Advanced Windows Installation
+
+If you prefer to run from source or are on Linux, follow these steps:
+
+#### Windows (Manual Python) 🪟
 
 - Download Zadig at https://zadig.akeo.ie/, then install the WinUSB and libusb-win drivers.
 - If using a Samsung device, also download and install the Samsung USB drivers at https://developer.samsung.com/android-usb-driver
