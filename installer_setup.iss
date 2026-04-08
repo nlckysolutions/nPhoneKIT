@@ -34,7 +34,7 @@ Source: "dist\nPhoneKIT\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdir
 
 [Icons]
 Name: "{group}\nPhoneKIT"; Filename: "{app}\nPhoneKIT.exe"
-Name: "{group}\{cm:UninstallProgram,nPhoneKIT}"; Filename: "{uninstaller}"
+Name: "{group}\{cm:UninstallProgram,nPhoneKIT}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\nPhoneKIT"; Filename: "{app}\nPhoneKIT.exe"; Tasks: desktopicon
 
 [Run]
