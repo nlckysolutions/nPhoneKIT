@@ -19,7 +19,7 @@
 
 ---
 
-## Disclaimer
+## ⚠️ DISCLAIMER (PLEASE READ THIS BEFORE USE)
 
 > [!IMPORTANT]
 > #### **Educational and Recovery Purposes Only**
