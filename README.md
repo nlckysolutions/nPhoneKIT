@@ -9,6 +9,8 @@
 [![Mastodon](https://img.shields.io/badge/-Mastodon-%232B90D9?logo=mastodon&logoColor=white)](https://mastodon.social/@nlckysolutions)
 [![Matrix](https://img.shields.io/badge/Matrix-FFF?logo=matrix&logoColor=000)](https://matrix.to/#/#nphonekit:matrix.org)
 
+---
+
 > [!IMPORTANT]
 > Educational and Recovery Purposes Only
 > This software is provided as a "last resort" tool intended solely for the recovery of access to personal devices by their legitimate owners.
