@@ -16,7 +16,7 @@
 > This software is provided as a "last resort" tool intended solely for the recovery of access to personal devices by their legitimate owners.
 > Zero Tolerance for Misuse: The developer strictly prohibits the use of this tool for illegal activities, including but not limited to unauthorized data breaches, theft, or any form of digital trespassing.
 > Ethical Use: This project was developed with the goal of assisting individuals in genuine need. By using this software, you agree to do so ethically and legally.
-> Liability: The author assumes no liability and is not responsible for any misuse or damage caused by this program. Users are responsible for complying with all local and international laws regarding digital privacy and device ownership.
+> Liability: The author assumes no liability and is not responsible for any misuse or damage caused by this program. Users are responsible for complying with all local and international laws regarding digital privacy and  > device ownership.
 
 ---
 
