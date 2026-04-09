@@ -21,6 +21,7 @@
 
 > [!IMPORTANT]
 > **Educational and Recovery Purposes Only**<br>
+>
 > This software is provided as a "last resort" tool intended **solely for the recovery of access to personal devices by their legitimate owners.**
 > * Zero Tolerance for Misuse: The developer **strictly prohibits** the use of this tool for illegal activities, including but not limited to unauthorized data breaches, theft, or any form of digital trespassing.
 > * Ethical Use: This project was developed with the goal of assisting individuals in genuine need. By using this software, you agree to do so ethically and legally.
