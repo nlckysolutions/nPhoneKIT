@@ -19,6 +19,8 @@
 
 ---
 
+## Disclaimer
+
 > [!IMPORTANT]
 > #### **Educational and Recovery Purposes Only**
 >
