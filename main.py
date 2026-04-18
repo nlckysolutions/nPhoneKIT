@@ -1616,14 +1616,14 @@ def frp_unlock_2024(): # FRP unlock for early 2024-ish security patch update
                         "AT+SWATD=0", # Modem unlocking
                         "AT+ACTIVATE=0,0,0", # Modem unlocking
                         "AT+DEVCONINFO", # Get device info
-                        "AT+VERSNAME=3.2.3", # FRP unlocking commands
-                        "AT+REACTIVE=1,0,0", # FRP unlocking commands
+                        "AT+VERSNAME=3,2,3", # FRP version query
+                        "AT+FRPUNLCK=3,0,0", # Query FRP lock status
                         "AT+SWATD=0", # Re-Modem unlocking
                         "AT+ACTIVATE=0,0,0", # Re-Modem unlocking
                         "AT+SWATD=1", # Lock quickly
                         "AT+SWATD=1", # Lock again
-                        "AT+PRECONFIG=2,VZW", # Quickly change CSC
-                        "AT+PRECONFIG=1,0", # Quickly change it back
+                        "AT+PRECONFG=2,VZW", # Quickly change CSC
+                        "AT+PRECONFG=1,0", # Quickly change it back
                     ]
 
                     ADBcommands = [ # Run list of commands in order to complete the unlock with newly-enabled ADB
