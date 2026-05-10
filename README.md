@@ -103,9 +103,9 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
   ```
   sudo apt install python3 python3-tk python3-serial python3-requests python3-pyqt5 adb
   ```
-- Then, (every time you want to run nPhoneKIT you will need to run this command in the source folder) (make sure to use SUDO):
+- Then, (every time you want to run nPhoneKIT you will need to run this command in the source folder):
   ```
-  sudo python3 main.py
+  python3 main.py
   ```
 
 ### Linux (Arch-based distro) 🐧
