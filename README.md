@@ -72,7 +72,7 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
 > **Please** subscribe to the NlckySolutions YouTube channel to support nPhoneKIT! It's just one click, but helps a ton! If everyone who saw this subscribed, there'd be 10x+ more frequent updates!
 
 > [!TIP]
-> Watch easy-to-follow installation video [here!](https://www.youtube.com/watch?v=I-0GeEmQ4kA) 
+> Watch easy-to-follow installation video [here!](https://youtu.be/hSK-dW2cTaY) 
 
 
 <details>
