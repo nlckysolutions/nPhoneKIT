@@ -97,6 +97,16 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
 
 ### Linux (Debian-based distro) 🐧
 
+> [!CAUTION]
+> **Please** subscribe to the NlckySolutions YouTube channel to support nPhoneKIT! It's just one click, but helps a ton! If everyone who saw this subscribed, there'd be 10x+ more frequent updates!
+
+> [!TIP]
+> Watch easy-to-follow installation video [here!](https://www.youtube.com/watch?v=lv1ZMkxWEVo) 
+
+
+<details>
+<summary>Classic Install Guide (click here when watching the video)</summary>
+
 - Go to the latest release, download Source Code as ZIP.
 - Extract the zip, open Terminal, and cd into the source code directory.
 - Run the following command:
@@ -107,6 +117,8 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
   ```
   python3 main.py
   ```
+
+</details>
 
 ### Linux (Arch-based distro) 🐧
 
