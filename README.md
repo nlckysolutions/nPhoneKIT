@@ -163,6 +163,9 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
 - Open Hidden WLANTEST Menu on All Samsung Devices
 - IMEI Check Feature
 - Remove Bloatware
+
+### Moto
+- Experimental FRP unlock
     
 ### LG
 - Legacy Screen Unlock (Pre-G5)
