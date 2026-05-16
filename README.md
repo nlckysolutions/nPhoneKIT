@@ -134,7 +134,7 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
 - cd into the source code directory (``cd nPhoneKIT``)
 - Run the following command:
   ```
-  sudo pacman -Syu python3 tk python-pyserial python-requests pyqt5 android-tools adb
+  sudo pacman -Syu python3 tk python-pyserial python-requests pyqt5 android-tools
   ```
 - Then, (every time you want to run nPhoneKIT you will need to run this command in the source folder) (make sure to use SUDO):
   ```
