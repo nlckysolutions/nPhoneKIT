@@ -122,6 +122,15 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
 
 ### Linux (Arch-based distro) 🐧
 
+> [!CAUTION]
+> **Please** subscribe to the NlckySolutions YouTube channel to support nPhoneKIT! It's just one click, but helps a ton! If everyone who saw this subscribed, there'd be 10x+ more frequent updates!
+
+> [!TIP]
+> Watch easy-to-follow installation video [here!](https://youtu.be/2JWpJUhficA)
+
+<details>
+<summary>Classic Install Guide (click here when watching the video)</summary>
+
 - Either download the latest release or clone the repository:
 
   a. Go to the latest release, download Source Code as ZIP.
@@ -140,6 +149,8 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
   ```
   sudo python3 main.py
   ```
+
+</details>
 
   ## ⚠️ IMPORTANT! If you want MediaTek features on LINUX:
   - In order to enable MTKCLIENT features, please run these additional commands in the source folder which contains main.py.
