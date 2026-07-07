@@ -167,7 +167,8 @@ default_settings = {
     "update_check": True,
     "enable_preload": True,
     "debug_info": False,
-    "basic_success_checks": True
+    "basic_success_checks": True,
+    "contributionsuggestions": True
 }
 
 if SETTINGS_PATH.exists(): # If settings, load, otherwise use default settings.
@@ -185,6 +186,7 @@ update_check = settings['update_check']
 enable_preload = settings['enable_preload']
 debug_info = settings['debug_info']
 basic_success_checks = settings['basic_success_checks']
+contributionsuggestions = settings['contributionsuggestions']
 
 def load_strings(xml_path): 
     tree = ET.parse(xml_path)
@@ -1284,6 +1286,7 @@ def check_for_update():
 
             latest_version_raw = data['tag_name']
             latest_version = data['tag_name'].lstrip("v")
+            latest_version = latest_version.lstrip("ⅴ")
 
             # If the tag is different then the current version, assume it's newer, and prompt update.
 
@@ -1410,6 +1413,101 @@ def show_messagebox_at(x, y, title, content): # Show a customizable message box
     box.grab_set()
     box.wait_window()  # <--- THIS is what blocks until closed
 
+def smbdelay(x, y, title, content, delay=8):  # Show a message box with a delayed close button and disabled X button
+    box = tk.Tk()
+    box.title(title)
+    box.geometry(f"+{x}+{y}")
+    box.resizable(False, False)
+
+    tk.Label(box, text=content, font=("Segoe UI", 12), padx=20, pady=20).pack()
+
+    # Button starts disabled
+    ok_button = tk.Button(box, text=f"OK ({delay})", width=10, state="disabled", command=box.destroy)
+    ok_button.pack(pady=(0, 15))
+
+    # Disable the X button — do nothing on close request
+    box.protocol("WM_DELETE_WINDOW", lambda: None)
+
+    # Countdown logic
+    def countdown(remaining):
+        if remaining > 0:
+            ok_button.config(text=f"OK ({remaining})")
+            box.after(1000, countdown, remaining - 1)
+        else:
+            ok_button.config(text="OK", state="normal")
+
+    countdown(delay)
+
+    # Keep it modal — BLOCK everything until this window closes
+    box.attributes("-topmost", True)
+    box.grab_set()
+    box.wait_window()
+
+def contribution_prompt(x, y):  # Nicely formatted contribution/support message box
+    uuid_str = str(get_public_hardware_uuid())
+
+    box = tk.Tk()
+    box.title("Support nPhoneKIT")
+    box.geometry(f"+{x}+{y}")
+    box.resizable(False, False)
+
+    message = (
+        "PLEASE DO NOT IGNORE THIS MESSAGE:\n\n"
+        "Want to help support nPhoneKIT, and get a special Contributor\n"
+        "thank you message on the README? Simply fill out the quick\n"
+        "and simple form linked below.\n\n"
+        "Remember, you can (and should!) submit the form, whether the\n"
+        "unlock worked flawlessly or failed horribly! This helps fix\n"
+        "bugs and errors for the future.\n\n"
+        f"Your unique submission code (prevents spam):\n{uuid_str}\n\n"
+        "Want to turn off this message? Turn off 'Contribution Messages'\n"
+        "in settings."
+    )
+
+    tk.Label(
+        box, text=message, font=("Segoe UI", 11),
+        padx=25, pady=20, justify="left"
+    ).pack()
+
+    # Notification label (hidden until button is clicked)
+    notice_label = tk.Label(box, text="", font=("Segoe UI", 9, "italic"), fg="green")
+    notice_label.pack(pady=(0, 5))
+
+    def open_form():
+        box.clipboard_clear()
+        box.clipboard_append(uuid_str)
+        box.update()  # keep clipboard content after window closes
+        notice_label.config(text="✅ UUID copied to clipboard! Opening form in your browser...")
+        webbrowser.open("https://forms.gle/SM8Mjyoz43Jcwxzn8")
+
+    support_button = tk.Button(
+        box, text="Support nPhoneKIT — Open Form", width=30, height=2,
+        bg="#1a73e8", fg="white", font=("Segoe UI", 11, "bold"),
+        activebackground="#1558b0", activeforeground="white",
+        command=open_form
+    )
+    support_button.pack(pady=(0, 15))
+
+    # Small delayed decline link
+    decline_label = tk.Label(
+        box, text="", font=("Segoe UI", 8), fg="gray50", cursor="hand2"
+    )
+    decline_label.pack(pady=(0, 15))
+
+    def countdown(remaining):
+        if remaining > 0:
+            decline_label.config(text=f"(decline available in {remaining}s)")
+            box.after(1000, countdown, remaining - 1)
+        else:
+            decline_label.config(text="No, I don't want to support open-source developers.")
+            decline_label.bind("<Button-1>", lambda e: box.destroy())
+
+    countdown(5)
+
+    box.attributes("-topmost", True)
+    box.grab_set()
+    box.wait_window()
+
 def modemUnlock(manufacturer, softUnlock=False): # Unlock the modem per-action if preload wasn't enabled
     global firstunlock
 
@@ -1479,6 +1577,9 @@ def parse_devconinfo(raw_input):
 def lu(path="unlocks.json"):
     return json.loads(Path(path).read_text(encoding="utf-8"))
                
+def formrequest():
+    if contributionsuggestions == True:
+        contribution_prompt(500, 500)
 # =============================================
 #  Unlocking methods for different devices
 # =============================================
@@ -1532,6 +1633,7 @@ def frp_unlock_pre_aug2022(): # FRP unlock for pre-aug2022 security patch update
                         print(strings['frpNotCompatible'])
                         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Pre_2022", "Fail"))
                         tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+                        formrequest()
                     else:
                         print(strings['okText'])
                         print(strings['runUnlock'], end="")
@@ -1542,6 +1644,7 @@ def frp_unlock_pre_aug2022(): # FRP unlock for pre-aug2022 security patch update
                         print(strings['unlockSuccess'])
                         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Pre_2022", "Success"))
                         tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+                        formrequest()
 
 def frp_unlock_aug2022_to_dec2022(): # FRP unlock for aug2022-dec2022 security patch update
     methods = lu("unlocks.json")
@@ -1586,6 +1689,7 @@ def frp_unlock_aug2022_to_dec2022(): # FRP unlock for aug2022-dec2022 security p
                         print(strings['frpNotCompatible'])
                         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Aug_To_Dec_2022", "Fail"))
                         tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+                        formrequest()
                     else:
                         print(strings['okText'])
                         print(strings['runUnlock'], end="")
@@ -1596,6 +1700,7 @@ def frp_unlock_aug2022_to_dec2022(): # FRP unlock for aug2022-dec2022 security p
                         print(strings['unlockSuccess'])
                         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_Aug_To_Dec_2022", "Success"))
                         tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+                        formrequest()
 
 def frp_unlock_2024(): # FRP unlock for early 2024-ish security patch update
     methods = lu("unlocks.json")
@@ -1651,6 +1756,7 @@ def frp_unlock_2024(): # FRP unlock for early 2024-ish security patch update
                         print(strings['frpNotCompatible'])
                         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_2024", "Fail"))
                         tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+                        formrequest()
                     else:
                         print(strings['okText'])
                         print(strings['runUnlock'], end="")
@@ -1665,6 +1771,7 @@ def frp_unlock_2024(): # FRP unlock for early 2024-ish security patch update
                             model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output
                         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_2024", "Success"))
                         tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+                        formrequest()
 
 def frp_unlock_android15_16(): # FRP unlock for early 2024-ish security patch update
     methods = lu("unlocks.json")
@@ -1722,11 +1829,13 @@ def frp_unlock_android15_16(): # FRP unlock for early 2024-ish security patch up
                             model = re.search(r'Model:\s*(\S+)', info) # Extract only the model no. from the output
                         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_15_16", "Success"))
                         tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+                        formrequest()
                     except Exception:
                         print(strings['failText'])
                         print(strings['frpNotCompatible'])
                         tthread = threading.Thread(target = success_checks, args = (get_public_hardware_uuid(), model, "FRP_Unlock_15_16", "Fail"))
                         tthread.start() # Sends basic, anonymized success_checks info with only the model number. This is so we know what devices are compatible with which unlocks.
+                        formrequest()
 
 def general_frp_unlock(): # Not completed yet
     raise NotImplementedError("This function is not yet implemented.")
@@ -2497,7 +2606,7 @@ class SettingsDialog(QtWidgets.QDialog):
         
 
         # main toggles
-        main_keys = ["dark_theme","hacker_font","slower_animations","update_check","enable_preload"]
+        main_keys = ["dark_theme","hacker_font","slower_animations","update_check","enable_preload","contributionsuggestions"]
         dev_keys  = ["debug_info","basic_success_checks"]
 
         layout = QtWidgets.QVBoxLayout(self)
@@ -2510,7 +2619,10 @@ class SettingsDialog(QtWidgets.QDialog):
         self.boxes = {}
         r = 0
         for k in main_keys:
-            cb = QtWidgets.QCheckBox(k.replace("_"," ").title())
+            if k == "contributionsuggestions":
+                cb = QtWidgets.QCheckBox("Contribution Suggestions".title())
+            else:
+                cb = QtWidgets.QCheckBox(k.replace("_"," ").title())
             cb.setChecked(bool(self.settings.get(k, False)))
             self.boxes[k] = cb
             grid.addWidget(cb, r//2, r%2)

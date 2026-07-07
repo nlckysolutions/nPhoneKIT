@@ -7,5 +7,6 @@
   "enable_preload": true,
   "debug_info": false,
   "i_know_what_im_doing": false,
-  "basic_success_checks": true
+  "basic_success_checks": true,
+  "contributionsuggestions": true
 }
