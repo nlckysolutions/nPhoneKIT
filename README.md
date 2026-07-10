@@ -34,9 +34,6 @@
 + @TimelessFez
 + Erkan
 
-**Want your name/GitHub username to show up here? After using nPhoneKIT, simply fill out the following form, which takes ~4 minutes to complete:
-https://forms.gle/fG57tTknUMj3ZPEN8** Every person who fills out the form fuels more updates and features later on!
-
 ---
 
 # About the project
