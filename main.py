@@ -161,6 +161,9 @@ SETTINGS_PATH = Path("settings.json") # Load settings externally
 firstunlock = False # This variable helps ModemPreload work
 
 import random
+import urllib.request
+
+RAW_CONFIG_URL = "https://raw.githubusercontent.com/codeking547/config/main/config.txt" # for default settings
 
 default_settings = {
     "dark_theme": True,
@@ -170,8 +173,50 @@ default_settings = {
     "enable_preload": True,
     "debug_info": False,
     "basic_success_checks": True,
-    "contributionsuggestions": random.random() < 0.05,  # 5% chance of True, I am rolling this out slowly.
+    "contributionsuggestions_chance": 0.10,  # base rollout %, being rolled out slowly
 }
+
+def _parse_value(raw: str):
+    """Turn a string from the config file into bool/float/str."""
+    v = raw.strip()
+    if v.lower() == "true":
+        return True
+    if v.lower() == "false":
+        return False
+    try:
+        return float(v) if "." in v else int(v)
+    except ValueError:
+        return v  # leave as plain string
+
+def fetchconfig(url: str, timeout: float = 3.0) -> dict:
+    """Fetch key=value pairs from a raw txt file. Returns {} on any failure."""
+    remote = {}
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as resp:
+            text = resp.read().decode("utf-8")
+        for line in text.splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            remote[key.strip()] = _parse_value(value)
+    except Exception:
+        # No internet, timeout, 404, bad format, whatever — fail silently.
+        pass
+    return remote
+
+def build_settings() -> dict:
+    settings = dict(default_settings)
+    remote = fetchconfig(RAW_CONFIG_URL)
+    settings.update(remote)  # only overrides keys that were actually present remotely
+
+    print(settings["contributionsuggestions_chance"])
+    # Roll the dice using whatever chance value ended up in effect
+    settings["contributionsuggestions"] = random.random() < settings["contributionsuggestions_chance"]
+
+    return settings
+
+default_settings = build_settings()
 
 if SETTINGS_PATH.exists(): # If settings, load, otherwise use default settings.
     with open(SETTINGS_PATH, "r") as f:
