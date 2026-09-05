@@ -366,13 +366,20 @@ class SerialManager: # AT command sender via class
             if debug_info:
                 print(strings['noDeviceSermanError']) 
         elif self.port:
-            try:
-                self.ser = serial.Serial(self.port, self.baud, timeout=2) # Save the port for use with the rest of the class
-                time.sleep(0.5)
-                if debug_info:
-                    print(f"{strings['sermanConnectedPort']}{self.port}")
-            except serial.SerialException as e:
-                raise RuntimeError(f"{strings['sermanOpeningPortError']}{self.port}: {e}")
+            deadline = time.time() + 3
+            while True:
+                try:
+                    self.ser = serial.Serial(self.port, self.baud, timeout=2) # Save the port for use with the rest of the class
+                    time.sleep(0.5)
+                    if debug_info:
+                        print(f"{strings['sermanConnectedPort']}{self.port}")
+                    break
+                except (serial.SerialException, PermissionError) as e:
+                    # udev creates ttyACM before logind applies the user's ACL.
+                    # Wait briefly instead of failing during that small window.
+                    if time.time() >= deadline:
+                        raise RuntimeError(f"{strings['sermanOpeningPortError']}{self.port}: {e}")
+                    time.sleep(0.1)
 
     def reset(self):
         self.__init__()
@@ -395,9 +402,70 @@ class SerialManager: # AT command sender via class
             return ports[0] if ports else None
         else:  # Linux
             ports = glob.glob("/dev/ttyACM*") + glob.glob("/dev/ttyUSB*")
+            if not ports:
+                self._activate_samsung_modem_config()
+                deadline = time.time() + 5
+                while time.time() < deadline:
+                    time.sleep(0.1)
+                    ports = glob.glob("/dev/ttyACM*") + glob.glob("/dev/ttyUSB*")
+                    if any(os.access(port, os.R_OK | os.W_OK) for port in ports):
+                        break
+            accessible_ports = [
+                port for port in ports if os.access(port, os.R_OK | os.W_OK)
+            ]
+            if accessible_ports:
+                return accessible_ports[0]
             return ports[0] if ports else None
 
         return None
+
+    @staticmethod
+    def _activate_samsung_modem_config():
+        """Expose Samsung's secondary CDC ACM configuration on Linux."""
+        try:
+            import usb.core
+        except ImportError:
+            return
+
+        device = usb.core.find(idVendor=0x04E8, idProduct=0x6860)
+        if device is None:
+            return
+
+        # Linux desktops commonly auto-mount Samsung's MTP interface. Release it
+        # before changing configurations, otherwise libusb returns BUSY (-6).
+        try:
+            serial_number = device.serial_number
+            if serial_number:
+                mtp_uri = f"mtp://SAMSUNG_SAMSUNG_Android_{serial_number}/"
+                subprocess.run(
+                    ["gio", "mount", "-u", mtp_uri],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    timeout=5,
+                    check=False,
+                )
+        except Exception:
+            pass
+
+        # Samsung devices can reject the first SET_CONFIGURATION immediately
+        # after a USB reset. Re-discover the device and retry a few times.
+        for _ in range(5):
+            if device is None:
+                time.sleep(1)
+                device = usb.core.find(idVendor=0x04E8, idProduct=0x6860)
+                continue
+            try:
+                device.reset()
+                time.sleep(1)
+                device = usb.core.find(idVendor=0x04E8, idProduct=0x6860)
+                if device is None:
+                    time.sleep(1)
+                    continue
+                device.set_configuration(2)
+                return
+            except usb.core.USBError:
+                time.sleep(1)
+                device = usb.core.find(idVendor=0x04E8, idProduct=0x6860)
 
     def send(self, command):
         if not self.ser or not self.ser.is_open:
@@ -641,17 +709,34 @@ def check_serial_permissions():
         import grp
         import getpass
         import platform
+        import pwd
+
+        # Root can access serial devices without supplementary group membership.
+        if os.geteuid() == 0:
+            return True
+
+        # udev may grant the active desktop user access through an ACL even when
+        # the account is not a member of dialout.
+        serial_ports = glob.glob("/dev/ttyACM*") + glob.glob("/dev/ttyUSB*")
+        if any(os.access(port, os.R_OK | os.W_OK) for port in serial_ports):
+            return True
 
         user = getpass.getuser()
 
         # Serial device groups used across most distros
         serial_groups = ["dialout", "uucp", "lock", "tty"]
 
+        # Collect the user's supplementary groups before checking membership.
+        user_groups = {
+            group.gr_name for group in grp.getgrall() if user in group.gr_mem
+        }
+
         # Also check primary group ID (some distros put uucp as primary)
         try:
-            primary_group = grp.getgrgid(os.getgid()).gr_name
-            user_groups.append(primary_group)
-        except:
+            primary_gid = pwd.getpwnam(user).pw_gid
+            primary_group = grp.getgrgid(primary_gid).gr_name
+            user_groups.add(primary_group)
+        except (KeyError, OSError):
             pass
 
         # Check if user is good
