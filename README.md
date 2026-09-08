@@ -21,6 +21,7 @@
 ---
 
 ## Recommended to read this [latest post](https://nlcky.solutions/?p=35) before using nPhoneKIT, for new and existing users.
+## Update: nPhoneKIT 1.6.8 is now released, please report any bugs with this experimental version!
 
 ---
 
@@ -45,6 +46,7 @@
 + lhteufel
 + sassysky
 + creabilly
++ @thistleclaw
 
 ---
 
@@ -63,7 +65,7 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
 
 ---
 
-### Bugs (as of v1.6.3)
+### Bugs (as of v1.6.8)
 - Motorola FRP not working for most devices.
 
 > [!IMPORTANT]
