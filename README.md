@@ -133,9 +133,9 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
 
 - Go to the latest release, download Source Code as ZIP.
 - Extract the zip, open Terminal, and cd into the source code directory.
-- Run the following command:
+- Run the following command (may differ from the video, that's normal.):
   ```
-  sudo apt install python3 python3-tk python3-serial python3-requests python3-pyqt5 adb
+  sudo apt install python3 python3-tk python3-serial python3-requests python3-pyqt5 python3-distro
   ```
 - Then, (every time you want to run nPhoneKIT you will need to run this command in the source folder):
   ```
