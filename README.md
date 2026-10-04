@@ -91,14 +91,16 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
 - nPhoneKIT is meant to be used responsibly by proper owners of their own phones.
 
 ## Donations
-Consider donating, even $1?
-We accept cryptocurrency to help support development:
-
-BTC (Bitcoin): bc1q6996a839k5g4ylh2s3cug403n97s347ld7wlzv
-
-ETH (Ethereum): 0xaaA95Ef59d39DE6A5efEe7631A32daC6293bB0fa
-
-XMR (Monero): 87yMat2XDsvdUnQGJGQdBm8rUAoUpEdh38se1KAR59LyAwdhAZ3bgj5ZMZd8cJRiV3YDZrcBac5b5NzPQLtpKC4jJPmGFGh
+> [!CAUTION]
+> Consider donating, even $1? This is a single person project working on my own time to develop this. Any amount is appreciated.
+>
+> We accept cryptocurrency to help support development:
+>
+> BTC (Bitcoin): bc1q6996a839k5g4ylh2s3cug403n97s347ld7wlzv
+>
+> ETH (Ethereum): 0xaaA95Ef59d39DE6A5efEe7631A32daC6293bB0fa
+>
+> XMR (Monero): 87yMat2XDsvdUnQGJGQdBm8rUAoUpEdh38se1KAR59LyAwdhAZ3bgj5ZMZd8cJRiV3YDZrcBac5b5NzPQLtpKC4jJPmGFGh
 
 ## Installation
 
