@@ -227,6 +227,18 @@ With **nPhoneKIT**, there’s no "magic click" – just real commands and real t
 
 ---
 
+## Star History
+
+<a href="https://www.star-history.com/?repos=nlckysolutions%2Fnphonekit&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=nlckysolutions/nphonekit&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=nlckysolutions/nphonekit&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=nlckysolutions/nphonekit&type=date&legend=top-left" />
+ </picture>
+</a>
+
+---
+
 ## ⚠️⚠️⚠️ Important Notes
 
 - **nPhoneKIT has a feature called "Success Checks" which will contact external servers, telling them whether a said feature worked on your phone model. No personal data is sent. This helps improve nPhoneKIT. (You may inspect the full success check code if you would like, this is only used to improve and debug. Personal identifiers are anonymized, hashed, and made untraceable)**
